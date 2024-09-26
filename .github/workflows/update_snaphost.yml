@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: "20.x"
       - run: |
-          npm i
+          npm ci
           npm run test -- -u
         working-directory: ./
       - name: Add & Commit
