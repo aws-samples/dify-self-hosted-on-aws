@@ -1,8 +1,8 @@
 # Dify on AWS with CDK
 
-[![Build](https://github.com/tmokmss/dify-on-aws-cdk/actions/workflows/build.yml/badge.svg)](https://github.com/tmokmss/dify-on-aws-cdk/actions/workflows/build.yml)
+[![Build](https://github.com/aws-samples/dify-self-hosted-on-aws/actions/workflows/build.yml/badge.svg)](https://github.com/aws-samples/dify-self-hosted-on-aws/actions/workflows/build.yml)
 
-Deploy [Dify](https://dify.ai/), an LLM app development platform, using AWS managed services with AWS CDK.
+Self-host [Dify](https://dify.ai/), an LLM app development platform, using AWS managed services with AWS CDK.
 
 ![architecture](./imgs/architecture.png)
 
@@ -14,7 +14,7 @@ Key Features:
     * allow to use NAT instances instead of NAT Gateway, and Fargate spot capacity by default
 * Natively integrate with Bedrock using IAM roles
 
-本リポジトリの使い方について、日本語で書かれた記事があります！[AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
+本リポジトリの使い方について、日本語で書かれた記事もあります: [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
 
 ## Prerequisites
 You must have the following dependencies installed to deploy this app:
@@ -45,12 +45,16 @@ The initial deployment usually takes about 20 minutes. After a successful deploy
 ✨  Deployment time: 326.43s
 
 Outputs:
-DifyOnAwsCdkStack.ApiGatewayApiEndpoint015055E7 = https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com
+DifyOnAwsStack.DifyUrl = https://dify.example.com
 ```
 
 You can open the URL with a browser and get started!
 
-## Setup Dify to use Bedrock
+## Tips
+
+Here is the information that might help when you use Dify on AWS.
+
+### Setup Dify to use Bedrock
 
 After logged in, you can setup Dify to use Bedrock LLMs.
 
@@ -63,7 +67,7 @@ IAM policies are already configured properly, so you can just select a correct A
 
 ![model-setup](./imgs/model-setup.png)
 
-## Add Python packages available in code execution
+### Add Python packages available in code execution
 
 You can add Python packages that is available in Dify code execution feature. Edit [sandbox-python-requirements.txt](./lib/constructs/dify-services/docker/sandbox-python-requirements.txt) following the [Requirements File Format](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
 
