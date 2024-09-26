@@ -92,7 +92,7 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
 
 export class DifyOnAwsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: DifyOnAwsStackProps) {
-    super(scope, id, props);
+    super(scope, id, { ...props, description: 'Dify on AWS (uksb-zea0rh9k0v)' });
 
     const {
       difyImageTag: imageTag = 'latest',
