@@ -39,9 +39,9 @@ export class Redis extends Construct implements ec2.IConnectable {
     });
 
     const redis = new CfnReplicationGroup(this, 'Resource', {
-      engine: 'Redis',
+      engine: 'Valkey',
       cacheNodeType: 'cache.t4g.micro',
-      engineVersion: '7.1',
+      engineVersion: '7.2',
       port: this.port,
       replicasPerNodeGroup: multiAz ? 1 : 0,
       numNodeGroups: 1,

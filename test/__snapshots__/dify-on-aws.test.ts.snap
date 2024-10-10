@@ -1008,7 +1008,7 @@ exports[`Snapshot test 1`] = `
             ],
             "Essential": true,
             "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:4f82f88e853f5bb99f9a2c526dcacc44aea241f3f4b9f74e8d75d38ad33627f9",
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:773ddfe132925364e498252af82c7db43bd892f7c211db52378305095ff00481",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -1985,8 +1985,8 @@ exports[`Snapshot test 1`] = `
         "CacheSubnetGroupName": {
           "Ref": "RedisSubnetGroup2387CBFF",
         },
-        "Engine": "Redis",
-        "EngineVersion": "7.1",
+        "Engine": "Valkey",
+        "EngineVersion": "7.2",
         "MultiAZEnabled": true,
         "NumNodeGroups": 1,
         "Port": 6379,
@@ -2504,7 +2504,7 @@ exports[`Snapshot test 1`] = `
           ],
         },
         "CidrBlock": "10.0.0.0/18",
-        "MapPublicIpOnLaunch": false,
+        "MapPublicIpOnLaunch": true,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
@@ -2612,7 +2612,7 @@ exports[`Snapshot test 1`] = `
           ],
         },
         "CidrBlock": "10.0.64.0/18",
-        "MapPublicIpOnLaunch": false,
+        "MapPublicIpOnLaunch": true,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
