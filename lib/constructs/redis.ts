@@ -1,9 +1,16 @@
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import { CfnReplicationGroup, CfnSubnetGroup } from 'aws-cdk-lib/aws-elasticache';
+import {
+  CfnReplicationGroup,
+  CfnServerlessCache,
+  CfnSubnetGroup,
+  CfnUser,
+  CfnUserGroup,
+} from 'aws-cdk-lib/aws-elasticache';
 import { SecurityGroup } from 'aws-cdk-lib/aws-ec2';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { Lazy, Names } from 'aws-cdk-lib';
 
 export interface RedisProps {
   vpc: ec2.IVpc;
@@ -22,11 +29,6 @@ export class Redis extends Construct implements ec2.IConnectable {
 
     const { vpc, multiAz } = props;
 
-    const subnetGroup = new CfnSubnetGroup(this, 'SubnetGroup', {
-      subnetIds: vpc.privateSubnets.map(({ subnetId }) => subnetId),
-      description: 'private subnet',
-    });
-
     const securityGroup = new SecurityGroup(this, 'SecurityGroup', {
       vpc,
     });
@@ -38,30 +40,46 @@ export class Redis extends Construct implements ec2.IConnectable {
       },
     });
 
-    const redis = new CfnReplicationGroup(this, 'Resource', {
-      engine: 'Redis',
-      cacheNodeType: 'cache.t4g.micro',
-      engineVersion: '7.1',
-      port: this.port,
-      replicasPerNodeGroup: multiAz ? 1 : 0,
-      numNodeGroups: 1,
-      replicationGroupDescription: 'Dify redis cluster',
-      cacheSubnetGroupName: subnetGroup.ref,
-      automaticFailoverEnabled: multiAz,
-      multiAzEnabled: multiAz,
+    const user = new CfnUser(this, 'User', {
+      accessString: 'on ~* +@all',
+      passwords: [secret.secretValue.unsafeUnwrap()],
+      engine: 'redis',
+      userId: 'placeholder',
+      // User group needs to contain a user with the user name default.
+      userName: 'default',
+    });
+    // UserId must begin with a letter; must contain only lowercase ASCII letters,
+    // digits, and hyphens; and must not end with a hyphen or contain two consecutive hyphens
+    user.userId = Names.uniqueResourceName(user, { maxLength: 32, separator: '-' }).toLowerCase();
+
+    const userGroup = new CfnUserGroup(this, 'UserGroup', {
+      // When using RBAC with Valkey clusters, you will still need to assign users and user groups the engine “redis”.
+      // https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Clusters.RBAC.html
+      engine: 'redis',
+      userIds: [user.ref],
+      userGroupId: 'placeholder',
+    });
+    userGroup.userGroupId = Names.uniqueResourceName(userGroup, { maxLength: 32, separator: '-' }).toLowerCase();
+
+    const cluster = new CfnServerlessCache(this, 'Default', {
+      engine: 'Valkey',
+      serverlessCacheName: Names.uniqueResourceName(this, { maxLength: 32, separator: '-' }),
+      description: 'Dify redis cluster',
+      majorEngineVersion: '7',
       securityGroupIds: [securityGroup.securityGroupId],
-      transitEncryptionEnabled: true,
-      atRestEncryptionEnabled: true,
-      authToken: secret.secretValue.unsafeUnwrap(),
+      subnetIds: vpc.privateSubnets.map(({ subnetId }) => subnetId),
+      userGroupId: userGroup.ref,
     });
 
-    this.endpoint = redis.attrPrimaryEndPointAddress;
+    this.endpoint = cluster.attrEndpointAddress;
 
     this.brokerUrl = new StringParameter(this, 'BrokerUrl', {
-      stringValue: `rediss://:${secret.secretValue.unsafeUnwrap()}@${this.endpoint}:${this.port}/1`,
+      stringValue: `rediss://${user.userName}:${secret.secretValue.unsafeUnwrap()}@${this.endpoint}:${
+        cluster.attrEndpointPort
+      }/0`,
     });
 
-    this.connections = new ec2.Connections({ securityGroups: [securityGroup], defaultPort: ec2.Port.tcp(this.port) });
+    this.connections = new ec2.Connections({ securityGroups: [securityGroup], defaultPort: ec2.Port.tcp(6379) });
     this.secret = secret;
   }
 }
