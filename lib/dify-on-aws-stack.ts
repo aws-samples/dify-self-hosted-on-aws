@@ -118,7 +118,8 @@ export class DifyOnAwsStack extends cdk.Stack {
           {
             subnetType: SubnetType.PUBLIC,
             name: 'Public',
-            mapPublicIpOnLaunch: false,
+            // NAT instance does not work when this set to false.
+            // mapPublicIpOnLaunch: false,
           },
           {
             subnetType: SubnetType.PRIVATE_WITH_EGRESS,
