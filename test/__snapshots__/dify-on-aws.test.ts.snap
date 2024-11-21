@@ -1414,14 +1414,16 @@ exports[`Snapshot test 1`] = `
       "DeletionPolicy": "Delete",
       "Properties": {
         "CopyTagsToSnapshot": true,
-        "DBClusterParameterGroupName": "default.aurora-postgresql15",
+        "DBClusterParameterGroupName": {
+          "Ref": "PostgresParameterGroupC3694DF2",
+        },
         "DBSubnetGroupName": {
           "Ref": "PostgresClusterSubnets99BD7A61",
         },
         "DatabaseName": "main",
         "EnableHttpEndpoint": true,
         "Engine": "aurora-postgresql",
-        "EngineVersion": "15.5",
+        "EngineVersion": "15.7",
         "MasterUserPassword": {
           "Fn::Join": [
             "",
@@ -1612,6 +1614,16 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::RDS::DBInstance",
       "UpdateReplacePolicy": "Delete",
+    },
+    "PostgresParameterGroupC3694DF2": {
+      "Properties": {
+        "Description": "Cluster parameter group for aurora-postgresql15",
+        "Family": "aurora-postgresql15",
+        "Parameters": {
+          "idle_session_timeout": "60000",
+        },
+      },
+      "Type": "AWS::RDS::DBClusterParameterGroup",
     },
     "PostgresQuery0CustomResourcePolicy41175230": {
       "Properties": {
