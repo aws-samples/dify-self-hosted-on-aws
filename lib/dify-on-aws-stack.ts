@@ -63,6 +63,12 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
   isRedisMultiAz?: boolean;
 
   /**
+   *
+   * @default false
+   */
+  enableAuroraScalesToZero?: boolean;
+
+  /**
    * The image tag to deploy Dify container images (api=worker and web).
    * The images are pulled from [here](https://hub.docker.com/u/langgenius).
    *
@@ -148,6 +154,7 @@ export class DifyOnAwsStack extends cdk.Stack {
 
     const postgres = new Postgres(this, 'Postgres', {
       vpc,
+      scalesToZero: props.enableAuroraScalesToZero ?? false,
     });
 
     const redis = new Redis(this, 'Redis', { vpc, multiAz: props.isRedisMultiAz ?? true });

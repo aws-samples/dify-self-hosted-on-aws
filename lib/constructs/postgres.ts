@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Connections, IConnectable, IVpc } from 'aws-cdk-lib/aws-ec2';
-import { CfnOutput, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { CfnOutput, CfnResource, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import { ISecret } from 'aws-cdk-lib/aws-secretsmanager';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -16,6 +16,11 @@ export interface PostgresProps {
    * @default false
    */
   createBastion?: boolean;
+
+  /**
+   * If true, the minimum ACU for the Aurora Cluster is set to zero.
+   */
+  scalesToZero: boolean;
 }
 
 export class Postgres extends Construct implements IConnectable {
@@ -32,11 +37,12 @@ export class Postgres extends Construct implements IConnectable {
     super(scope, id);
 
     const { vpc } = props;
+    const engine = rds.DatabaseClusterEngine.auroraPostgres({
+      version: rds.AuroraPostgresEngineVersion.VER_15_7,
+    });
 
     const cluster = new rds.DatabaseCluster(this, 'Cluster', {
-      engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_15_5,
-      }),
+      engine,
       vpc,
       serverlessV2MinCapacity: 0.5,
       serverlessV2MaxCapacity: 2.0,
@@ -48,7 +54,17 @@ export class Postgres extends Construct implements IConnectable {
       enableDataApi: true,
       storageEncrypted: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      parameterGroup: new rds.ParameterGroup(this, 'ParameterGroup', {
+        engine,
+        parameters: {
+          // Terminate idle session for Aurora Serverless V2 auto-pause
+          idle_session_timeout: '60000',
+        },
+      }),
     });
+    if (props.scalesToZero ?? false) {
+      (cluster.node.defaultChild as CfnResource).addPropertyOverride('ServerlessV2ScalingConfiguration.MinCapacity', 0);
+    }
 
     if (props.createBastion) {
       const host = new ec2.BastionHostLinux(this, 'BastionHost', {
@@ -73,7 +89,9 @@ export class Postgres extends Construct implements IConnectable {
         }"], "localPortNumber":["${cluster.clusterEndpoint.port}"], "host": ["${cluster.clusterEndpoint.hostname}"]}'`,
       });
       new CfnOutput(this, 'DatabaseSecretsCommand', {
-        value: `aws secretsmanager get-secret-value --secret-id ${cluster.secret!.secretName} --region ${Stack.of(this).region}`,
+        value: `aws secretsmanager get-secret-value --secret-id ${cluster.secret!.secretName} --region ${
+          Stack.of(this).region
+        }`,
       });
     }
 
