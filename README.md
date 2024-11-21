@@ -93,14 +93,14 @@ The following table provides a sample cost breakdown for deploying this system i
 
 | AWS service | Dimensions | Cost [USD] |
 | --------------------| ----------------- | -------------------------------|
-| RDS Aurora | Postgres Serverless v2 (0.5ACU) | $43.2 |
+| RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
 | ECS (Fargate) | Dify-web 1 task running 24/7 (256CPU) | $2.7 |
 | ECS (Fargate) | Dify-api 1 task running 24/7 (1024CPU) | $10.7 |
 | ECS (Fargate) | Dify-worker 1 task running 24/7 (1024CPU) | $10.7 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
-| TOTAL | estimate per month | $97.0 |
+| TOTAL | estimate per month | $53.8 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 

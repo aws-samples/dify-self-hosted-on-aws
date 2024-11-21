@@ -15,5 +15,10 @@ new DifyOnAwsStack(app, 'DifyOnAwsStack', {
   // Set Dify version
   difyImageTag: '0.9.1',
 
+  // uncomment the below for cheap configuration:
+  // isRedisMultiAz: false,
+  // cheapVpc: true,
+  // enableAuroraScalesToZero: true,
+
   // Please see DifyOnAwsStackProps in lib/dify-on-aws-stack.ts for all the available properties
 });
