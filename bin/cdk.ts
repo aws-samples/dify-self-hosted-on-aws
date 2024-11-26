@@ -13,7 +13,7 @@ new DifyOnAwsStack(app, 'DifyOnAwsStack', {
   // Allow access from the Internet. Narrow this down if you want further security.
   allowedCidrs: ['0.0.0.0/0'],
   // Set Dify version
-  difyImageTag: '0.9.1',
+  difyImageTag: '0.12.0',
 
   // uncomment the below for cheap configuration:
   // isRedisMultiAz: false,
