@@ -48,6 +48,9 @@ export class WorkerService extends Construct {
         // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
         MIGRATION_ENABLED: 'true',
 
+        // Enable pessimistic disconnect handling for recover from Aurora automatic pause
+        SQLALCHEMY_POOL_PRE_PING: 'True',
+
         // The configurations of redis connection.
         REDIS_HOST: redis.endpoint,
         REDIS_PORT: redis.port.toString(),
@@ -87,7 +90,7 @@ export class WorkerService extends Construct {
       new PolicyStatement({
         actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
         resources: ['*'],
-      })
+      }),
     );
 
     const service = new ecs.FargateService(this, 'FargateService', {

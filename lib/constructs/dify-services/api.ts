@@ -71,6 +71,10 @@ export class ApiService extends Construct {
         SERVICE_API_URL: alb.url,
         // The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from console or api domain.
         APP_WEB_URL: alb.url,
+        
+        // Enable pessimistic disconnect handling for recover from Aurora automatic pause
+        // https://docs.sqlalchemy.org/en/20/core/pooling.html#disconnect-handling-pessimistic
+        SQLALCHEMY_POOL_PRE_PING: "True",
 
         // The configurations of redis connection.
         REDIS_HOST: redis.endpoint,

@@ -732,6 +732,10 @@ exports[`Snapshot test 1`] = `
                 "Value": "https://dify.example.com",
               },
               {
+                "Name": "SQLALCHEMY_POOL_PRE_PING",
+                "Value": "True",
+              },
+              {
                 "Name": "REDIS_HOST",
                 "Value": {
                   "Fn::GetAtt": [
@@ -3062,6 +3066,10 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "MIGRATION_ENABLED",
                 "Value": "true",
+              },
+              {
+                "Name": "SQLALCHEMY_POOL_PRE_PING",
+                "Value": "True",
               },
               {
                 "Name": "REDIS_HOST",
