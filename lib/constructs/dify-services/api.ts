@@ -182,7 +182,7 @@ export class ApiService extends Construct {
     // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank'],
         resources: ['*'],
       }),
     );
