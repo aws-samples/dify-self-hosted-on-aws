@@ -71,10 +71,10 @@ export class ApiService extends Construct {
         SERVICE_API_URL: alb.url,
         // The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from console or api domain.
         APP_WEB_URL: alb.url,
-        
+
         // Enable pessimistic disconnect handling for recover from Aurora automatic pause
         // https://docs.sqlalchemy.org/en/20/core/pooling.html#disconnect-handling-pessimistic
-        SQLALCHEMY_POOL_PRE_PING: "True",
+        SQLALCHEMY_POOL_PRE_PING: 'True',
 
         // The configurations of redis connection.
         REDIS_HOST: redis.endpoint,
@@ -132,8 +132,7 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Sandbox', {
-      image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker'), {
-        file: 'sandbox.Dockerfile',
+      image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
         buildArgs: {
           DIFY_VERSION: props.sandboxImageTag,
@@ -176,13 +175,29 @@ export class ApiService extends Construct {
       },
     });
 
+    taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
+      image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'external-knowledge-api'), {
+        platform: Platform.LINUX_AMD64,
+        buildArgs: {
+          DIFY_VERSION: props.sandboxImageTag,
+        },
+      }),
+      environment: {
+        BEARER_TOKEN: 'dummy-key',
+        BEDROCK_REGION: 'us-west-2',
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      portMappings: [{ containerPort: 8000 }],
+    });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
 
     // we can use IAM role once this issue will be closed
     // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank'],
+        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank', 'bedrock:Retrieve'],
         resources: ['*'],
       }),
     );
