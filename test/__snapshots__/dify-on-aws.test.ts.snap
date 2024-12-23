@@ -294,7 +294,7 @@ exports[`Snapshot test 1`] = `
     },
     "AlbApiTargetGroup4B6AF19C": {
       "Properties": {
-        "HealthCheckIntervalSeconds": 15,
+        "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/health",
         "HealthyThresholdCount": 2,
         "Matcher": {
@@ -548,7 +548,7 @@ exports[`Snapshot test 1`] = `
     },
     "AlbWebTargetGroupC65B2BDF": {
       "Properties": {
-        "HealthCheckIntervalSeconds": 15,
+        "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/",
         "HealthyThresholdCount": 2,
         "Matcher": {
@@ -1012,7 +1012,7 @@ exports[`Snapshot test 1`] = `
             ],
             "Essential": true,
             "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:773ddfe132925364e498252af82c7db43bd892f7c211db52378305095ff00481",
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:a5a95617c90c3c7131cc55e1bcd4db50ff05388d7beb645494e57e65ef67da63",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -1039,6 +1039,41 @@ exports[`Snapshot test 1`] = `
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
+              },
+            ],
+          },
+          {
+            "Environment": [
+              {
+                "Name": "BEARER_TOKEN",
+                "Value": "dummy-key",
+              },
+              {
+                "Name": "BEDROCK_REGION",
+                "Value": "us-west-2",
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:101aec398491cb3d4c172cb3d6291c54c9c8991b1d17193433ecac0db28259fc",
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "ApiServiceTaskExternalKnowledgeBaseAPILogGroupE8D1DD85",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "log",
+              },
+            },
+            "Name": "ExternalKnowledgeBaseAPI",
+            "PortMappings": [
+              {
+                "ContainerPort": 8000,
+                "Protocol": "tcp",
               },
             ],
           },
@@ -1196,6 +1231,19 @@ exports[`Snapshot test 1`] = `
                 ],
               },
             },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApiServiceTaskExternalKnowledgeBaseAPILogGroupE8D1DD85",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1224,6 +1272,11 @@ exports[`Snapshot test 1`] = `
         },
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ApiServiceTaskExternalKnowledgeBaseAPILogGroupE8D1DD85": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
     },
     "ApiServiceTaskMainLogGroup4A8BF33F": {
       "DeletionPolicy": "Retain",
@@ -1298,6 +1351,7 @@ exports[`Snapshot test 1`] = `
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:Rerank",
+                "bedrock:Retrieve",
               ],
               "Effect": "Allow",
               "Resource": "*",

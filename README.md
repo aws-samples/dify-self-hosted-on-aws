@@ -78,6 +78,26 @@ In some libraries, you have to allow additonal system calls in Dify sandbox. Thi
 
 Please also refer to this blog article for more details: [Using any Python libraries in Dify's code block](https://tmokmss.hatenablog.com/entry/use-any-python-packages-on-dify-sandbox)
 
+### Connect to Bedrock Knowledge Bases
+
+You can use the [External Knowledge Base feature](https://docs.dify.ai/guides/knowledge-base/connect-external-knowledge) to connect to [Amazon Bedrock Knowledge Bases](https://aws.amazon.com/bedrock/knowledge-bases/). Because the external knowledge API is deployed as a sidecar of Dify API, you can use the feature immediately with the following steps:
+
+1. Click Dify -> Knowledge -> Add an External Knowledge API button.
+    * ![add external knowledge api](./imgs/add-external-knowledge-api.png)
+2. Fill the form as below:
+    1. Name: any name as you like (e.g. `Bedrock Knowledge Bases`)
+    2. API Endpoint: `http://localhost:8000`
+    3. API Key: `dummy-key` (you can configure it by editing `BEARER_TOKEN` environment variable in [`api.ts`](./lib/constructs/dify-services/api.ts).)
+3. Click Dify -> Knowledge -> Create Knowledge -> Connect to an External Knowledge Base
+    * ![Connect to an External Knowledge Base](./imgs/connect-to-an-externa-lknowledge-base.png)
+4. Fill the form as below
+    1. External Knowledge Name / Knowledge Description: any string
+    2. External Knowledge API: the external API you created in the previous step
+    3. External Knowledge ID: The Bedrock Knowledge Base ID you want to use. The AWS region is us-west-2 by default, but you can override the AWS region by adding region prefix with colon, e.g. `us-east-1:QWERTYASDF`.
+5. Now you can use the knowledge from Dify tools.
+
+For more information, please refer to this article: [Dify can also do RAG on documents with charts and graphs!](https://qiita.com/mabuchs/items/85fb2dad19ec441c870c)
+
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
 

@@ -85,7 +85,7 @@ export class Alb extends Construct {
       deregistrationDelay: Duration.seconds(10),
       healthCheck: {
         path: healthCheckPath,
-        interval: Duration.seconds(15),
+        interval: Duration.seconds(20),
         healthyHttpCodes: '200-299,307',
         healthyThresholdCount: 2,
         unhealthyThresholdCount: 6,
