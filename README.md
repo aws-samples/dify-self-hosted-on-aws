@@ -12,9 +12,11 @@ Key Features:
     * Aurora servereless v2, ElastiCache, ECS Fargate, etc.
 * Cost effective architectural decisions
     * allow to use NAT instances instead of NAT Gateway, and Fargate spot capacity by default
-* Natively integrate with Bedrock using IAM roles
+* Easily integrate with Bedrock models and Knowledge Bases
 
-本リポジトリの使い方について、日本語で書かれた記事もあります: [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
+本リポジトリの使い方について、日本語で書かれた記事もあります: 
+* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
+* [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
 
 ## Prerequisites
 You must have the following dependencies installed to deploy this app:
