@@ -15,7 +15,7 @@ Key Features:
 * Easily integrate with Bedrock models and Knowledge Bases
 
 本リポジトリの使い方について、日本語で書かれた記事もあります: 
-* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
+* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f) ( [CloudShell版](https://note.com/yukkie1114/n/n8e055c4e7566) )
 * [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
 
 ## Prerequisites
