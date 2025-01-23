@@ -16,7 +16,8 @@ import { Construct } from 'constructs';
 
 export interface AlbProps {
   vpc: IVpc;
-  allowedCidrs: string[];
+  allowedIPv4Cidrs: string[];
+  allowedIPv6Cidrs: string[];
 
   /**
    * @default 'dify'
@@ -61,7 +62,8 @@ export class Alb extends Construct {
       defaultAction: ListenerAction.fixedResponse(400),
       certificates: certificate ? [certificate] : undefined,
     });
-    props.allowedCidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    props.allowedIPv4Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    props.allowedIPv6Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv6(cidr)));
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {

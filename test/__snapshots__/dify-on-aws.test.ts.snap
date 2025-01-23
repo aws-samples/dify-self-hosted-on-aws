@@ -497,6 +497,13 @@ exports[`Snapshot test 1`] = `
             "IpProtocol": "tcp",
             "ToPort": 443,
           },
+          {
+            "CidrIpv6": "::/0",
+            "Description": "from ::/0:443",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
         ],
         "VpcId": {
           "Ref": "Vpc8378EB38",
