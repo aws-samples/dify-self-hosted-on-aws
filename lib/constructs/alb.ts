@@ -44,9 +44,9 @@ export class Alb extends Construct {
     const protocol = props.hostedZone ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP;
     const certificate = props.hostedZone
       ? new Certificate(this, 'Certificate', {
-        domainName: `${subDomain}.${props.hostedZone.zoneName}`,
-        validation: CertificateValidation.fromDns(props.hostedZone),
-      })
+          domainName: `${subDomain}.${props.hostedZone.zoneName}`,
+          validation: CertificateValidation.fromDns(props.hostedZone),
+        })
       : undefined;
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {

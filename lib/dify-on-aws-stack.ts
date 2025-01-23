@@ -114,11 +114,11 @@ export class DifyOnAwsStack extends cdk.Stack {
       vpc = new Vpc(this, 'Vpc', {
         ...(props.cheapVpc
           ? {
-            natGatewayProvider: NatProvider.instanceV2({
-              instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
-            }),
-            natGateways: 1,
-          }
+              natGatewayProvider: NatProvider.instanceV2({
+                instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
+              }),
+              natGateways: 1,
+            }
           : {}),
         maxAzs: 2,
         subnetConfiguration: [
@@ -143,9 +143,9 @@ export class DifyOnAwsStack extends cdk.Stack {
     const hostedZone =
       props.domainName && props.hostedZoneId
         ? PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-          zoneName: props.domainName,
-          hostedZoneId: props.hostedZoneId,
-        })
+            zoneName: props.domainName,
+            hostedZoneId: props.hostedZoneId,
+          })
         : undefined;
 
     const cluster = new Cluster(this, 'Cluster', {
@@ -167,7 +167,12 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = new Alb(this, 'Alb', { vpc, allowedIPv4Cidrs: props.allowedIPv4Cidrs, allowedIPv6Cidrs: props.allowedIPv6Cidrs, hostedZone });
+    const alb = new Alb(this, 'Alb', {
+      vpc,
+      allowedIPv4Cidrs: props.allowedIPv4Cidrs,
+      allowedIPv6Cidrs: props.allowedIPv6Cidrs,
+      hostedZone,
+    });
 
     const api = new ApiService(this, 'ApiService', {
       cluster,
