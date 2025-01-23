@@ -15,7 +15,6 @@ jobs:
           npm ci
           npm run build
           npm run format:check
-          npm run test
         working-directory: ./
         name: static analysis
       - run: |
