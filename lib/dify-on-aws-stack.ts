@@ -26,7 +26,8 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
    * The IP address ranges in CIDR notation that have access to the app.
    * @example ['1.1.1.1/30']
    */
-  allowedCidrs: string[];
+  allowedCidrIPv4s: string[];
+  allowedCidrIPv6s: string[];
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
@@ -113,11 +114,11 @@ export class DifyOnAwsStack extends cdk.Stack {
       vpc = new Vpc(this, 'Vpc', {
         ...(props.cheapVpc
           ? {
-              natGatewayProvider: NatProvider.instanceV2({
-                instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
-              }),
-              natGateways: 1,
-            }
+            natGatewayProvider: NatProvider.instanceV2({
+              instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
+            }),
+            natGateways: 1,
+          }
           : {}),
         maxAzs: 2,
         subnetConfiguration: [
@@ -142,9 +143,9 @@ export class DifyOnAwsStack extends cdk.Stack {
     const hostedZone =
       props.domainName && props.hostedZoneId
         ? PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-            zoneName: props.domainName,
-            hostedZoneId: props.hostedZoneId,
-          })
+          zoneName: props.domainName,
+          hostedZoneId: props.hostedZoneId,
+        })
         : undefined;
 
     const cluster = new Cluster(this, 'Cluster', {
@@ -166,7 +167,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = new Alb(this, 'Alb', { vpc, allowedCidrs: props.allowedCidrs, hostedZone });
+    const alb = new Alb(this, 'Alb', { vpc, allowedCidrIPv4s: props.allowedCidrIPv4s, allowedCidrIPv6s: props.allowedCidrIPv6s, hostedZone });
 
     const api = new ApiService(this, 'ApiService', {
       cluster,

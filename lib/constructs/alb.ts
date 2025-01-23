@@ -16,7 +16,8 @@ import { Construct } from 'constructs';
 
 export interface AlbProps {
   vpc: IVpc;
-  allowedCidrs: string[];
+  allowedCidrIPv4s: string[];
+  allowedCidrIPv6s: string[];
 
   /**
    * @default 'dify'
@@ -43,9 +44,9 @@ export class Alb extends Construct {
     const protocol = props.hostedZone ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP;
     const certificate = props.hostedZone
       ? new Certificate(this, 'Certificate', {
-          domainName: `${subDomain}.${props.hostedZone.zoneName}`,
-          validation: CertificateValidation.fromDns(props.hostedZone),
-        })
+        domainName: `${subDomain}.${props.hostedZone.zoneName}`,
+        validation: CertificateValidation.fromDns(props.hostedZone),
+      })
       : undefined;
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
@@ -61,7 +62,8 @@ export class Alb extends Construct {
       defaultAction: ListenerAction.fixedResponse(400),
       certificates: certificate ? [certificate] : undefined,
     });
-    props.allowedCidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    props.allowedCidrIPv4s.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    props.allowedCidrIPv6s.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv6(cidr)));
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {
