@@ -1,0 +1,19 @@
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+quote_type = single
+
+[Makefile]
+indent_size = 4
+indent_style = tab
+
+[*.py]
+indent_size = 4
+
+[README.md]
+indent_size = 4
