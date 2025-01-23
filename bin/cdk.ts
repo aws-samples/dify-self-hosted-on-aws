@@ -11,8 +11,8 @@ new DifyOnAwsStack(app, 'DifyOnAwsStack', {
     // account: '123456789012'
   },
   // Allow access from the Internet. Narrow this down if you want further security.
-  allowedCidrIPv4s: ['0.0.0.0/0'],
-  allowedCidrIPv6s: ['::/0'],
+  allowedIPv4Cidrs: ['0.0.0.0/0'],
+  allowedIPv6Cidrs: ['::/0'],
   // Set Dify version
   difyImageTag: '0.14.2',
 

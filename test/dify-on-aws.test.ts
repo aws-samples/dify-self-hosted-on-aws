@@ -5,8 +5,8 @@ import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
 test('Snapshot test', () => {
   const app = new cdk.App();
   const stack = new DifyOnAwsStack(app, 'TestStack', {
-    allowedCidrIPv4s: ['0.0.0.0/0'],
-    allowedCidrIPv4s: ['::/0'],
+    allowedIPv4Cidrs: ['0.0.0.0/0'],
+    allowedIPv4Cidrs: ['::/0'],
     difySandboxImageTag: '0.2.4',
     domainName: 'example.com',
     hostedZoneId: 'Z0123456789ABCDEFG',

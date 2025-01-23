@@ -26,8 +26,8 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
    * The IP address ranges in CIDR notation that have access to the app.
    * @example ['1.1.1.1/30']
    */
-  allowedCidrIPv4s: string[];
-  allowedCidrIPv6s: string[];
+  allowedIPv4Cidrs: string[];
+  allowedIPv6Cidrs: string[];
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
@@ -167,7 +167,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = new Alb(this, 'Alb', { vpc, allowedCidrIPv4s: props.allowedCidrIPv4s, allowedCidrIPv6s: props.allowedCidrIPv6s, hostedZone });
+    const alb = new Alb(this, 'Alb', { vpc, allowedIPv4Cidrs: props.allowedIPv4Cidrs, allowedIPv6Cidrs: props.allowedIPv6Cidrs, hostedZone });
 
     const api = new ApiService(this, 'ApiService', {
       cluster,
