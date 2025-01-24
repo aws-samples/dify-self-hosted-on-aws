@@ -143,11 +143,6 @@ export class ApiService extends Construct {
       }),
       essential: false,
     });
-    sandboxFileContainer.addMountPoints({
-      containerPath: '/dependencies',
-      sourceVolume: volumeName,
-      readOnly: true,
-    });
 
     const sandboxContainer = taskDefinition.addContainer('Sandbox', {
       image: ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
@@ -186,6 +181,12 @@ export class ApiService extends Construct {
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
       },
+    });
+
+    sandboxFileContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: false,
     });
     sandboxContainer.addMountPoints({
       containerPath: '/dependencies',
