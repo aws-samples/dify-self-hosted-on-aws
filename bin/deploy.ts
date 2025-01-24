@@ -4,7 +4,12 @@ import { BuildSpec, LinuxBuildImage, Project, Source } from 'aws-cdk-lib/aws-cod
 import { ManagedPolicy } from 'aws-cdk-lib/aws-iam';
 
 const app = new cdk.App();
-const stack = new cdk.Stack(app, 'DeployStack', { description: 'A stack to deploy Dify-on-AWS resources from CloudShell.' });
+const stack = new cdk.Stack(app, 'DeployStack', {
+  description: 'A stack to deploy Dify-on-AWS resources from CloudShell.',
+  synthesizer: new cdk.DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+});
 const bucket = new Bucket(stack, 'SourceBucket');
 const project = new Project(stack, 'Project', {
   environment: {
