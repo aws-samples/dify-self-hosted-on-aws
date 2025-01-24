@@ -7,7 +7,7 @@ ZIP_FILE_NAME="dify-on-aws-files.zip"
 
 echo "Preparing CloudFormation stack $STACK_NAME..."
 
-# npm ci
+npm ci
 npm run synth
 aws cloudformation deploy --stack-name $STACK_NAME --template-file deploy.yaml --capabilities CAPABILITY_IAM
 BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue | [0]' --output text)
@@ -16,15 +16,15 @@ PROJECT_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --que
 echo "Found S3 bucket ${BUCKET_NAME}, CodeBuild project ${PROJECT_NAME}"
 echo 
 
-# REPLY="no"
+REPLY="no"
 
-# while [ $REPLY != "yes" ]
-# do
-#   # prompt user to confirm if the configuration is ready
-#   echo "Are you sure you want to deploy? Please check the configuration parameters in bin/cdk.ts."
-#   read -p "If you are ready, type 'yes': " -r
-#   echo 
-# done
+while [ $REPLY != "yes" ]
+do
+  # prompt user to confirm if the configuration is ready
+  echo "Are you sure you want to deploy? Please check the configuration parameters in bin/cdk.ts."
+  read -p "If you are ready, type 'yes': " -r
+  echo 
+done
 
 echo "Staging files..."
 
