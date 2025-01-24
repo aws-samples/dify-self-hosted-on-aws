@@ -1,11 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import {
-  AmazonLinuxCpuType,
   IVpc,
   InstanceClass,
   InstanceSize,
   InstanceType,
-  MachineImage,
   NatProvider,
   SubnetType,
   Vpc,
@@ -23,10 +21,15 @@ import { PublicHostedZone } from 'aws-cdk-lib/aws-route53';
 
 interface DifyOnAwsStackProps extends cdk.StackProps {
   /**
-   * The IP address ranges in CIDR notation that have access to the app.
+   * IPv4 address ranges in CIDR notation that have access to the app.
    * @example ['1.1.1.1/30']
    */
   allowedIPv4Cidrs: string[];
+
+  /**
+   * IPv6 address ranges in CIDR notation that have access to the app.
+   * @example ['2001:db8:0:7::5/64']
+   */
   allowedIPv6Cidrs: string[];
 
   /**
@@ -64,7 +67,8 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
   isRedisMultiAz?: boolean;
 
   /**
-   *
+   * If enabled, Aurora Serverless v2 automatically scales to zero with cold start around 10 seconds.
+   * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2-auto-pause.html
    * @default false
    */
   enableAuroraScalesToZero?: boolean;
