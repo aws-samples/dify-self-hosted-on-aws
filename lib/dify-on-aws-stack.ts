@@ -1,13 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import {
-  IVpc,
-  InstanceClass,
-  InstanceSize,
-  InstanceType,
-  NatProvider,
-  SubnetType,
-  Vpc,
-} from 'aws-cdk-lib/aws-ec2';
+import { IVpc, InstanceClass, InstanceSize, InstanceType, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Cluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
