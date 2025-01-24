@@ -18,7 +18,7 @@ echo
 
 REPLY="no"
 
-while [ $REPLY != "yes" ]
+while [ "$REPLY" != "yes" ]
 do
   # prompt user to confirm if the configuration is ready
   echo "Are you sure you want to deploy? Please check the configuration parameters in bin/cdk.ts."
@@ -29,9 +29,9 @@ done
 echo "Staging files..."
 
 # create archive of current files
-rm -f /tmp/$ZIP_FILE_NAME
-git ls-files | xargs zip -q /tmp/$ZIP_FILE_NAME
-aws s3 cp /tmp/$ZIP_FILE_NAME s3://${BUCKET_NAME}/code.zip
+rm -f "/tmp/$ZIP_FILE_NAME"
+git ls-files | xargs zip -q "/tmp/$ZIP_FILE_NAME"
+aws s3 cp "/tmp/$ZIP_FILE_NAME" s3://${BUCKET_NAME}/code.zip
 
 echo "Starting deployment..."
 
