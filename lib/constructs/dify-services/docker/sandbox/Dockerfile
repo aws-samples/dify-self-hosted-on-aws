@@ -1,3 +1,2 @@
-ARG DIFY_VERSION=latest
-FROM langgenius/dify-sandbox:${DIFY_VERSION}
+FROM scratch
 COPY ./sandbox-python-requirements.txt /dependencies/python-requirements.txt
