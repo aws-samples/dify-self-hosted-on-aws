@@ -37,12 +37,18 @@ export class ApiService extends Construct {
 
     const { cluster, alb, postgres, redis, storageBucket, debug = false } = props;
     const port = 5001;
+    const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
       cpu: 1024,
       // 512だとOOMが起きたので、増やした
       memoryLimitMiB: 2048,
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
+      volumes: [
+        {
+          name: volumeName,
+        },
+      ],
     });
 
     const encryptionSecret = new Secret(this, 'EncryptionSecret', {
@@ -100,7 +106,11 @@ export class ApiService extends Construct {
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
         // The sandbox service endpoint.
-        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194', // Fargate の task 内通信は localhost 宛,
+        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
+
+        INNER_API_KEY_FOR_PLUGIN: 'QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1',
+        PLUGIN_API_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
+        PLUGIN_DAEMON_URL: 'http://localhost:5002',
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -131,13 +141,15 @@ export class ApiService extends Construct {
       },
     });
 
-    taskDefinition.addContainer('Sandbox', {
+    const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
-        buildArgs: {
-          DIFY_VERSION: props.sandboxImageTag,
-        },
       }),
+      essential: false,
+    });
+
+    const sandboxContainer = taskDefinition.addContainer('Sandbox', {
+      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
       environment: {
         GIN_MODE: 'release',
         WORKER_TIMEOUT: '15',
@@ -173,6 +185,75 @@ export class ApiService extends Construct {
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
       },
+    });
+
+    sandboxFileContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: false,
+    });
+    sandboxContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: true,
+    });
+    sandboxContainer.addContainerDependencies({
+      container: sandboxFileContainer,
+      condition: ecs.ContainerDependencyCondition.COMPLETE,
+    });
+
+    taskDefinition.addContainer('PluginDaemon', {
+      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:0.0.1-local`),
+      environment: {
+        // The configurations of redis connection.
+        REDIS_HOST: redis.endpoint,
+        REDIS_PORT: redis.port.toString(),
+        REDIS_USE_SSL: 'true',
+        REDIS_DB: '0',
+
+        // The type of storage to use for storing user files.
+        STORAGE_TYPE: 's3',
+        S3_BUCKET_NAME: storageBucket.bucketName,
+        S3_REGION: Stack.of(storageBucket).region,
+
+        // pgvector configurations
+        VECTOR_STORE: 'pgvector',
+        PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
+
+        // The sandbox service endpoint.
+        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
+        DB_DATABASE: 'dify_plugin',
+        SERVER_PORT: '5002',
+        SERVER_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
+        MAX_PLUGIN_PACKAGE_SIZE: '52428800',
+        PPROF_ENABLED: 'false',
+        DIFY_INNER_API_URL: 'http://localhost:5001',
+        DIFY_INNER_API_KEY: 'QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1',
+        // PLUGIN_REMOTE_INSTALLING_HOST: '0.0.0.0',
+        // PLUGIN_REMOTE_INSTALLING_PORT: '5003',
+        PLUGIN_WORKING_PATH: '/app/storage/cwd',
+        FORCE_VERIFYING_SIGNATURE: 'true',
+      },
+      secrets: {
+        // The configurations of postgres database connection.
+        // It is consistent with the configuration in the 'db' service below.
+        DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        DB_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        PGVECTOR_USER: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        PGVECTOR_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        PGVECTOR_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        PGVECTOR_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
+        CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
+        SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      portMappings: [{ containerPort: 5002, name: 'plugin_daemon' }],
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {

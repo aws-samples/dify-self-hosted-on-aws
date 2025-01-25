@@ -147,6 +147,9 @@ export class DifyOnAwsStack extends cdk.Stack {
     const cluster = new Cluster(this, 'Cluster', {
       vpc,
       containerInsights: true,
+      defaultCloudMapNamespace: {
+        name: 'dify',
+      },
     });
 
     const postgres = new Postgres(this, 'Postgres', {

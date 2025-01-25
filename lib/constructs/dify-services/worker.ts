@@ -66,6 +66,9 @@ export class WorkerService extends Construct {
         // pgvector configurations
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
+
+        PLUGIN_API_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
+        PLUGIN_API_URL: 'http://plugin_daemon.dify:5002',
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
