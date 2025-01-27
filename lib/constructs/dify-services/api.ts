@@ -8,11 +8,11 @@ import { Redis } from '../redis';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
-import { Alb } from '../alb';
+import { IAlb } from '../alb';
 
 export interface ApiServiceProps {
   cluster: ICluster;
-  alb: Alb;
+  alb: IAlb;
 
   postgres: Postgres;
   redis: Redis;

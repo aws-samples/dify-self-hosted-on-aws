@@ -13,7 +13,7 @@ phases:
     commands:
       - echo Build started on `date`
       - npx cdk bootstrap
-      - npx cdk deploy --require-approval=never
+      - npx cdk deploy --require-approval=never --all
   post_build:
     commands:
       - echo Build completed on `date`

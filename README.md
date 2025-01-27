@@ -26,7 +26,7 @@ You must have the following dependencies installed to deploy this app:
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and IAM profile with Administrator policy
 
 ## Deploy
-You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`DifyOnAwsStackProps` interface](./lib/dify-on-aws-stack.ts) for all the available parameters.
+You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`EnvironmentProps` interface](./lib/environment-props.ts) for all the available parameters.
 
 Then you can run the following commands to deploy the entire stack.
 
@@ -36,7 +36,7 @@ npm ci
 # bootstrap the AWS account (required only once per account and region)
 npx cdk bootstrap
 # deploy the CDK stack
-npx cdk deploy
+npx cdk deploy --all
 ```
 
 The initial deployment usually takes about 20 minutes. After a successful deployment, you will get the URL for the app.

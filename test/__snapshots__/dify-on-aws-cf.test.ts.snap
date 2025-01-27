@@ -1,8 +1,265 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Snapshot test 1`] = `
+exports[`Snapshot test (with CloudFront) 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "Certificate4E7ABB08": {
+      "Properties": {
+        "DomainName": "*.example.com",
+        "DomainValidationOptions": [
+          {
+            "DomainName": "example.com",
+            "HostedZoneId": "DUMMY",
+          },
+        ],
+        "SubjectAlternativeNames": [
+          "example.com",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestUsEast1Stack/Certificate",
+          },
+        ],
+        "ValidationMethod": "DNS",
+      },
+      "Type": "AWS::CertificateManager::Certificate",
+    },
+    "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A": {
+      "DependsOn": [
+        "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "246cb27aa0cb552c81fdca061092d0905aa4d2529e8b52b5598c069f18be51d7.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameters",
+                    "ssm:ListTagsForResource",
+                    "ssm:GetParameters",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ssm:us-west-2:123456789012:parameter/cdk/exports/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ExportsWriteruswest209BD44F0A7CF058B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A",
+            "Arn",
+          ],
+        },
+        "WriterProps": {
+          "exports": {
+            "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B": {
+              "Fn::GetAtt": [
+                "WebAcl9BD21CA7",
+                "Arn",
+              ],
+            },
+            "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5": {
+              "Ref": "Certificate4E7ABB08",
+            },
+          },
+          "region": "us-west-2",
+        },
+      },
+      "Type": "Custom::CrossRegionExportWriter",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "WebAcl9BD21CA7": {
+      "Properties": {
+        "DefaultAction": {
+          "Block": {},
+        },
+        "Rules": [
+          {
+            "Action": {
+              "Allow": {},
+            },
+            "Name": "IpV4SetRule",
+            "Priority": 1,
+            "Statement": {
+              "IPSetReferenceStatement": {
+                "Arn": {
+                  "Fn::GetAtt": [
+                    "WebAclIPv4SetA3B84D27",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "IpV4SetRule",
+              "SampledRequestsEnabled": true,
+            },
+          },
+          {
+            "Action": {
+              "Allow": {},
+            },
+            "Name": "IpV6SetRule",
+            "Priority": 2,
+            "Statement": {
+              "IPSetReferenceStatement": {
+                "Arn": {
+                  "Fn::GetAtt": [
+                    "WebAclIPv6SetEBDEE314",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "IpV6SetRule",
+              "SampledRequestsEnabled": true,
+            },
+          },
+        ],
+        "Scope": "CLOUDFRONT",
+        "VisibilityConfig": {
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "DifyWebAcl-c8201431ad5298a909b974e2cb65af9c87dd0d6c2a",
+          "SampledRequestsEnabled": true,
+        },
+      },
+      "Type": "AWS::WAFv2::WebACL",
+    },
+    "WebAclIPv4SetA3B84D27": {
+      "Properties": {
+        "Addresses": [
+          "0.0.0.0/0",
+        ],
+        "IPAddressVersion": "IPV4",
+        "Scope": "CLOUDFRONT",
+      },
+      "Type": "AWS::WAFv2::IPSet",
+    },
+    "WebAclIPv6SetEBDEE314": {
+      "Properties": {
+        "Addresses": [
+          "::/0",
+        ],
+        "IPAddressVersion": "IPV6",
+        "Scope": "CLOUDFRONT",
+      },
+      "Type": "AWS::WAFv2::IPSet",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
+
+exports[`Snapshot test (with CloudFront) 2`] = `
 {
   "Description": "Dify on AWS (uksb-zea0rh9k0v)",
+  "Mappings": {
+    "AWSCloudFrontPartitionHostedZoneIdMap": {
+      "aws": {
+        "zoneId": "Z2FDTNDATAQYW2",
+      },
+      "aws-cn": {
+        "zoneId": "Z3RFFRIM2A3IF5",
+      },
+    },
+  },
   "Outputs": {
     "DifyUrl": {
       "Value": "https://dify.example.com",
@@ -320,23 +577,18 @@ exports[`Snapshot test 1`] = `
       "Properties": {
         "AliasTarget": {
           "DNSName": {
-            "Fn::Join": [
-              "",
-              [
-                "dualstack.",
-                {
-                  "Fn::GetAtt": [
-                    "AlbC1372A32",
-                    "DNSName",
-                  ],
-                },
-              ],
+            "Fn::GetAtt": [
+              "AlbDistribution42730BA5",
+              "DomainName",
             ],
           },
           "HostedZoneId": {
-            "Fn::GetAtt": [
-              "AlbC1372A32",
-              "CanonicalHostedZoneID",
+            "Fn::FindInMap": [
+              "AWSCloudFrontPartitionHostedZoneIdMap",
+              {
+                "Ref": "AWS::Partition",
+              },
+              "zoneId",
             ],
           },
         },
@@ -424,34 +676,79 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
-    "AlbCertificate78F220B5": {
+    "AlbDistribution42730BA5": {
       "Properties": {
-        "DomainName": "dify.example.com",
-        "DomainValidationOptions": [
-          {
-            "DomainName": "dify.example.com",
-            "HostedZoneId": "DUMMY",
+        "DistributionConfig": {
+          "Aliases": [
+            "dify.example.com",
+          ],
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PUT",
+              "PATCH",
+              "POST",
+              "DELETE",
+            ],
+            "CachePolicyId": "4cc15a8a-d715-48a4-82b8-cc0b614638fe",
+            "Compress": true,
+            "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+            "TargetOriginId": "TestStackAlbDistributionOrigin1D9B11DF5",
+            "ViewerProtocolPolicy": "redirect-to-https",
           },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Alb/Certificate",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Logging": {
+            "Bucket": {
+              "Fn::GetAtt": [
+                "AccessLogBucketDA470295",
+                "RegionalDomainName",
+              ],
+            },
+            "Prefix": "dify-cloudfront/",
           },
-        ],
-        "ValidationMethod": "DNS",
+          "Origins": [
+            {
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "http-only",
+                "OriginSSLProtocols": [
+                  "TLSv1.2",
+                ],
+              },
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "AlbC1372A32",
+                  "DNSName",
+                ],
+              },
+              "Id": "TestStackAlbDistributionOrigin1D9B11DF5",
+            },
+          ],
+          "ViewerCertificate": {
+            "AcmCertificateArn": {
+              "Fn::GetAtt": [
+                "ExportsReader8B249524",
+                "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5",
+              ],
+            },
+            "MinimumProtocolVersion": "TLSv1.2_2021",
+            "SslSupportMethod": "sni-only",
+          },
+          "WebACLId": {
+            "Fn::GetAtt": [
+              "ExportsReader8B249524",
+              "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B",
+            ],
+          },
+        },
       },
-      "Type": "AWS::CertificateManager::Certificate",
+      "Type": "AWS::CloudFront::Distribution",
     },
     "AlbListener318AEEBA": {
       "Properties": {
-        "Certificates": [
-          {
-            "CertificateArn": {
-              "Ref": "AlbCertificate78F220B5",
-            },
-          },
-        ],
         "DefaultActions": [
           {
             "FixedResponseConfig": {
@@ -463,8 +760,8 @@ exports[`Snapshot test 1`] = `
         "LoadBalancerArn": {
           "Ref": "AlbC1372A32",
         },
-        "Port": 443,
-        "Protocol": "HTTPS",
+        "Port": 80,
+        "Protocol": "HTTP",
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
@@ -561,17 +858,10 @@ exports[`Snapshot test 1`] = `
         "SecurityGroupIngress": [
           {
             "CidrIp": "0.0.0.0/0",
-            "Description": "from 0.0.0.0/0:443",
-            "FromPort": 443,
+            "Description": "from 0.0.0.0/0:80",
+            "FromPort": 80,
             "IpProtocol": "tcp",
-            "ToPort": 443,
-          },
-          {
-            "CidrIpv6": "::/0",
-            "Description": "from ::/0:443",
-            "FromPort": 443,
-            "IpProtocol": "tcp",
-            "ToPort": 443,
+            "ToPort": 80,
           },
         ],
         "VpcId": {
@@ -1474,6 +1764,80 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ECS::Cluster",
     },
+    "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68": {
+      "DependsOn": [
+        "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
+          "S3Key": "8acca95a9957d02a9f3ec124c9869c5d5b70a7fb3e332120850781ecc9363037.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:AddTagsToResource",
+                    "ssm:RemoveTagsFromResource",
+                    "ssm:GetParameters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:us-west-2:123456789012:parameter/cdk/exports/TestStack/*",
+                      ],
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
       "DependsOn": [
         "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
@@ -1529,6 +1893,27 @@ exports[`Snapshot test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ExportsReader8B249524": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ReaderProps": {
+          "imports": {
+            "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B": "{{resolve:ssm:/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B}}",
+            "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5": "{{resolve:ssm:/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5}}",
+          },
+          "prefix": "TestStack",
+          "region": "us-west-2",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CrossRegionExportReader",
+      "UpdateReplacePolicy": "Delete",
     },
     "PostgresCluster53E5BDAB": {
       "DeletionPolicy": "Delete",

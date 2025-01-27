@@ -1,5 +1,14 @@
 import { Duration } from 'aws-cdk-lib';
-import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
+import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import {
+  AllowedMethods,
+  CachePolicy,
+  Distribution,
+  OriginProtocolPolicy,
+  OriginRequestPolicy,
+  ViewerProtocolPolicy,
+} from 'aws-cdk-lib/aws-cloudfront';
+import { LoadBalancerV2Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
 import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import {
@@ -11,14 +20,13 @@ import {
   ListenerCondition,
 } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
-import { LoadBalancerTarget } from 'aws-cdk-lib/aws-route53-targets';
+import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { IAlb } from './alb';
 
 export interface AlbProps {
   vpc: IVpc;
-  allowedIPv4Cidrs?: string[];
-  allowedIPv6Cidrs?: string[];
 
   /**
    * @default 'dify'
@@ -31,14 +39,13 @@ export interface AlbProps {
   hostedZone?: IHostedZone;
 
   accessLogBucket: IBucket;
+
+  cloudFrontCertificate?: ICertificate;
+
+  cloudFrontWebAclArn?: string;
 }
 
-export interface IAlb {
-  url: string;
-  addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]): void;
-}
-
-export class Alb extends Construct implements IAlb {
+export class AlbWithCloudFront extends Construct implements IAlb {
   public url: string;
 
   private listenerPriority = 1;
@@ -48,20 +55,8 @@ export class Alb extends Construct implements IAlb {
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
 
-    const {
-      vpc,
-      subDomain = 'dify',
-      accessLogBucket,
-      allowedIPv4Cidrs = ['0.0.0.0/0'],
-      allowedIPv6Cidrs = ['::/0'],
-    } = props;
-    const protocol = props.hostedZone ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP;
-    const certificate = props.hostedZone
-      ? new Certificate(this, 'Certificate', {
-          domainName: `${subDomain}.${props.hostedZone.zoneName}`,
-          validation: CertificateValidation.fromDns(props.hostedZone),
-        })
-      : undefined;
+    const { vpc, subDomain = 'dify', accessLogBucket } = props;
+    const protocol = ApplicationProtocol.HTTP;
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
@@ -75,18 +70,38 @@ export class Alb extends Construct implements IAlb {
       protocol,
       open: false,
       defaultAction: ListenerAction.fixedResponse(400),
-      certificates: certificate ? [certificate] : undefined,
     });
-    allowedIPv4Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
-    allowedIPv6Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv6(cidr)));
+    // TODO: Use VPC Origins
+    ['0.0.0.0/0'].forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+
+    let distribution = new Distribution(this, 'Distribution', {
+      ...(props.hostedZone
+        ? {
+            domainNames: [`${subDomain}.${props.hostedZone.zoneName}`],
+            certificate: props.cloudFrontCertificate,
+          }
+        : {}),
+      webAclId: props.cloudFrontWebAclArn,
+      defaultBehavior: {
+        origin: new LoadBalancerV2Origin(alb, { protocolPolicy: OriginProtocolPolicy.HTTP_ONLY }),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        compress: true,
+        cachePolicy: CachePolicy.USE_ORIGIN_CACHE_CONTROL_HEADERS_QUERY_STRINGS,
+        allowedMethods: AllowedMethods.ALLOW_ALL,
+        originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
+      },
+      logBucket: accessLogBucket,
+      logFilePrefix: 'dify-cloudfront/',
+    });
+    this.url = `https://${distribution.domainName}`;
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {
         zone: props.hostedZone,
         recordName: subDomain,
-        target: RecordTarget.fromAlias(new LoadBalancerTarget(alb)),
+        target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
       });
-      this.url = `${protocol.toLowerCase()}://${subDomain}.${props.hostedZone.zoneName}`;
+      this.url = `https://${subDomain}.${props.hostedZone.zoneName}`;
     }
 
     this.vpc = vpc;
