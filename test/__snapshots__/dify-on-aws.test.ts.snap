@@ -3,130 +3,6 @@
 exports[`Snapshot test 1`] = `
 {
   "Description": "Dify on AWS (uksb-zea0rh9k0v)",
-  "Mappings": {
-    "LatestNodeRuntimeMap": {
-      "af-south-1": {
-        "value": "nodejs20.x",
-      },
-      "ap-east-1": {
-        "value": "nodejs20.x",
-      },
-      "ap-northeast-1": {
-        "value": "nodejs20.x",
-      },
-      "ap-northeast-2": {
-        "value": "nodejs20.x",
-      },
-      "ap-northeast-3": {
-        "value": "nodejs20.x",
-      },
-      "ap-south-1": {
-        "value": "nodejs20.x",
-      },
-      "ap-south-2": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-1": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-2": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-3": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-4": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-5": {
-        "value": "nodejs20.x",
-      },
-      "ap-southeast-7": {
-        "value": "nodejs20.x",
-      },
-      "ca-central-1": {
-        "value": "nodejs20.x",
-      },
-      "ca-west-1": {
-        "value": "nodejs20.x",
-      },
-      "cn-north-1": {
-        "value": "nodejs18.x",
-      },
-      "cn-northwest-1": {
-        "value": "nodejs18.x",
-      },
-      "eu-central-1": {
-        "value": "nodejs20.x",
-      },
-      "eu-central-2": {
-        "value": "nodejs20.x",
-      },
-      "eu-isoe-west-1": {
-        "value": "nodejs18.x",
-      },
-      "eu-north-1": {
-        "value": "nodejs20.x",
-      },
-      "eu-south-1": {
-        "value": "nodejs20.x",
-      },
-      "eu-south-2": {
-        "value": "nodejs20.x",
-      },
-      "eu-west-1": {
-        "value": "nodejs20.x",
-      },
-      "eu-west-2": {
-        "value": "nodejs20.x",
-      },
-      "eu-west-3": {
-        "value": "nodejs20.x",
-      },
-      "il-central-1": {
-        "value": "nodejs20.x",
-      },
-      "me-central-1": {
-        "value": "nodejs20.x",
-      },
-      "me-south-1": {
-        "value": "nodejs20.x",
-      },
-      "mx-central-1": {
-        "value": "nodejs20.x",
-      },
-      "sa-east-1": {
-        "value": "nodejs20.x",
-      },
-      "us-east-1": {
-        "value": "nodejs20.x",
-      },
-      "us-east-2": {
-        "value": "nodejs20.x",
-      },
-      "us-gov-east-1": {
-        "value": "nodejs18.x",
-      },
-      "us-gov-west-1": {
-        "value": "nodejs18.x",
-      },
-      "us-iso-east-1": {
-        "value": "nodejs18.x",
-      },
-      "us-iso-west-1": {
-        "value": "nodejs18.x",
-      },
-      "us-isob-east-1": {
-        "value": "nodejs18.x",
-      },
-      "us-west-1": {
-        "value": "nodejs20.x",
-      },
-      "us-west-2": {
-        "value": "nodejs20.x",
-      },
-    },
-  },
   "Outputs": {
     "DifyUrl": {
       "Value": "https://dify.example.com",
@@ -147,9 +23,7 @@ exports[`Snapshot test 1`] = `
       ],
       "Properties": {
         "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
           "S3Key": "ce2f3595a340d6c519a65888ef97e3b9b64f053f83608e32cc28162e22d7d99a.zip",
         },
         "Handler": "index.handler",
@@ -159,15 +33,7 @@ exports[`Snapshot test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
@@ -234,15 +100,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":rds:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":cluster:",
+                    ":rds:us-west-2:123456789012:cluster:",
                     {
                       "Ref": "PostgresCluster53E5BDAB",
                     },
@@ -261,6 +119,202 @@ exports[`Snapshot test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AccessLogBucketAutoDeleteObjectsCustomResource01AB31E8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AccessLogBucketPolicyF52D2D01",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "AccessLogBucketDA470295",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AccessLogBucketDA470295": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "ObjectWriter",
+            },
+          ],
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AccessLogBucketPolicyF52D2D01": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "AccessLogBucketDA470295",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AccessLogBucketDA470295",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AccessLogBucketDA470295",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:PutBucketPolicy",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AccessLogBucketDA470295",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AccessLogBucketDA470295",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:PutObject",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::797873946194:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "AccessLogBucketDA470295",
+                        "Arn",
+                      ],
+                    },
+                    "/dify-alb/AWSLogs/123456789012/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:PutObject",
+              "Condition": {
+                "StringEquals": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "delivery.logs.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "AccessLogBucketDA470295",
+                        "Arn",
+                      ],
+                    },
+                    "/dify-alb/AWSLogs/123456789012/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "delivery.logs.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccessLogBucketDA470295",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
     },
     "AlbAliasRecordEE9D42DE": {
       "Properties": {
@@ -286,7 +340,7 @@ exports[`Snapshot test 1`] = `
             ],
           },
         },
-        "HostedZoneId": "Z0123456789ABCDEFG",
+        "HostedZoneId": "DUMMY",
         "Name": "dify.example.com.",
         "Type": "A",
       },
@@ -322,6 +376,7 @@ exports[`Snapshot test 1`] = `
     },
     "AlbC1372A32": {
       "DependsOn": [
+        "AccessLogBucketPolicyF52D2D01",
         "VpcPublicSubnet1DefaultRoute3DA9E72A",
         "VpcPublicSubnet1RouteTableAssociation97140677",
         "VpcPublicSubnet2DefaultRoute97F91067",
@@ -332,6 +387,20 @@ exports[`Snapshot test 1`] = `
           {
             "Key": "deletion_protection.enabled",
             "Value": "false",
+          },
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "access_logs.s3.bucket",
+            "Value": {
+              "Ref": "AccessLogBucketDA470295",
+            },
+          },
+          {
+            "Key": "access_logs.s3.prefix",
+            "Value": "dify-alb",
           },
         ],
         "Scheme": "internet-facing",
@@ -361,7 +430,7 @@ exports[`Snapshot test 1`] = `
         "DomainValidationOptions": [
           {
             "DomainName": "dify.example.com",
-            "HostedZoneId": "Z0123456789ABCDEFG",
+            "HostedZoneId": "DUMMY",
           },
         ],
         "Tags": [
@@ -783,9 +852,7 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "S3_REGION",
-                "Value": {
-                  "Ref": "AWS::Region",
-                },
+                "Value": "us-west-2",
               },
               {
                 "Name": "DB_DATABASE",
@@ -822,9 +889,7 @@ exports[`Snapshot test 1`] = `
                 "awslogs-group": {
                   "Ref": "ApiServiceTaskMainLogGroup4A8BF33F",
                 },
-                "awslogs-region": {
-                  "Ref": "AWS::Region",
-                },
+                "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
@@ -964,15 +1029,7 @@ exports[`Snapshot test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":ssm:",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":parameter/",
+                      ":ssm:us-west-2:123456789012:parameter/",
                       {
                         "Ref": "RedisBrokerUrlA8582E06",
                       },
@@ -997,7 +1054,7 @@ exports[`Snapshot test 1`] = `
           {
             "Essential": false,
             "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
+              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
             },
             "MountPoints": [
               {
@@ -1045,9 +1102,7 @@ exports[`Snapshot test 1`] = `
                 "awslogs-group": {
                   "Ref": "ApiServiceTaskSandboxLogGroupDDF292A0",
                 },
-                "awslogs-region": {
-                  "Ref": "AWS::Region",
-                },
+                "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
@@ -1087,7 +1142,7 @@ exports[`Snapshot test 1`] = `
             ],
             "Essential": true,
             "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:64ce6f060d671ff40122ebae64f14d89fd2d3eb82237fae0284034b4de27d0d9",
+              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:64ce6f060d671ff40122ebae64f14d89fd2d3eb82237fae0284034b4de27d0d9",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -1095,9 +1150,7 @@ exports[`Snapshot test 1`] = `
                 "awslogs-group": {
                   "Ref": "ApiServiceTaskExternalKnowledgeBaseAPILogGroupE8D1DD85",
                 },
-                "awslogs-region": {
-                  "Ref": "AWS::Region",
-                },
+                "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
@@ -1193,15 +1246,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":parameter/",
+                    ":ssm:us-west-2:123456789012:parameter/",
                     {
                       "Ref": "RedisBrokerUrlA8582E06",
                     },
@@ -1234,18 +1279,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ecr:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":repository/",
-                    {
-                      "Fn::Sub": "cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}",
-                    },
+                    ":ecr:us-west-2:123456789012:repository/cdk-hnb659fds-container-assets-123456789012-us-west-2",
                   ],
                 ],
               },
@@ -1446,9 +1480,7 @@ exports[`Snapshot test 1`] = `
       ],
       "Properties": {
         "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
           "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
         },
         "Description": {
@@ -1457,7 +1489,7 @@ exports[`Snapshot test 1`] = `
             [
               "Lambda function for auto-deleting objects in ",
               {
-                "Ref": "StorageBucket19DB2FF8",
+                "Ref": "AccessLogBucketDA470295",
               },
               " S3 bucket.",
             ],
@@ -1471,15 +1503,7 @@ exports[`Snapshot test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1736,15 +1760,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":rds:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":cluster:",
+                    ":rds:us-west-2:123456789012:cluster:",
                     {
                       "Ref": "PostgresCluster53E5BDAB",
                     },
@@ -1779,15 +1795,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1799,15 +1807,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1830,15 +1830,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1850,15 +1842,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1885,15 +1869,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1905,15 +1881,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1936,15 +1904,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1956,15 +1916,7 @@ exports[`Snapshot test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":rds:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":cluster:",
+              ":rds:us-west-2:123456789012:cluster:",
               {
                 "Ref": "PostgresCluster53E5BDAB",
               },
@@ -1991,15 +1943,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":rds:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":cluster:",
+                    ":rds:us-west-2:123456789012:cluster:",
                     {
                       "Ref": "PostgresCluster53E5BDAB",
                     },
@@ -2426,14 +2370,7 @@ exports[`Snapshot test 1`] = `
     },
     "VpcPrivateSubnet1Subnet536B997A": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "dummy1a",
         "CidrBlock": "10.0.128.0/18",
         "MapPublicIpOnLaunch": false,
         "Tags": [
@@ -2495,14 +2432,7 @@ exports[`Snapshot test 1`] = `
     },
     "VpcPrivateSubnet2Subnet3788AAA1": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "dummy1b",
         "CidrBlock": "10.0.192.0/18",
         "MapPublicIpOnLaunch": false,
         "Tags": [
@@ -2603,14 +2533,7 @@ exports[`Snapshot test 1`] = `
     },
     "VpcPublicSubnet1Subnet5C2D37C4": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "dummy1a",
         "CidrBlock": "10.0.0.0/18",
         "MapPublicIpOnLaunch": true,
         "Tags": [
@@ -2711,14 +2634,7 @@ exports[`Snapshot test 1`] = `
     },
     "VpcPublicSubnet2Subnet691E08A3": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "dummy1b",
         "CidrBlock": "10.0.64.0/18",
         "MapPublicIpOnLaunch": true,
         "Tags": [
@@ -2959,9 +2875,7 @@ exports[`Snapshot test 1`] = `
                 "awslogs-group": {
                   "Ref": "WebServiceTaskMainLogGroup38DB76FC",
                 },
-                "awslogs-region": {
-                  "Ref": "AWS::Region",
-                },
+                "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
@@ -3196,9 +3110,7 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "S3_REGION",
-                "Value": {
-                  "Ref": "AWS::Region",
-                },
+                "Value": "us-west-2",
               },
               {
                 "Name": "DB_DATABASE",
@@ -3221,9 +3133,7 @@ exports[`Snapshot test 1`] = `
                 "awslogs-group": {
                   "Ref": "WorkerServiceTaskMainLogGroupA90F15B8",
                 },
-                "awslogs-region": {
-                  "Ref": "AWS::Region",
-                },
+                "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
@@ -3357,15 +3267,7 @@ exports[`Snapshot test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":ssm:",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":parameter/",
+                      ":ssm:us-west-2:123456789012:parameter/",
                       {
                         "Ref": "RedisBrokerUrlA8582E06",
                       },
@@ -3460,15 +3362,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":parameter/",
+                    ":ssm:us-west-2:123456789012:parameter/",
                     {
                       "Ref": "RedisBrokerUrlA8582E06",
                     },

@@ -1,17 +1,45 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
+import { UsEast1Stack } from '../lib/us-east-1-stack';
+import { EnvironmentProps } from '../lib/environment-props';
 
 test('Snapshot test', () => {
+  // GIVEN
   const app = new cdk.App();
-  const stack = new DifyOnAwsStack(app, 'TestStack', {
+
+  const props: EnvironmentProps = {
+    awsRegion: 'us-west-2',
+    awsAccount: '123456789012',
     allowedIPv4Cidrs: ['0.0.0.0/0'],
     allowedIPv6Cidrs: ['::/0'],
     difySandboxImageTag: '0.2.4',
     domainName: 'example.com',
-    hostedZoneId: 'Z0123456789ABCDEFG',
     allowAnySyscalls: true,
+    useCloudFront: false,
+  };
+
+  // WHEN
+  let virginia: UsEast1Stack | undefined = undefined;
+  if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs))) {
+    virginia = new UsEast1Stack(app, 'TestUsEast1Stack', {
+      env: { region: 'us-east-1', account: props.awsAccount },
+      domainName: props.domainName,
+      allowedIpV4AddressRanges: props.allowedIPv4Cidrs,
+      allowedIpV6AddressRanges: props.allowedIPv6Cidrs,
+    });
+  }
+
+  const main = new DifyOnAwsStack(app, 'TestStack', {
+    env: { region: props.awsRegion, account: props.awsAccount },
+    ...props,
+    cloudFrontCertificate: virginia?.certificate,
+    cloudFrontWebAclArn: virginia?.webAclArn,
   });
-  const template = Template.fromStack(stack);
+
+  const template = Template.fromStack(main);
+
+  //THEN
+  expect(virginia).toBeUndefined();
   expect(template).toMatchSnapshot();
 });
