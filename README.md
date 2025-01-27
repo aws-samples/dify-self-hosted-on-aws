@@ -52,6 +52,19 @@ DifyOnAwsStack.DifyUrl = https://dify.example.com
 
 You can open the URL with a browser and get started!
 
+### Deploy from CloudShell
+
+When you deploy from CloudShell, you can use a dedicated script that works even in an environment with limited storage space.
+
+In CloudShell, run the following commands:
+
+```sh
+git clone https://github.com/aws-samples/dify-self-hosted-on-aws.git
+./simple-deploy.sh
+```
+
+Then follow the prompts from the shell script. You will finally get the `DifyOnAwsStack.DifyUrl` output in the CLI.
+
 ## Tips
 
 Here is the information that might help when you use Dify on AWS.
