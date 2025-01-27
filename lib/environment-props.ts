@@ -1,3 +1,6 @@
+/**
+ * The configuration parameters for a Dify environment
+ */
 export interface EnvironmentProps {
   /**
    * The AWS region where you want to deploy this system.

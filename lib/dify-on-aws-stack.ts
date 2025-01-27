@@ -9,90 +9,27 @@ import { WebService } from './constructs/dify-services/web';
 import { ApiService } from './constructs/dify-services/api';
 import { WorkerService } from './constructs/dify-services/worker';
 import { Alb } from './constructs/alb';
-import { HostedZone, PublicHostedZone } from 'aws-cdk-lib/aws-route53';
+import { HostedZone } from 'aws-cdk-lib/aws-route53';
+import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
+import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 
+/**
+ * Mostly inherited from EnvironmentProps
+ */
 export interface DifyOnAwsStackProps extends cdk.StackProps {
-  /**
-   * IPv4 address ranges in CIDR notation that have access to the app.
-   * @example ['1.1.1.1/30']
-   */
-  allowedIPv4Cidrs?: string[];
-
-  /**
-   * IPv6 address ranges in CIDR notation that have access to the app.
-   * @example ['2001:db8:0:7::5/64']
-   */
-  allowedIPv6Cidrs?: string[];
-
-  /**
-   * Use t4g.nano NAT instances instead of NAT Gateway.
-   * Ignored when you import an existing VPC.
-   * @default false
-   */
-  cheapVpc?: boolean;
-
-  /**
-   * If set, it imports the existing VPC instead of creating a new one.
-   * The VPC must have one or more public and private subnets.
-   * @default create a new VPC
-   */
-  vpcId?: string;
-
-  /**
-   * The domain name you use for Dify's service URL.
-   * You must own a Route53 public hosted zone for the domain in your account.
-   * @default No custom domain is used.
-   */
-  domainName?: string;
-
-  /**
-   * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
-   * It is generally recommended to enable this, but you can disable it to minimize AWS cost.
-   * @default true
-   */
-  isRedisMultiAz?: boolean;
-
-  /**
-   * If enabled, Aurora Serverless v2 automatically scales to zero with cold start around 10 seconds.
-   * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2-auto-pause.html
-   * @default false
-   */
-  enableAuroraScalesToZero?: boolean;
-
-  /**
-   * The image tag to deploy Dify container images (api=worker and web).
-   * The images are pulled from [here](https://hub.docker.com/u/langgenius).
-   *
-   * It is recommended to set this to a fixed version,
-   * because otherwise an unexpected version is pulled on a ECS service's scaling activity.
-   * @default "latest"
-   */
-  difyImageTag?: string;
-
-  /**
-   * The image tag to deploy the Dify sandbox container image.
-   * The image is pulled from [here](https://hub.docker.com/r/langgenius/dify-sandbox/tags).
-   *
-   * @default "latest"
-   */
-  difySandboxImageTag?: string;
-
-  /**
-   * If true, Dify sandbox allows any system calls when executing code.
-   * Do NOT set this property if you are not sure code executed in the sandbox
-   * can be trusted or not.
-   *
-   * @default false
-   */
-  allowAnySyscalls?: boolean;
-
-  /**
-   * Deploy CloudFront in front of ALB.
-   * Recommended to enable it if you do not own domain.
-   *
-   * @default true
-   */
-  useCloudFront?: boolean;
+  readonly allowedIPv4Cidrs?: string[];
+  readonly allowedIPv6Cidrs?: string[];
+  readonly cheapVpc?: boolean;
+  readonly vpcId?: string;
+  readonly domainName?: string;
+  readonly isRedisMultiAz?: boolean;
+  readonly enableAuroraScalesToZero?: boolean;
+  readonly difyImageTag?: string;
+  readonly difySandboxImageTag?: string;
+  readonly allowAnySyscalls?: boolean;
+  readonly useCloudFront?: boolean;
+  readonly cloudFrontWebAclArn?: string;
+  readonly cloudFrontCertificate?: ICertificate;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -174,14 +111,21 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = new Alb(this, 'Alb', {
-      vpc,
-      allowedIPv4Cidrs: props.allowedIPv4Cidrs,
-      allowedIPv6Cidrs: props.allowedIPv6Cidrs,
-      hostedZone,
-      accessLogBucket,
-      useCloudFront,
-    });
+    const alb = useCloudFront
+      ? new AlbWithCloudFront(this, 'Alb', {
+          vpc,
+          hostedZone,
+          accessLogBucket,
+          cloudFrontCertificate: props.cloudFrontCertificate,
+          cloudFrontWebAclArn: props.cloudFrontWebAclArn,
+        })
+      : new Alb(this, 'Alb', {
+          vpc,
+          allowedIPv4Cidrs: props.allowedIPv4Cidrs,
+          allowedIPv6Cidrs: props.allowedIPv6Cidrs,
+          hostedZone,
+          accessLogBucket,
+        });
 
     const api = new ApiService(this, 'ApiService', {
       cluster,

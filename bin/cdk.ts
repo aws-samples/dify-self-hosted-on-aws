@@ -23,8 +23,10 @@ const props: EnvironmentProps = {
 };
 
 const app = new cdk.App();
+
+let virginia: UsEast1Stack | undefined = undefined;
 if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs))) {
-  const stack = new UsEast1Stack(app, 'DifyonAwsUsEast1Stack', {
+  virginia = new UsEast1Stack(app, 'DifyOnAwsUsEast1Stack', {
     env: { region: 'us-east-1', account: props.awsAccount },
     domainName: props.domainName,
     allowedIpV4AddressRanges: props.allowedIPv4Cidrs,
@@ -35,4 +37,6 @@ if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs 
 new DifyOnAwsStack(app, 'DifyOnAwsStack', {
   env: { region: props.awsRegion, account: props.awsAccount },
   ...props,
+  cloudFrontCertificate: virginia?.certificate,
+  cloudFrontWebAclArn: virginia?.webAclArn,
 });
