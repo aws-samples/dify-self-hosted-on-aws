@@ -36,7 +36,7 @@ npm ci
 # bootstrap the AWS account (required only once per account and region)
 npx cdk bootstrap
 # deploy the CDK stack
-npx cdk deploy
+npx cdk deploy --all
 ```
 
 The initial deployment usually takes about 20 minutes. After a successful deployment, you will get the URL for the app.

@@ -4,25 +4,25 @@ import { Cluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
 import { Redis } from './constructs/redis';
-import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { WebService } from './constructs/dify-services/web';
 import { ApiService } from './constructs/dify-services/api';
 import { WorkerService } from './constructs/dify-services/worker';
 import { Alb } from './constructs/alb';
-import { PublicHostedZone } from 'aws-cdk-lib/aws-route53';
+import { HostedZone, PublicHostedZone } from 'aws-cdk-lib/aws-route53';
 
-interface DifyOnAwsStackProps extends cdk.StackProps {
+export interface DifyOnAwsStackProps extends cdk.StackProps {
   /**
    * IPv4 address ranges in CIDR notation that have access to the app.
    * @example ['1.1.1.1/30']
    */
-  allowedIPv4Cidrs: string[];
+  allowedIPv4Cidrs?: string[];
 
   /**
    * IPv6 address ranges in CIDR notation that have access to the app.
    * @example ['2001:db8:0:7::5/64']
    */
-  allowedIPv6Cidrs: string[];
+  allowedIPv6Cidrs?: string[];
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
@@ -44,12 +44,6 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
    * @default No custom domain is used.
    */
   domainName?: string;
-
-  /**
-   * The ID of Route53 hosted zone for the domain.
-   * @default No custom domain is used.
-   */
-  hostedZoneId?: string;
 
   /**
    * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
@@ -91,6 +85,14 @@ interface DifyOnAwsStackProps extends cdk.StackProps {
    * @default false
    */
   allowAnySyscalls?: boolean;
+
+  /**
+   * Deploy CloudFront in front of ALB.
+   * Recommended to enable it if you do not own domain.
+   *
+   * @default true
+   */
+  useCloudFront?: boolean;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -101,6 +103,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       difyImageTag: imageTag = 'latest',
       difySandboxImageTag: sandboxImageTag = 'latest',
       allowAnySyscalls = false,
+      useCloudFront = true,
     } = props;
 
     let vpc: IVpc;
@@ -132,17 +135,25 @@ export class DifyOnAwsStack extends cdk.Stack {
       });
     }
 
-    if ((props.hostedZoneId != null) !== (props.domainName != null)) {
-      throw new Error(`You have to set both hostedZoneId and domainName! Or leave both blank.`);
+    if (!props.useCloudFront && props.domainName == null) {
+      cdk.Annotations.of(this).addWarningV2(
+        'ALBWithoutEncryption',
+        'You are exposing ALB to the Internet without TLS encryption. Recommended to set useCloudFront: true or domainName property.',
+      );
     }
 
-    const hostedZone =
-      props.domainName && props.hostedZoneId
-        ? PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-            zoneName: props.domainName,
-            hostedZoneId: props.hostedZoneId,
-          })
-        : undefined;
+    const hostedZone = props.domainName
+      ? HostedZone.fromLookup(this, 'HostedZone', {
+          domainName: props.domainName,
+        })
+      : undefined;
+
+    const accessLogBucket = new Bucket(this, 'AccessLogBucket', {
+      enforceSSL: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      autoDeleteObjects: true,
+    });
 
     const cluster = new Cluster(this, 'Cluster', {
       vpc,
@@ -168,6 +179,8 @@ export class DifyOnAwsStack extends cdk.Stack {
       allowedIPv4Cidrs: props.allowedIPv4Cidrs,
       allowedIPv6Cidrs: props.allowedIPv6Cidrs,
       hostedZone,
+      accessLogBucket,
+      useCloudFront,
     });
 
     const api = new ApiService(this, 'ApiService', {
