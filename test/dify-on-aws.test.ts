@@ -21,7 +21,7 @@ test('Snapshot test', () => {
 
   // WHEN
   let virginia: UsEast1Stack | undefined = undefined;
-  if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs))) {
+  if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {
     virginia = new UsEast1Stack(app, 'TestUsEast1Stack', {
       env: { region: 'us-east-1', account: props.awsAccount },
       crossRegionReferences: true,

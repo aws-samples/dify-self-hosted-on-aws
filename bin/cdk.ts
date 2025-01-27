@@ -6,7 +6,7 @@ import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
 const props: EnvironmentProps = {
-  awsRegion: 'ap-northeast-1',
+  awsRegion: 'us-west-2',
   // Set Dify version
   difyImageTag: '0.14.2',
 
@@ -15,18 +15,15 @@ const props: EnvironmentProps = {
   // cheapVpc: true,
   // enableAuroraScalesToZero: true,
 
-  // Please see DifyOnAwsStackProps in lib/dify-on-aws-stack.ts for all the available properties
-  allowAnySyscalls: true,
-  isRedisMultiAz: false,
-  cheapVpc: true,
-  enableAuroraScalesToZero: true,
   useCloudFront: false,
+
+  // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };
 
 const app = new cdk.App();
 
 let virginia: UsEast1Stack | undefined = undefined;
-if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs))) {
+if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {
   virginia = new UsEast1Stack(app, 'DifyOnAwsUsEast1Stack', {
     env: { region: 'us-east-1', account: props.awsAccount },
     crossRegionReferences: true,
