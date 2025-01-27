@@ -3,9 +3,9 @@ set -e
 
 # # the stack name must be unique enough
 STACK_NAME="DifySimpleDeployStack"
-ZIP_FILE_NAME="dify-on-aws-files.zip"
+ZIP_FILE_PATH="/tmp/dify-on-aws-files.zip"
 
-echo "Preparing CloudFormation stack $STACK_NAME..."
+echo "⏱️ Preparing CloudFormation stack $STACK_NAME..."
 
 npm ci
 npm run synth
@@ -31,14 +31,14 @@ do
   echo 
 done
 
-echo "Staging files..."
+echo "⏱️ Staging files..."
 
 # create archive of current files
-rm -f "/tmp/$ZIP_FILE_NAME"
-git ls-files | xargs zip -q "/tmp/$ZIP_FILE_NAME"
-aws s3 cp "/tmp/$ZIP_FILE_NAME" s3://${bucketName}/code.zip
+rm -f "$ZIP_FILE_PATH"
+git ls-files | xargs zip -q "$ZIP_FILE_PATH"
+aws s3 cp "$ZIP_FILE_PATH" s3://${bucketName}/code.zip
 
-echo "Starting deployment..."
+echo "⏱️ Starting deployment..."
 
 buildId=$(aws codebuild start-build --project-name $projectName --query 'build.id' --output text)
 
@@ -47,12 +47,13 @@ if [[ -z "$buildId" ]]; then
     exit 1
 fi
 
-echo "Waiting for the CodeBuild project to complete..."
-echo "You can check the progress here:"
-echo "$progressUrlBase/$buildId"
+echo "⏱️ Waiting for the CodeBuild project to complete..."
+echo "You can check the progress here: $progressUrlBase/$buildId"
 echo 
+echo "⏱️ Tailing logs from CloudWatch log group $logGroupName"
 
-aws logs tail --follow $logGroupName --format short--since 30s
+aws logs tail --follow $logGroupName --format short --since 30s
+
 while true; do
     buildStatus=$(aws codebuild batch-get-builds --ids $buildId --query 'builds[0].buildStatus' --output text)
     if [[ "$buildStatus" == "SUCCEEDED" || "$buildStatus" == "FAILED" || "$buildStatus" == "STOPPED" ]]; then
@@ -61,12 +62,3 @@ while true; do
     sleep 10
 done
 echo "CodeBuild project completed with status: $buildStatus"
-echo 
-
-buildDetail=$(aws codebuild batch-get-builds --ids $buildId --output json)
-logGroupName=$(echo $buildDetail | jq -r '.builds[0].logs.groupName')
-logStreamName=$(echo $buildDetail | jq -r '.builds[0].logs.streamName')
-logs=$(aws logs get-log-events --log-group-name $logGroupName --log-stream-name $logStreamName)
-frontendUrl=$(echo "$logs" | grep -o 'DifyUrl = [^ ]*' | cut -d' ' -f3 | tr -d '\n' | tr -d '\n,')
-
-echo "Frontend URL: $frontendUrl"
