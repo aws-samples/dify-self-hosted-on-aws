@@ -2,17 +2,11 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
+import { UsEast1Stack } from '../lib/us-east-1-stack';
+import { EnvironmentProps } from '../lib/environment-props';
 
-const app = new cdk.App();
-new DifyOnAwsStack(app, 'DifyOnAwsStack', {
-  env: {
-    region: 'us-west-2',
-    // You need to explicitly set AWS account ID when you look up an existing VPC.
-    // account: '123456789012'
-  },
-  // Allow access from the Internet. Narrow this down if you want further security.
-  allowedIPv4Cidrs: ['0.0.0.0/0'],
-  allowedIPv6Cidrs: ['::/0'],
+const props: EnvironmentProps = {
+  awsRegion: 'ap-northeast-1',
   // Set Dify version
   difyImageTag: '0.14.2',
 
@@ -22,4 +16,23 @@ new DifyOnAwsStack(app, 'DifyOnAwsStack', {
   // enableAuroraScalesToZero: true,
 
   // Please see DifyOnAwsStackProps in lib/dify-on-aws-stack.ts for all the available properties
+  allowAnySyscalls: true,
+  isRedisMultiAz: false,
+  cheapVpc: true,
+  enableAuroraScalesToZero: true,
+};
+
+const app = new cdk.App();
+if (props.useCloudFront ?? (true && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs))) {
+  const stack = new UsEast1Stack(app, 'DifyonAwsUsEast1Stack', {
+    env: { region: 'us-east-1', account: props.awsAccount },
+    domainName: props.domainName,
+    allowedIpV4AddressRanges: props.allowedIPv4Cidrs,
+    allowedIpV6AddressRanges: props.allowedIPv6Cidrs,
+  });
+}
+
+new DifyOnAwsStack(app, 'DifyOnAwsStack', {
+  env: { region: props.awsRegion, account: props.awsAccount },
+  ...props,
 });
