@@ -15,8 +15,6 @@ const props: EnvironmentProps = {
   // cheapVpc: true,
   // enableAuroraScalesToZero: true,
 
-  useCloudFront: false,
-
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };
 
