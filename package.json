@@ -1,6 +1,5 @@
 {
   "name": "dify-on-aws-cdk",
-  "version": "0.1.0",
   "bin": {
     "dify-on-aws-cdk": "bin/cdk.js"
   },

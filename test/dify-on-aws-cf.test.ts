@@ -4,7 +4,7 @@ import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
 import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
-test('Snapshot test', () => {
+test('Snapshot test (with CloudFront)', () => {
   // GIVEN
   const app = new cdk.App();
 
@@ -16,7 +16,6 @@ test('Snapshot test', () => {
     difySandboxImageTag: '0.2.4',
     domainName: 'example.com',
     allowAnySyscalls: true,
-    useCloudFront: false,
   };
 
   // WHEN
@@ -40,6 +39,7 @@ test('Snapshot test', () => {
   });
 
   //THEN
-  expect(virginia).toBeUndefined();
+  expect(virginia).toBeDefined();
+  expect(Template.fromStack(virginia!)).toMatchSnapshot();
   expect(Template.fromStack(main)).toMatchSnapshot();
 });

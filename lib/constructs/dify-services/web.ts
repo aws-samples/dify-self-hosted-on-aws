@@ -1,12 +1,11 @@
 import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Duration, aws_ecs as ecs } from 'aws-cdk-lib';
-import { Alb } from '../alb';
-import { AlbController } from 'aws-cdk-lib/aws-eks';
+import { IAlb } from '../alb';
 
 export interface WebServiceProps {
   cluster: ICluster;
-  alb: Alb;
+  alb: IAlb;
 
   imageTag: string;
 
