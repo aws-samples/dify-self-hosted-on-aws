@@ -1,3 +1,5 @@
-ARG DIFY_VERSION=latest
-FROM langgenius/dify-sandbox:${DIFY_VERSION}
-COPY ./sandbox-python-requirements.txt /dependencies/python-requirements.txt
+FROM public.ecr.aws/docker/library/busybox:stable
+WORKDIR /app
+COPY ./python-requirements.txt ./
+
+CMD ["cp", "/app/python-requirements.txt", "/dependencies/python-requirements.txt"]

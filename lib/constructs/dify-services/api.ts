@@ -37,12 +37,18 @@ export class ApiService extends Construct {
 
     const { cluster, alb, postgres, redis, storageBucket, debug = false } = props;
     const port = 5001;
+    const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
       cpu: 1024,
       // 512だとOOMが起きたので、増やした
       memoryLimitMiB: 2048,
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
+      volumes: [
+        {
+          name: volumeName,
+        },
+      ],
     });
 
     const encryptionSecret = new Secret(this, 'EncryptionSecret', {
@@ -131,13 +137,15 @@ export class ApiService extends Construct {
       },
     });
 
-    taskDefinition.addContainer('Sandbox', {
+    const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
-        buildArgs: {
-          DIFY_VERSION: props.sandboxImageTag,
-        },
       }),
+      essential: false,
+    });
+
+    const sandboxContainer = taskDefinition.addContainer('Sandbox', {
+      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
       environment: {
         GIN_MODE: 'release',
         WORKER_TIMEOUT: '15',
@@ -173,6 +181,21 @@ export class ApiService extends Construct {
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
       },
+    });
+
+    sandboxFileContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: false,
+    });
+    sandboxContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: true,
+    });
+    sandboxContainer.addContainerDependencies({
+      container: sandboxFileContainer,
+      condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {

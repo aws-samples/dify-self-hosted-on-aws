@@ -995,6 +995,26 @@ exports[`Snapshot test 1`] = `
             ],
           },
           {
+            "Essential": false,
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
+            },
+            "MountPoints": [
+              {
+                "ContainerPath": "/dependencies",
+                "ReadOnly": false,
+                "SourceVolume": "sandbox",
+              },
+            ],
+            "Name": "SandboxFileMount",
+          },
+          {
+            "DependsOn": [
+              {
+                "Condition": "COMPLETE",
+                "ContainerName": "SandboxFileMount",
+              },
+            ],
             "Environment": [
               {
                 "Name": "GIN_MODE",
@@ -1018,9 +1038,7 @@ exports[`Snapshot test 1`] = `
               },
             ],
             "Essential": true,
-            "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:a5a95617c90c3c7131cc55e1bcd4db50ff05388d7beb645494e57e65ef67da63",
-            },
+            "Image": "langgenius/dify-sandbox:0.2.4",
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1033,6 +1051,13 @@ exports[`Snapshot test 1`] = `
                 "awslogs-stream-prefix": "log",
               },
             },
+            "MountPoints": [
+              {
+                "ContainerPath": "/dependencies",
+                "ReadOnly": true,
+                "SourceVolume": "sandbox",
+              },
+            ],
             "Name": "Sandbox",
             "PortMappings": [
               {
@@ -1062,7 +1087,7 @@ exports[`Snapshot test 1`] = `
             ],
             "Essential": true,
             "Image": {
-              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:101aec398491cb3d4c172cb3d6291c54c9c8991b1d17193433ecac0db28259fc",
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:64ce6f060d671ff40122ebae64f14d89fd2d3eb82237fae0284034b4de27d0d9",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -1107,6 +1132,11 @@ exports[`Snapshot test 1`] = `
             "Arn",
           ],
         },
+        "Volumes": [
+          {
+            "Name": "sandbox",
+          },
+        ],
       },
       "Type": "AWS::ECS::TaskDefinition",
     },

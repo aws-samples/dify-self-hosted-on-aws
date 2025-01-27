@@ -52,6 +52,19 @@ DifyOnAwsStack.DifyUrl = https://dify.example.com
 
 You can open the URL with a browser and get started!
 
+### Deploy from CloudShell
+
+When you deploy from CloudShell, you can use a dedicated script that works even in an environment with limited storage space.
+
+In CloudShell, run the following commands:
+
+```sh
+git clone https://github.com/aws-samples/dify-self-hosted-on-aws.git
+./simple-deploy.sh
+```
+
+Then follow the prompts from the shell script. You will finally get the `DifyOnAwsStack.DifyUrl` output in the CLI.
+
 ## Tips
 
 Here is the information that might help when you use Dify on AWS.
@@ -71,7 +84,7 @@ IAM policies are already configured properly, so you can just select a correct A
 
 ### Add Python packages available in code execution
 
-You can add Python packages that is available in Dify code execution feature. Edit [sandbox-python-requirements.txt](./lib/constructs/dify-services/docker/sandbox-python-requirements.txt) following the [Requirements File Format](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
+You can add Python packages that is available in Dify code execution feature. Edit [python-requirements.txt](./lib/constructs/dify-services/docker/python-requirements.txt) following the [Requirements File Format](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
 
 In some libraries, you have to allow additonal system calls in Dify sandbox. This CDK project let you to allow all the system calls by `allowAnySysCalls` flag in [`bin/cdk.ts`](bin/cdk.ts).
 

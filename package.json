@@ -8,6 +8,7 @@
     "build": "tsc",
     "format": "prettier --write './**/*.ts'",
     "format:check": "prettier --check './**/*.ts'",
+    "synth": "cdk -a 'npx ts-node --prefer-ts-exts bin/deploy.ts' --version-reporting false --path-metadata false synth > deploy.yaml",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk"
