@@ -11,7 +11,7 @@ export interface EnvironmentProps {
    * You need to explicitly set AWS account ID when you look up an existing VPC or set a custom domain name.
    * @example '123456789012'
    */
-  awsAccount?: string;
+  awsAccount: string;
 
   /**
    * IPv4 address ranges in CIDR notation that have access to the app.
@@ -44,6 +44,7 @@ export interface EnvironmentProps {
   /**
    * The domain name you use for Dify's service URL.
    * You must own a Route53 public hosted zone for the domain in your account.
+   * This will enable TLS encryption of ALB when useCloudFront = false.
    * @default No custom domain is used.
    */
   domainName?: string;

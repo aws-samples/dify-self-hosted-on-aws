@@ -7,6 +7,7 @@ import { EnvironmentProps } from '../lib/environment-props';
 
 const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
+  awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
   difyImageTag: '0.14.2',
 
@@ -16,6 +17,7 @@ const props: EnvironmentProps = {
   // enableAuroraScalesToZero: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
+  useCloudFront: false,
 };
 
 const app = new cdk.App();
