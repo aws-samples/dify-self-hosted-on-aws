@@ -30,7 +30,6 @@ export interface ApiServiceProps {
 }
 
 export class ApiService extends Construct {
-
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
@@ -134,7 +133,6 @@ export class ApiService extends Construct {
         retries: 5,
       },
     });
-
 
     taskDefinition.addContainer('Worker', {
       image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
