@@ -30,8 +30,6 @@ export interface ApiServiceProps {
 }
 
 export class ApiService extends Construct {
-  public readonly encryptionSecret: Secret;
-
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
@@ -56,7 +54,6 @@ export class ApiService extends Construct {
         passwordLength: 42,
       },
     });
-    this.encryptionSecret = encryptionSecret;
 
     taskDefinition.addContainer('Main', {
       image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
@@ -134,6 +131,55 @@ export class ApiService extends Construct {
         startPeriod: Duration.seconds(30),
         timeout: Duration.seconds(5),
         retries: 5,
+      },
+    });
+
+    taskDefinition.addContainer('Worker', {
+      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      environment: {
+        MODE: 'worker',
+        // The log level for the application. Supported values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+        LOG_LEVEL: debug ? 'DEBUG' : 'ERROR',
+        // enable DEBUG mode to output more logs
+        DEBUG: debug ? 'true' : 'false',
+
+        // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
+        MIGRATION_ENABLED: 'true',
+
+        // Enable pessimistic disconnect handling for recover from Aurora automatic pause
+        SQLALCHEMY_POOL_PRE_PING: 'True',
+
+        // The configurations of redis connection.
+        REDIS_HOST: redis.endpoint,
+        REDIS_PORT: redis.port.toString(),
+        REDIS_USE_SSL: 'true',
+        REDIS_DB: '0',
+
+        // The S3 storage configurations, only available when STORAGE_TYPE is `s3`.
+        STORAGE_TYPE: 's3',
+        S3_BUCKET_NAME: storageBucket.bucketName,
+        S3_REGION: Stack.of(storageBucket).region,
+
+        DB_DATABASE: postgres.databaseName,
+        // pgvector configurations
+        VECTOR_STORE: 'pgvector',
+        PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      secrets: {
+        DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        DB_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        PGVECTOR_USER: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        PGVECTOR_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        PGVECTOR_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        PGVECTOR_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
+        CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
+        SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
       },
     });
 
