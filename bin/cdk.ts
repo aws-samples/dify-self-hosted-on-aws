@@ -17,6 +17,7 @@ const props: EnvironmentProps = {
   // enableAuroraScalesToZero: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
+  useCloudFront: false,
 };
 
 const app = new cdk.App();

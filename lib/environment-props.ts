@@ -44,6 +44,7 @@ export interface EnvironmentProps {
   /**
    * The domain name you use for Dify's service URL.
    * You must own a Route53 public hosted zone for the domain in your account.
+   * This will enable TLS encryption of ALB when useCloudFront = false.
    * @default No custom domain is used.
    */
   domainName?: string;
