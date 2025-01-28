@@ -7,7 +7,6 @@ import { Redis } from './constructs/redis';
 import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { WebService } from './constructs/dify-services/web';
 import { ApiService } from './constructs/dify-services/api';
-import { WorkerService } from './constructs/dify-services/worker';
 import { Alb } from './constructs/alb';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
@@ -130,7 +129,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           accessLogBucket,
         });
 
-    const api = new ApiService(this, 'ApiService', {
+    new ApiService(this, 'ApiService', {
       cluster,
       alb,
       postgres,
@@ -144,15 +143,6 @@ export class DifyOnAwsStack extends cdk.Stack {
     new WebService(this, 'WebService', {
       cluster,
       alb,
-      imageTag,
-    });
-
-    new WorkerService(this, 'WorkerService', {
-      cluster,
-      postgres,
-      redis,
-      storageBucket,
-      encryptionSecret: api.encryptionSecret,
       imageTag,
     });
 
