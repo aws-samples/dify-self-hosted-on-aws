@@ -11,7 +11,7 @@ export interface EnvironmentProps {
    * You need to explicitly set AWS account ID when you look up an existing VPC or set a custom domain name.
    * @example '123456789012'
    */
-  awsAccount?: string;
+  awsAccount: string;
 
   /**
    * IPv4 address ranges in CIDR notation that have access to the app.
