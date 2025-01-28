@@ -126,7 +126,7 @@ npx cdk destroy --force
 The following table provides a sample cost breakdown for deploying this system in the us-east-1 (N. Virginia) region for one month (when deployed using cheap configuration).
 
 
-| AWS service | Dimensions | Cost [USD] |
+| AWS service | Dimensions | Cost [USD/month] |
 | --------------------| ----------------- | -------------------------------|
 | RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
@@ -135,7 +135,8 @@ The following table provides a sample cost breakdown for deploying this system i
 | ECS (Fargate) | Dify-worker 1 task running 24/7 (1024CPU) | $10.7 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
-| TOTAL | estimate per month | $53.8 |
+| Secrets Manager | Secret x3 | $1.2 |
+| TOTAL | estimate per month | $55.0 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 

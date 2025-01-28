@@ -211,11 +211,6 @@ export class ApiService extends Construct {
         REDIS_USE_SSL: 'true',
         REDIS_DB: '0',
 
-        // The type of storage to use for storing user files.
-        STORAGE_TYPE: 's3',
-        S3_BUCKET_NAME: storageBucket.bucketName,
-        S3_REGION: Stack.of(storageBucket).region,
-
         // pgvector configurations
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
@@ -223,10 +218,14 @@ export class ApiService extends Construct {
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
         DB_DATABASE: 'dify_plugin',
+        
         SERVER_PORT: '5002',
         SERVER_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
+
+        PLUGIN_STORAGE_TYPE: 'aws_s3',
+        PLUGIN_STORAGE_OSS_BUCKET: storageBucket.bucketName,
         MAX_PLUGIN_PACKAGE_SIZE: '52428800',
-        PPROF_ENABLED: 'false',
+
         DIFY_INNER_API_URL: 'http://localhost:5001',
         DIFY_INNER_API_KEY: 'QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1',
         // PLUGIN_REMOTE_INSTALLING_HOST: '0.0.0.0',
