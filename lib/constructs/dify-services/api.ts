@@ -266,7 +266,7 @@ export class ApiService extends Construct {
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
         DB_DATABASE: 'dify_plugin',
-        
+
         SERVER_PORT: '5002',
         SERVER_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
 
