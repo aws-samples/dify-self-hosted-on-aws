@@ -871,14 +871,6 @@ exports[`Snapshot test 1`] = `
                 "Value": "http://localhost:8194",
               },
               {
-                "Name": "INNER_API_KEY_FOR_PLUGIN",
-                "Value": "QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1",
-              },
-              {
-                "Name": "PLUGIN_API_KEY",
-                "Value": "lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi",
-              },
-              {
                 "Name": "PLUGIN_DAEMON_URL",
                 "Value": "http://localhost:5002",
               },
@@ -1061,6 +1053,18 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "INNER_API_KEY_FOR_PLUGIN",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "PLUGIN_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
             ],
           },
           {
@@ -1131,10 +1135,6 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "PGVECTOR_DATABASE",
                 "Value": "pgvector",
-              },
-              {
-                "Name": "PLUGIN_API_KEY",
-                "Value": "lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi",
               },
               {
                 "Name": "PLUGIN_API_URL",
@@ -1297,6 +1297,12 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "PLUGIN_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
             ],
           },
           {
@@ -1421,12 +1427,8 @@ exports[`Snapshot test 1`] = `
                 "Value": "5002",
               },
               {
-                "Name": "SERVER_KEY",
-                "Value": "lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi",
-              },
-              {
                 "Name": "PLUGIN_STORAGE_TYPE",
-                "Value": "aws_s3",
+                "Value": "local",
               },
               {
                 "Name": "PLUGIN_STORAGE_OSS_BUCKET",
@@ -1441,10 +1443,6 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "DIFY_INNER_API_URL",
                 "Value": "http://localhost:5001",
-              },
-              {
-                "Name": "DIFY_INNER_API_KEY",
-                "Value": "QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1",
               },
               {
                 "Name": "PLUGIN_WORKING_PATH",
@@ -1471,7 +1469,6 @@ exports[`Snapshot test 1`] = `
             "PortMappings": [
               {
                 "ContainerPort": 5002,
-                "Name": "plugin_daemon",
                 "Protocol": "tcp",
               },
             ],
@@ -1620,6 +1617,18 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "CODE_EXECUTION_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "DIFY_INNER_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "SERVER_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
@@ -1995,15 +2004,6 @@ exports[`Snapshot test 1`] = `
       "DeletionPolicy": "Retain",
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
-    },
-    "ClusterDefaultServiceDiscoveryNamespaceC336F9B4": {
-      "Properties": {
-        "Name": "dify",
-        "Vpc": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::ServiceDiscovery::PrivateDnsNamespace",
     },
     "ClusterEB0386A7": {
       "Properties": {
