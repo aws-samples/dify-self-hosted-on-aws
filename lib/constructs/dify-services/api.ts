@@ -41,8 +41,7 @@ export class ApiService extends Construct {
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
       cpu: 1024,
-      // 512だとOOMが起きたので、増やした
-      memoryLimitMiB: 2048,
+      memoryLimitMiB: 2048, // We got OOM frequently when RAM=512MB
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
       volumes: [
         {

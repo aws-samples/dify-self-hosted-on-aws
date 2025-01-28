@@ -74,8 +74,8 @@ export class DifyOnAwsStack extends cdk.Stack {
 
     if (!props.useCloudFront && props.domainName == null) {
       cdk.Annotations.of(this).addWarningV2(
-        'ALBWithoutEncryption',
-        'You are exposing ALB to the Internet without TLS encryption. Recommended to set useCloudFront: true or domainName property.',
+        'Dify:albWithoutEncryption',
+        'You are exposing ALB to the Internet without TLS encryption. It is recommended to set useCloudFront: true or domainName property.',
       );
     }
 
