@@ -104,8 +104,6 @@ export class ApiService extends Construct {
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
 
-        INNER_API_KEY_FOR_PLUGIN: 'QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1',
-        PLUGIN_API_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
         PLUGIN_DAEMON_URL: 'http://localhost:5002',
       },
       logging: ecs.LogDriver.awsLogs({
@@ -127,6 +125,8 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        INNER_API_KEY_FOR_PLUGIN: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
       },
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
@@ -168,7 +168,6 @@ export class ApiService extends Construct {
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
-        PLUGIN_API_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
         PLUGIN_API_URL: 'http://localhost:5002',
       },
       logging: ecs.LogDriver.awsLogs({
@@ -186,6 +185,7 @@ export class ApiService extends Construct {
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
       },
     });
 
@@ -268,14 +268,13 @@ export class ApiService extends Construct {
         DB_DATABASE: 'dify_plugin',
 
         SERVER_PORT: '5002',
-        SERVER_KEY: 'lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi',
 
-        PLUGIN_STORAGE_TYPE: 'aws_s3',
+        // TODO: set this to aws_s3 for persistence
+        PLUGIN_STORAGE_TYPE: 'local',
         PLUGIN_STORAGE_OSS_BUCKET: storageBucket.bucketName,
         MAX_PLUGIN_PACKAGE_SIZE: '52428800',
 
         DIFY_INNER_API_URL: 'http://localhost:5001',
-        DIFY_INNER_API_KEY: 'QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1',
         // PLUGIN_REMOTE_INSTALLING_HOST: '0.0.0.0',
         // PLUGIN_REMOTE_INSTALLING_PORT: '5003',
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
@@ -296,11 +295,13 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        DIFY_INNER_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        SERVER_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
       }),
-      portMappings: [{ containerPort: 5002, name: 'plugin_daemon' }],
+      portMappings: [{ containerPort: 5002 }],
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
