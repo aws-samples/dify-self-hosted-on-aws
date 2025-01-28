@@ -113,6 +113,24 @@ You can use the [External Knowledge Base feature](https://docs.dify.ai/guides/kn
 
 For more information, please refer to this article: [Dify can also do RAG on documents with charts and graphs!](https://qiita.com/mabuchs/items/85fb2dad19ec441c870c)
 
+### Scaling out / Scaling up
+
+Although this system is designed with infrastructure scalability in mind, there are several tuning knobs that you might want to explicitly set as you prepare for larger numbers of users.
+
+The below are the list of configurable parameters and their default values:
+
+1. ECS Task ([api.ts](./lib/constructs/dify-services/api.ts), [web.ts](./lib/constructs/dify-services/web.ts))
+    1. Size
+        1. api/worker: 1024vCPU / 2048MB
+        2. web: 256vCPU / 512MB
+    2. Desired Count
+        1. 1 task for each service
+2. ElastiCache ([redis.ts](./lib/constructs/redis.ts))
+    1. Node Type: `cache.t4g.micro`
+    2. Node Count: 1
+3. Aurora Postgres ([postgres.ts](./lib/constructs/postgres.ts))
+    1. Serverless v2 maximum capacity: 2 ACU
+
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
 
@@ -131,11 +149,10 @@ The following table provides a sample cost breakdown for deploying this system i
 | RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
 | ECS (Fargate) | Dify-web 1 task running 24/7 (256CPU) | $2.7 |
-| ECS (Fargate) | Dify-api 1 task running 24/7 (1024CPU) | $10.7 |
-| ECS (Fargate) | Dify-worker 1 task running 24/7 (1024CPU) | $10.7 |
+| ECS (Fargate) | Dify-api/worker 1 task running 24/7 (1024CPU) | $10.7 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
-| TOTAL | estimate per month | $53.8 |
+| TOTAL | estimate per month | $43.1 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 

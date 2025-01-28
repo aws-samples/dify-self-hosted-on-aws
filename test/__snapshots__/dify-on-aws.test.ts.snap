@@ -1052,6 +1052,234 @@ exports[`Snapshot test 1`] = `
             ],
           },
           {
+            "Environment": [
+              {
+                "Name": "MODE",
+                "Value": "worker",
+              },
+              {
+                "Name": "LOG_LEVEL",
+                "Value": "ERROR",
+              },
+              {
+                "Name": "DEBUG",
+                "Value": "false",
+              },
+              {
+                "Name": "MIGRATION_ENABLED",
+                "Value": "true",
+              },
+              {
+                "Name": "SQLALCHEMY_POOL_PRE_PING",
+                "Value": "True",
+              },
+              {
+                "Name": "REDIS_HOST",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "RedisFF642DF2",
+                    "PrimaryEndPoint.Address",
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PORT",
+                "Value": "6379",
+              },
+              {
+                "Name": "REDIS_USE_SSL",
+                "Value": "true",
+              },
+              {
+                "Name": "REDIS_DB",
+                "Value": "0",
+              },
+              {
+                "Name": "STORAGE_TYPE",
+                "Value": "s3",
+              },
+              {
+                "Name": "S3_BUCKET_NAME",
+                "Value": {
+                  "Ref": "StorageBucket19DB2FF8",
+                },
+              },
+              {
+                "Name": "S3_REGION",
+                "Value": "us-west-2",
+              },
+              {
+                "Name": "DB_DATABASE",
+                "Value": "main",
+              },
+              {
+                "Name": "VECTOR_STORE",
+                "Value": "pgvector",
+              },
+              {
+                "Name": "PGVECTOR_DATABASE",
+                "Value": "pgvector",
+              },
+            ],
+            "Essential": true,
+            "Image": "langgenius/dify-api:latest",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "ApiServiceTaskWorkerLogGroup48EED12F",
+                },
+                "awslogs-region": "us-west-2",
+                "awslogs-stream-prefix": "log",
+              },
+            },
+            "Name": "Worker",
+            "Secrets": [
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PASSWORD",
+                "ValueFrom": {
+                  "Ref": "RedisAuthToken9E34F6A5",
+                },
+              },
+              {
+                "Name": "CELERY_BROKER_URL",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/",
+                      {
+                        "Ref": "RedisBrokerUrlA8582E06",
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+            ],
+          },
+          {
             "Essential": false,
             "Image": {
               "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
@@ -1266,6 +1494,19 @@ exports[`Snapshot test 1`] = `
             },
             {
               "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApiServiceTaskWorkerLogGroup48EED12F",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
                 "ecr:BatchCheckLayerAvailability",
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:BatchGetImage",
@@ -1463,6 +1704,11 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "ApiServiceTaskWorkerLogGroup48EED12F": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
     "ClusterEB0386A7": {
       "Properties": {
         "ClusterSettings": [
@@ -1657,37 +1903,6 @@ exports[`Snapshot test 1`] = `
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
             "ApiServiceFargateServiceSecurityGroupE31C96C6",
-            "GroupId",
-          ],
-        },
-        "ToPort": {
-          "Fn::GetAtt": [
-            "PostgresCluster53E5BDAB",
-            "Endpoint.Port",
-          ],
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "PostgresClusterSecurityGroupfromTestStackWorkerServiceFargateServiceSecurityGroup3259E932IndirectPort6C372135": {
-      "Properties": {
-        "Description": "from TestStackWorkerServiceFargateServiceSecurityGroup3259E932:{IndirectPort}",
-        "FromPort": {
-          "Fn::GetAtt": [
-            "PostgresCluster53E5BDAB",
-            "Endpoint.Port",
-          ],
-        },
-        "GroupId": {
-          "Fn::GetAtt": [
-            "PostgresClusterSecurityGroup08DE6EE8",
-            "GroupId",
-          ],
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Fn::GetAtt": [
-            "WorkerServiceFargateServiceSecurityGroupEC8152E8",
             "GroupId",
           ],
         },
@@ -2086,27 +2301,6 @@ exports[`Snapshot test 1`] = `
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
             "ApiServiceFargateServiceSecurityGroupE31C96C6",
-            "GroupId",
-          ],
-        },
-        "ToPort": 6379,
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "RedisSecurityGroupfromTestStackWorkerServiceFargateServiceSecurityGroup3259E93263795D7BE143": {
-      "Properties": {
-        "Description": "from TestStackWorkerServiceFargateServiceSecurityGroup3259E932:6379",
-        "FromPort": 6379,
-        "GroupId": {
-          "Fn::GetAtt": [
-            "RedisSecurityGroupC1E9FD21",
-            "GroupId",
-          ],
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Fn::GetAtt": [
-            "WorkerServiceFargateServiceSecurityGroupEC8152E8",
             "GroupId",
           ],
         },
@@ -2970,548 +3164,6 @@ exports[`Snapshot test 1`] = `
         "Roles": [
           {
             "Ref": "WebServiceTaskTaskRole22AA8FAB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "WorkerServiceFargateService83FD39CB": {
-      "DependsOn": [
-        "WorkerServiceTaskTaskRoleDefaultPolicyB05718F5",
-        "WorkerServiceTaskTaskRoleC99169CE",
-      ],
-      "Properties": {
-        "CapacityProviderStrategy": [
-          {
-            "CapacityProvider": "FARGATE",
-            "Weight": 0,
-          },
-          {
-            "CapacityProvider": "FARGATE_SPOT",
-            "Weight": 1,
-          },
-        ],
-        "Cluster": {
-          "Ref": "ClusterEB0386A7",
-        },
-        "DeploymentConfiguration": {
-          "Alarms": {
-            "AlarmNames": [],
-            "Enable": false,
-            "Rollback": false,
-          },
-          "MaximumPercent": 200,
-          "MinimumHealthyPercent": 50,
-        },
-        "EnableECSManagedTags": false,
-        "EnableExecuteCommand": true,
-        "NetworkConfiguration": {
-          "AwsvpcConfiguration": {
-            "AssignPublicIp": "DISABLED",
-            "SecurityGroups": [
-              {
-                "Fn::GetAtt": [
-                  "WorkerServiceFargateServiceSecurityGroupEC8152E8",
-                  "GroupId",
-                ],
-              },
-            ],
-            "Subnets": [
-              {
-                "Ref": "VpcPrivateSubnet1Subnet536B997A",
-              },
-              {
-                "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
-              },
-            ],
-          },
-        },
-        "TaskDefinition": {
-          "Ref": "WorkerServiceTaskEB3CD2E8",
-        },
-      },
-      "Type": "AWS::ECS::Service",
-    },
-    "WorkerServiceFargateServiceSecurityGroupEC8152E8": {
-      "DependsOn": [
-        "WorkerServiceTaskTaskRoleDefaultPolicyB05718F5",
-        "WorkerServiceTaskTaskRoleC99169CE",
-      ],
-      "Properties": {
-        "GroupDescription": "TestStack/WorkerService/FargateService/SecurityGroup",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "Allow all outbound traffic by default",
-            "IpProtocol": "-1",
-          },
-        ],
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
-    "WorkerServiceTaskEB3CD2E8": {
-      "Properties": {
-        "ContainerDefinitions": [
-          {
-            "Environment": [
-              {
-                "Name": "MODE",
-                "Value": "worker",
-              },
-              {
-                "Name": "LOG_LEVEL",
-                "Value": "ERROR",
-              },
-              {
-                "Name": "DEBUG",
-                "Value": "false",
-              },
-              {
-                "Name": "MIGRATION_ENABLED",
-                "Value": "true",
-              },
-              {
-                "Name": "SQLALCHEMY_POOL_PRE_PING",
-                "Value": "True",
-              },
-              {
-                "Name": "REDIS_HOST",
-                "Value": {
-                  "Fn::GetAtt": [
-                    "RedisFF642DF2",
-                    "PrimaryEndPoint.Address",
-                  ],
-                },
-              },
-              {
-                "Name": "REDIS_PORT",
-                "Value": "6379",
-              },
-              {
-                "Name": "REDIS_USE_SSL",
-                "Value": "true",
-              },
-              {
-                "Name": "REDIS_DB",
-                "Value": "0",
-              },
-              {
-                "Name": "STORAGE_TYPE",
-                "Value": "s3",
-              },
-              {
-                "Name": "S3_BUCKET_NAME",
-                "Value": {
-                  "Ref": "StorageBucket19DB2FF8",
-                },
-              },
-              {
-                "Name": "S3_REGION",
-                "Value": "us-west-2",
-              },
-              {
-                "Name": "DB_DATABASE",
-                "Value": "main",
-              },
-              {
-                "Name": "VECTOR_STORE",
-                "Value": "pgvector",
-              },
-              {
-                "Name": "PGVECTOR_DATABASE",
-                "Value": "pgvector",
-              },
-            ],
-            "Essential": true,
-            "Image": "langgenius/dify-api:latest",
-            "LogConfiguration": {
-              "LogDriver": "awslogs",
-              "Options": {
-                "awslogs-group": {
-                  "Ref": "WorkerServiceTaskMainLogGroupA90F15B8",
-                },
-                "awslogs-region": "us-west-2",
-                "awslogs-stream-prefix": "log",
-              },
-            },
-            "Name": "Main",
-            "Secrets": [
-              {
-                "Name": "DB_USERNAME",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":username::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "DB_HOST",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":host::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "DB_PORT",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":port::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "DB_PASSWORD",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":password::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "PGVECTOR_USER",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":username::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "PGVECTOR_HOST",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":host::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "PGVECTOR_PORT",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":port::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "PGVECTOR_PASSWORD",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-                      },
-                      ":password::",
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "REDIS_PASSWORD",
-                "ValueFrom": {
-                  "Ref": "RedisAuthToken9E34F6A5",
-                },
-              },
-              {
-                "Name": "CELERY_BROKER_URL",
-                "ValueFrom": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":ssm:us-west-2:123456789012:parameter/",
-                      {
-                        "Ref": "RedisBrokerUrlA8582E06",
-                      },
-                    ],
-                  ],
-                },
-              },
-              {
-                "Name": "SECRET_KEY",
-                "ValueFrom": {
-                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-                },
-              },
-            ],
-          },
-        ],
-        "Cpu": "1024",
-        "ExecutionRoleArn": {
-          "Fn::GetAtt": [
-            "WorkerServiceTaskExecutionRoleFF871AC9",
-            "Arn",
-          ],
-        },
-        "Family": "TestStackWorkerServiceTask7B4B1923",
-        "Memory": "2048",
-        "NetworkMode": "awsvpc",
-        "RequiresCompatibilities": [
-          "FARGATE",
-        ],
-        "RuntimePlatform": {
-          "CpuArchitecture": "X86_64",
-        },
-        "TaskRoleArn": {
-          "Fn::GetAtt": [
-            "WorkerServiceTaskTaskRoleC99169CE",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::ECS::TaskDefinition",
-    },
-    "WorkerServiceTaskExecutionRoleDefaultPolicyD3383FFB": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "WorkerServiceTaskMainLogGroupA90F15B8",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:DescribeSecret",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
-              },
-            },
-            {
-              "Action": [
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:DescribeSecret",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "RedisAuthToken9E34F6A5",
-              },
-            },
-            {
-              "Action": [
-                "ssm:DescribeParameters",
-                "ssm:GetParameters",
-                "ssm:GetParameter",
-                "ssm:GetParameterHistory",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":ssm:us-west-2:123456789012:parameter/",
-                    {
-                      "Ref": "RedisBrokerUrlA8582E06",
-                    },
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": [
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:DescribeSecret",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "WorkerServiceTaskExecutionRoleDefaultPolicyD3383FFB",
-        "Roles": [
-          {
-            "Ref": "WorkerServiceTaskExecutionRoleFF871AC9",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "WorkerServiceTaskExecutionRoleFF871AC9": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ecs-tasks.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "WorkerServiceTaskMainLogGroupA90F15B8": {
-      "DeletionPolicy": "Retain",
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "WorkerServiceTaskTaskRoleC99169CE": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ecs-tasks.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "WorkerServiceTaskTaskRoleDefaultPolicyB05718F5": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "StorageBucket19DB2FF8",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "StorageBucket19DB2FF8",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "bedrock:InvokeModel",
-                "bedrock:InvokeModelWithResponseStream",
-                "bedrock:Rerank",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            {
-              "Action": [
-                "ssmmessages:CreateControlChannel",
-                "ssmmessages:CreateDataChannel",
-                "ssmmessages:OpenControlChannel",
-                "ssmmessages:OpenDataChannel",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            {
-              "Action": "logs:DescribeLogGroups",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            {
-              "Action": [
-                "logs:CreateLogStream",
-                "logs:DescribeLogStreams",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "WorkerServiceTaskTaskRoleDefaultPolicyB05718F5",
-        "Roles": [
-          {
-            "Ref": "WorkerServiceTaskTaskRoleC99169CE",
           },
         ],
       },
