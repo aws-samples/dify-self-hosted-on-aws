@@ -2,13 +2,14 @@ import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aw
 import { Construct } from 'constructs';
 import { Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { AccessKey, ManagedPolicy, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
 import { Postgres } from '../postgres';
 import { Redis } from '../redis';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -105,6 +106,9 @@ export class ApiService extends Construct {
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
 
         PLUGIN_DAEMON_URL: 'http://localhost:5002',
+
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -169,6 +173,9 @@ export class ApiService extends Construct {
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
         PLUGIN_API_URL: 'http://localhost:5002',
+
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -250,14 +257,21 @@ export class ApiService extends Construct {
       condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
+    const user = new User(this, 'PluginUser', {});
+    const accessKey = new AccessKey(this, 'AccessKey', { user });
+    storageBucket.grantReadWrite(user);
+    user.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'));
+
     taskDefinition.addContainer('PluginDaemon', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:0.0.1-local`),
+      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp'),
+      // image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
       environment: {
+        GIN_MODE: 'release',
+
         // The configurations of redis connection.
         REDIS_HOST: redis.endpoint,
         REDIS_PORT: redis.port.toString(),
         REDIS_USE_SSL: 'true',
-        REDIS_DB: '0',
 
         // pgvector configurations
         VECTOR_STORE: 'pgvector',
@@ -266,17 +280,33 @@ export class ApiService extends Construct {
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
         DB_DATABASE: 'dify_plugin',
+        DB_SSL_MODE: 'disable',
 
         SERVER_PORT: '5002',
+
+        AWS_ACCESS_KEY: accessKey.accessKeyId,
+        AWS_SECRET_KEY: accessKey.secretAccessKey.unsafeUnwrap(),
+        AWS_REGION: Stack.of(this).region,
 
         // TODO: set this to aws_s3 for persistence
         PLUGIN_STORAGE_TYPE: 'local',
         PLUGIN_STORAGE_OSS_BUCKET: storageBucket.bucketName,
+        PLUGIN_INSTALLED_PATH: 'plugins',
+        PLUGIN_MAX_EXECUTION_TIMEOUT: '600',
+        PLUGIN_REMOTE_INSTALLING_ENABLED: 'false',
         MAX_PLUGIN_PACKAGE_SIZE: '52428800',
+        MAX_BUNDLE_PACKAGE_SIZE: '52428800',
+
+        ROUTINE_POOL_SIZE: '10000',
+        LIFETIME_COLLECTION_HEARTBEAT_INTERVAL: '5',
+        LIFETIME_COLLECTION_GC_INTERVAL: '60',
+        LIFETIME_STATE_GC_INTERVAL: '300',
+        DIFY_INVOCATION_CONNECTION_IDLE_TIMEOUT: '120',
+        PYTHON_ENV_INIT_TIMEOUT: '120',
 
         DIFY_INNER_API_URL: 'http://localhost:5001',
-        // PLUGIN_REMOTE_INSTALLING_HOST: '0.0.0.0',
-        // PLUGIN_REMOTE_INSTALLING_PORT: '5003',
+        // PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
+        // PLUGIN_REMOTE_INSTALLING_PORT: port.toString(),
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
         FORCE_VERIFYING_SIGNATURE: 'true',
       },

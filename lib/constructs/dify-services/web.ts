@@ -48,6 +48,9 @@ export class WebService extends Construct {
         // https://nextjs.org/docs/pages/api-reference/next-config-js/output
         HOSTNAME: '0.0.0.0',
         PORT: port.toString(),
+
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
