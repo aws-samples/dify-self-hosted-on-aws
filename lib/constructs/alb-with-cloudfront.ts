@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib';
+import { CfnResource, Duration, Names } from 'aws-cdk-lib';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -24,6 +24,8 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { IAlb } from './alb';
+import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export interface AlbProps {
   vpc: IVpc;
@@ -51,6 +53,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   private listenerPriority = 1;
   private listener: ApplicationListener;
   private vpc: IVpc;
+  private cloudFrontPrefixListCustomResource: AwsCustomResource | undefined;
 
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
@@ -60,8 +63,8 @@ export class AlbWithCloudFront extends Construct implements IAlb {
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
-      vpcSubnets: vpc.selectSubnets({ subnets: vpc.publicSubnets }),
-      internetFacing: true,
+      vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets.concat(vpc.isolatedSubnets) }),
+      internetFacing: false,
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;
@@ -71,8 +74,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       open: false,
       defaultAction: ListenerAction.fixedResponse(400),
     });
-    // TODO: Use VPC Origins
-    ['0.0.0.0/0'].forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    listener.connections.allowDefaultPortFrom(Peer.prefixList(this.getCloudFrontManagedPrefixListId()));
 
     let distribution = new Distribution(this, 'Distribution', {
       ...(props.hostedZone
@@ -109,7 +111,8 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   }
 
   public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
-    const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
+    // we need different target group ids for different albs because a single target group can be attached to only one alb.
+    const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
       vpc: this.vpc,
       targets: [ecsService],
       protocol: ApplicationProtocol.HTTP,
@@ -133,5 +136,36 @@ export class AlbWithCloudFront extends Construct implements IAlb {
         priority: this.listenerPriority++,
       });
     }
+  }
+
+  getCloudFrontManagedPrefixListId() {
+    if (this.cloudFrontPrefixListCustomResource == null) {
+      this.cloudFrontPrefixListCustomResource = new AwsCustomResource(this, 'GetCloudFrontPrefixListId', {
+        onUpdate: {
+          service: 'ec2',
+          action: 'describeManagedPrefixLists',
+          parameters: {
+            Filters: [
+              {
+                Name: 'prefix-list-name',
+                Values: ['com.amazonaws.global.cloudfront.origin-facing'],
+              },
+            ],
+          },
+          physicalResourceId: PhysicalResourceId.of('static'),
+          outputPaths: ['PrefixLists.0.PrefixListId'],
+        },
+        policy: {
+          statements: [
+            new PolicyStatement({
+              effect: Effect.ALLOW,
+              actions: ['ec2:DescribeManagedPrefixLists'],
+              resources: ['*'],
+            }),
+          ],
+        },
+      });
+    }
+    return this.cloudFrontPrefixListCustomResource.getResponseField('PrefixLists.0.PrefixListId');
   }
 }
