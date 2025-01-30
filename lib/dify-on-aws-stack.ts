@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { IVpc, InstanceClass, InstanceSize, InstanceType, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { Cluster } from 'aws-cdk-lib/aws-ecs';
+import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
 import { Redis } from './constructs/redis';
@@ -93,7 +93,7 @@ export class DifyOnAwsStack extends cdk.Stack {
 
     const cluster = new Cluster(this, 'Cluster', {
       vpc,
-      containerInsights: true,
+      containerInsightsV2: ContainerInsights.ENABLED,
     });
 
     const postgres = new Postgres(this, 'Postgres', {
