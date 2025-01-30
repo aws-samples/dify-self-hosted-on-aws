@@ -1,4 +1,4 @@
-import { CfnResource, Duration, Names } from 'aws-cdk-lib';
+import { Duration } from 'aws-cdk-lib';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -63,7 +63,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
-      vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets.concat(vpc.isolatedSubnets) }),
+      vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets }),
       internetFacing: false,
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');

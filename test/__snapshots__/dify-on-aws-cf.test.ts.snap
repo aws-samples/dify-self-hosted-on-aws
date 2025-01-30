@@ -598,7 +598,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "AlbApiTargetGroup4B6AF19C": {
+    "AlbApiTargetGroupInternal2EB9930E": {
       "Properties": {
         "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/health",
@@ -629,10 +629,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "AlbC1372A32": {
       "DependsOn": [
         "AccessLogBucketPolicyF52D2D01",
-        "VpcPublicSubnet1DefaultRoute3DA9E72A",
-        "VpcPublicSubnet1RouteTableAssociation97140677",
-        "VpcPublicSubnet2DefaultRoute97F91067",
-        "VpcPublicSubnet2RouteTableAssociationDD5762D8",
       ],
       "Properties": {
         "LoadBalancerAttributes": [
@@ -655,7 +651,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Value": "dify-alb",
           },
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Fn::GetAtt": [
@@ -666,10 +662,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
         "Subnets": [
           {
-            "Ref": "VpcPublicSubnet1Subnet5C2D37C4",
+            "Ref": "VpcPrivateSubnet1Subnet536B997A",
           },
           {
-            "Ref": "VpcPublicSubnet2Subnet691E08A3",
+            "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
           },
         ],
         "Type": "application",
@@ -747,6 +743,46 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::CloudFront::Distribution",
     },
+    "AlbGetCloudFrontPrefixListId0ED122F4": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AlbGetCloudFrontPrefixListIdCustomResourcePolicyB4DDE84F",
+      ],
+      "Properties": {
+        "Create": "{"service":"ec2","action":"describeManagedPrefixLists","parameters":{"Filters":[{"Name":"prefix-list-name","Values":["com.amazonaws.global.cloudfront.origin-facing"]}]},"physicalResourceId":{"id":"static"},"outputPaths":["PrefixLists.0.PrefixListId"]}",
+        "InstallLatestAwsSdk": true,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+            "Arn",
+          ],
+        },
+        "Update": "{"service":"ec2","action":"describeManagedPrefixLists","parameters":{"Filters":[{"Name":"prefix-list-name","Values":["com.amazonaws.global.cloudfront.origin-facing"]}]},"physicalResourceId":{"id":"static"},"outputPaths":["PrefixLists.0.PrefixListId"]}",
+      },
+      "Type": "Custom::AWS",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AlbGetCloudFrontPrefixListIdCustomResourcePolicyB4DDE84F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ec2:DescribeManagedPrefixLists",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AlbGetCloudFrontPrefixListIdCustomResourcePolicyB4DDE84F",
+        "Roles": [
+          {
+            "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "AlbListener318AEEBA": {
       "Properties": {
         "DefaultActions": [
@@ -770,7 +806,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
             "Type": "forward",
           },
@@ -801,7 +837,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
             "Type": "forward",
           },
@@ -830,7 +866,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbWebTargetGroupC65B2BDF",
+              "Ref": "AlbWebTargetGroupInternal92BC2C4D",
             },
             "Type": "forward",
           },
@@ -855,20 +891,46 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "AlbSecurityGroup433229ED": {
       "Properties": {
         "GroupDescription": "Automatically created Security Group for ELB TestStackAlb4BAF7F63",
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "from 0.0.0.0/0:80",
-            "FromPort": 80,
-            "IpProtocol": "tcp",
-            "ToPort": 80,
-          },
-        ],
         "VpcId": {
           "Ref": "Vpc8378EB38",
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AlbSecurityGroupfromIndirectPeer8094DF45A1": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "from ",
+              {
+                "Fn::GetAtt": [
+                  "AlbGetCloudFrontPrefixListId0ED122F4",
+                  "PrefixLists.0.PrefixListId",
+                ],
+              },
+              ":80",
+            ],
+          ],
+        },
+        "FromPort": 80,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourcePrefixListId": {
+          "Fn::GetAtt": [
+            "AlbGetCloudFrontPrefixListId0ED122F4",
+            "PrefixLists.0.PrefixListId",
+          ],
+        },
+        "ToPort": 80,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "AlbSecurityGrouptoTestStackApiServiceFargateServiceSecurityGroup7DD0AF445001CF7EB3A2": {
       "Properties": {
@@ -912,7 +974,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
-    "AlbWebTargetGroupC65B2BDF": {
+    "AlbWebTargetGroupInternal92BC2C4D": {
       "Properties": {
         "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/",
@@ -988,7 +1050,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "ContainerName": "Main",
             "ContainerPort": 5001,
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
           },
         ],
@@ -3284,7 +3346,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "ContainerName": "Main",
             "ContainerPort": 3000,
             "TargetGroupArn": {
-              "Ref": "AlbWebTargetGroupC65B2BDF",
+              "Ref": "AlbWebTargetGroupInternal92BC2C4D",
             },
           },
         ],
