@@ -39,7 +39,7 @@ exports[`Snapshot test (with CloudFront) 1`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
-          "S3Key": "246cb27aa0cb552c81fdca061092d0905aa4d2529e8b52b5598c069f18be51d7.zip",
+          "S3Key": "8a17fb3ceee821f797100bf65fa3047c164a08c03aa5a07fbcff9a676fb73b97.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
@@ -2017,7 +2017,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
-          "S3Key": "8acca95a9957d02a9f3ec124c9869c5d5b70a7fb3e332120850781ecc9363037.zip",
+          "S3Key": "d41c8e6342cd078b5ea5aec11522bdb605eae00f4bb98a3fb0b44c827e9b5ca9.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
