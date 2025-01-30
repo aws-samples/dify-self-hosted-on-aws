@@ -217,21 +217,6 @@ export class ApiService extends Construct {
                 .join(','),
             }
           : {}),
-        PYTHON_LIB_PATH: [
-          // Originally from here:
-          // https://github.com/langgenius/dify-sandbox/blob/main/internal/static/config_default_amd64.go
-          '/usr/local/lib/python3.10',
-          '/usr/lib/python3.10',
-          '/usr/lib/python3',
-          // copy all the lib. **DO NOT** add a trailing slash!
-          '/usr/lib/x86_64-linux-gnu',
-          '/etc/ssl/certs/ca-certificates.crt',
-          '/etc/nsswitch.conf',
-          '/etc/hosts',
-          '/etc/resolv.conf',
-          '/run/systemd/resolve/stub-resolv.conf',
-          '/run/resolvconf/resolv.conf',
-        ].join(','),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -260,10 +245,9 @@ export class ApiService extends Construct {
     const user = new User(this, 'PluginUser', {});
     const accessKey = new AccessKey(this, 'AccessKey', { user });
     storageBucket.grantReadWrite(user);
-    user.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'));
 
     taskDefinition.addContainer('PluginDaemon', {
-      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp'),
+      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp2'),
       // image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
       environment: {
         GIN_MODE: 'release',
@@ -273,29 +257,25 @@ export class ApiService extends Construct {
         REDIS_PORT: redis.port.toString(),
         REDIS_USE_SSL: 'true',
 
-        // pgvector configurations
-        VECTOR_STORE: 'pgvector',
-        PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
-
-        // The sandbox service endpoint.
-        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
         DB_DATABASE: 'dify_plugin',
         DB_SSL_MODE: 'disable',
 
         SERVER_PORT: '5002',
 
-        AWS_ACCESS_KEY: accessKey.accessKeyId,
-        AWS_SECRET_KEY: accessKey.secretAccessKey.unsafeUnwrap(),
+        // AWS_ACCESS_KEY: accessKey.accessKeyId,
+        // AWS_SECRET_KEY: accessKey.secretAccessKey.unsafeUnwrap(),
         AWS_REGION: Stack.of(this).region,
 
         // TODO: set this to aws_s3 for persistence
-        PLUGIN_STORAGE_TYPE: 'local',
+        PLUGIN_STORAGE_TYPE: 'aws_s3',
         PLUGIN_STORAGE_OSS_BUCKET: storageBucket.bucketName,
         PLUGIN_INSTALLED_PATH: 'plugins',
         PLUGIN_MAX_EXECUTION_TIMEOUT: '600',
-        PLUGIN_REMOTE_INSTALLING_ENABLED: 'false',
         MAX_PLUGIN_PACKAGE_SIZE: '52428800',
         MAX_BUNDLE_PACKAGE_SIZE: '52428800',
+        PLUGIN_REMOTE_INSTALLING_ENABLED: 'false',
+        // PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
+        // PLUGIN_REMOTE_INSTALLING_PORT: port.toString(),
 
         ROUTINE_POOL_SIZE: '10000',
         LIFETIME_COLLECTION_HEARTBEAT_INTERVAL: '5',
@@ -303,16 +283,11 @@ export class ApiService extends Construct {
         LIFETIME_STATE_GC_INTERVAL: '300',
         DIFY_INVOCATION_CONNECTION_IDLE_TIMEOUT: '120',
         PYTHON_ENV_INIT_TIMEOUT: '120',
-
         DIFY_INNER_API_URL: 'http://localhost:5001',
-        // PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
-        // PLUGIN_REMOTE_INSTALLING_PORT: port.toString(),
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
         FORCE_VERIFYING_SIGNATURE: 'true',
       },
       secrets: {
-        // The configurations of postgres database connection.
-        // It is consistent with the configuration in the 'db' service below.
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
         DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
         DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
