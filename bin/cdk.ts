@@ -5,7 +5,7 @@ import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
 import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
-const props: EnvironmentProps = {
+export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version

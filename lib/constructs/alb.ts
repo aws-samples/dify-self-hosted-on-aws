@@ -31,6 +31,12 @@ export interface AlbProps {
   hostedZone?: IHostedZone;
 
   accessLogBucket: IBucket;
+
+  /**
+   * If true, the alb is deployed to private or isolated subnet.
+   * @default false
+   */
+  internal?: boolean;
 }
 
 export interface IAlb {
@@ -54,6 +60,7 @@ export class Alb extends Construct implements IAlb {
       accessLogBucket,
       allowedIPv4Cidrs = ['0.0.0.0/0'],
       allowedIPv6Cidrs = ['::/0'],
+      internal = false,
     } = props;
     const protocol = props.hostedZone ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP;
     const certificate = props.hostedZone
@@ -65,8 +72,10 @@ export class Alb extends Construct implements IAlb {
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
-      vpcSubnets: vpc.selectSubnets({ subnets: vpc.publicSubnets }),
-      internetFacing: true,
+      vpcSubnets: vpc.selectSubnets({
+        subnets: internal ? vpc.privateSubnets.concat(vpc.isolatedSubnets) : vpc.publicSubnets,
+      }),
+      internetFacing: !internal,
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;

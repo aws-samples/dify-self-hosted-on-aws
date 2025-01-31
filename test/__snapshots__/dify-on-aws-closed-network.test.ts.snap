@@ -1,268 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Snapshot test (with CloudFront) 1`] = `
-{
-  "Parameters": {
-    "BootstrapVersion": {
-      "Default": "/cdk-bootstrap/hnb659fds/version",
-      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-  },
-  "Resources": {
-    "Certificate4E7ABB08": {
-      "Properties": {
-        "DomainName": "*.example.com",
-        "DomainValidationOptions": [
-          {
-            "DomainName": "example.com",
-            "HostedZoneId": "DUMMY",
-          },
-        ],
-        "SubjectAlternativeNames": [
-          "example.com",
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestUsEast1Stack/Certificate",
-          },
-        ],
-        "ValidationMethod": "DNS",
-      },
-      "Type": "AWS::CertificateManager::Certificate",
-    },
-    "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A": {
-      "DependsOn": [
-        "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
-          "S3Key": "8a17fb3ceee821f797100bf65fa3047c164a08c03aa5a07fbcff9a676fb73b97.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "ssm:DeleteParameters",
-                    "ssm:ListTagsForResource",
-                    "ssm:GetParameters",
-                    "ssm:PutParameter",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":ssm:us-west-2:123456789012:parameter/cdk/exports/*",
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "ExportsWriteruswest209BD44F0A7CF058B": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A",
-            "Arn",
-          ],
-        },
-        "WriterProps": {
-          "exports": {
-            "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B": {
-              "Fn::GetAtt": [
-                "WebAcl9BD21CA7",
-                "Arn",
-              ],
-            },
-            "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5": {
-              "Ref": "Certificate4E7ABB08",
-            },
-          },
-          "region": "us-west-2",
-        },
-      },
-      "Type": "Custom::CrossRegionExportWriter",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "WebAcl9BD21CA7": {
-      "Properties": {
-        "DefaultAction": {
-          "Block": {},
-        },
-        "Rules": [
-          {
-            "Action": {
-              "Allow": {},
-            },
-            "Name": "IpV4SetRule",
-            "Priority": 1,
-            "Statement": {
-              "IPSetReferenceStatement": {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "WebAclIPv4SetA3B84D27",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-            "VisibilityConfig": {
-              "CloudWatchMetricsEnabled": true,
-              "MetricName": "IpV4SetRule",
-              "SampledRequestsEnabled": true,
-            },
-          },
-          {
-            "Action": {
-              "Allow": {},
-            },
-            "Name": "IpV6SetRule",
-            "Priority": 2,
-            "Statement": {
-              "IPSetReferenceStatement": {
-                "Arn": {
-                  "Fn::GetAtt": [
-                    "WebAclIPv6SetEBDEE314",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-            "VisibilityConfig": {
-              "CloudWatchMetricsEnabled": true,
-              "MetricName": "IpV6SetRule",
-              "SampledRequestsEnabled": true,
-            },
-          },
-        ],
-        "Scope": "CLOUDFRONT",
-        "VisibilityConfig": {
-          "CloudWatchMetricsEnabled": true,
-          "MetricName": "DifyWebAcl-c8201431ad5298a909b974e2cb65af9c87dd0d6c2a",
-          "SampledRequestsEnabled": true,
-        },
-      },
-      "Type": "AWS::WAFv2::WebACL",
-    },
-    "WebAclIPv4SetA3B84D27": {
-      "Properties": {
-        "Addresses": [
-          "0.0.0.0/0",
-        ],
-        "IPAddressVersion": "IPV4",
-        "Scope": "CLOUDFRONT",
-      },
-      "Type": "AWS::WAFv2::IPSet",
-    },
-    "WebAclIPv6SetEBDEE314": {
-      "Properties": {
-        "Addresses": [
-          "::/0",
-        ],
-        "IPAddressVersion": "IPV6",
-        "Scope": "CLOUDFRONT",
-      },
-      "Type": "AWS::WAFv2::IPSet",
-    },
-  },
-  "Rules": {
-    "CheckBootstrapVersion": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Not": [
-              {
-                "Fn::Contains": [
-                  [
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                  ],
-                  {
-                    "Ref": "BootstrapVersion",
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
-        },
-      ],
-    },
-  },
-}
-`;
-
-exports[`Snapshot test (with CloudFront) 2`] = `
+exports[`Snapshot test 1`] = `
 {
   "Description": "Dify on AWS (uksb-zea0rh9k0v)",
-  "Mappings": {
-    "AWSCloudFrontPartitionHostedZoneIdMap": {
-      "aws": {
-        "zoneId": "Z2FDTNDATAQYW2",
-      },
-      "aws-cn": {
-        "zoneId": "Z3RFFRIM2A3IF5",
-      },
-    },
-  },
   "Outputs": {
     "DifyUrl": {
-      "Value": "https://dify.example.com",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "AlbC1372A32",
+                "DNSName",
+              ],
+            },
+          ],
+        ],
+      },
     },
   },
   "Parameters": {
@@ -573,31 +329,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "AlbAliasRecordEE9D42DE": {
-      "Properties": {
-        "AliasTarget": {
-          "DNSName": {
-            "Fn::GetAtt": [
-              "AlbDistribution42730BA5",
-              "DomainName",
-            ],
-          },
-          "HostedZoneId": {
-            "Fn::FindInMap": [
-              "AWSCloudFrontPartitionHostedZoneIdMap",
-              {
-                "Ref": "AWS::Partition",
-              },
-              "zoneId",
-            ],
-          },
-        },
-        "HostedZoneId": "DUMMY",
-        "Name": "dify.example.com.",
-        "Type": "A",
-      },
-      "Type": "AWS::Route53::RecordSet",
-    },
     "AlbApiTargetGroup4B6AF19C": {
       "Properties": {
         "HealthCheckIntervalSeconds": 20,
@@ -629,10 +360,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "AlbC1372A32": {
       "DependsOn": [
         "AccessLogBucketPolicyF52D2D01",
-        "VpcPublicSubnet1DefaultRoute3DA9E72A",
-        "VpcPublicSubnet1RouteTableAssociation97140677",
-        "VpcPublicSubnet2DefaultRoute97F91067",
-        "VpcPublicSubnet2RouteTableAssociationDD5762D8",
       ],
       "Properties": {
         "LoadBalancerAttributes": [
@@ -655,7 +382,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Value": "dify-alb",
           },
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Fn::GetAtt": [
@@ -666,86 +393,15 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
         "Subnets": [
           {
-            "Ref": "VpcPublicSubnet1Subnet5C2D37C4",
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
           },
           {
-            "Ref": "VpcPublicSubnet2Subnet691E08A3",
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
           },
         ],
         "Type": "application",
       },
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
-    },
-    "AlbDistribution42730BA5": {
-      "Properties": {
-        "DistributionConfig": {
-          "Aliases": [
-            "dify.example.com",
-          ],
-          "DefaultCacheBehavior": {
-            "AllowedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PUT",
-              "PATCH",
-              "POST",
-              "DELETE",
-            ],
-            "CachePolicyId": "4cc15a8a-d715-48a4-82b8-cc0b614638fe",
-            "Compress": true,
-            "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
-            "TargetOriginId": "TestStackAlbDistributionOrigin1D9B11DF5",
-            "ViewerProtocolPolicy": "redirect-to-https",
-          },
-          "Enabled": true,
-          "HttpVersion": "http2",
-          "IPV6Enabled": true,
-          "Logging": {
-            "Bucket": {
-              "Fn::GetAtt": [
-                "AccessLogBucketDA470295",
-                "RegionalDomainName",
-              ],
-            },
-            "Prefix": "dify-cloudfront/",
-          },
-          "Origins": [
-            {
-              "CustomOriginConfig": {
-                "OriginProtocolPolicy": "http-only",
-                "OriginSSLProtocols": [
-                  "TLSv1.2",
-                ],
-              },
-              "DomainName": {
-                "Fn::GetAtt": [
-                  "AlbC1372A32",
-                  "DNSName",
-                ],
-              },
-              "Id": "TestStackAlbDistributionOrigin1D9B11DF5",
-            },
-          ],
-          "ViewerCertificate": {
-            "AcmCertificateArn": {
-              "Fn::GetAtt": [
-                "ExportsReader8B249524",
-                "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5",
-              ],
-            },
-            "MinimumProtocolVersion": "TLSv1.2_2021",
-            "SslSupportMethod": "sni-only",
-          },
-          "WebACLId": {
-            "Fn::GetAtt": [
-              "ExportsReader8B249524",
-              "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B",
-            ],
-          },
-        },
-      },
-      "Type": "AWS::CloudFront::Distribution",
     },
     "AlbListener318AEEBA": {
       "Properties": {
@@ -859,6 +515,13 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           {
             "CidrIp": "0.0.0.0/0",
             "Description": "from 0.0.0.0/0:80",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80,
+          },
+          {
+            "CidrIpv6": "::/0",
+            "Description": "from ::/0:80",
             "FromPort": 80,
             "IpProtocol": "tcp",
             "ToPort": 80,
@@ -1005,10 +668,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             ],
             "Subnets": [
               {
-                "Ref": "VpcPrivateSubnet1Subnet536B997A",
+                "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
               },
               {
-                "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
+                "Ref": "VpcIsolatedSubnet2Subnet16364B91",
               },
             ],
           },
@@ -1083,19 +746,71 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
               {
                 "Name": "CONSOLE_WEB_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "CONSOLE_API_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "SERVICE_API_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "APP_WEB_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "SQLALCHEMY_POOL_PRE_PING",
@@ -1176,7 +891,18 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "StartPeriod": 60,
               "Timeout": 5,
             },
-            "Image": "langgenius/dify-api:latest",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/custom:dify-api_latest",
+                ],
+              ],
+            },
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1416,7 +1142,18 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
             ],
             "Essential": true,
-            "Image": "langgenius/dify-api:latest",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/custom:dify-api_latest",
+                ],
+              ],
+            },
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1608,16 +1345,23 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Value": "true",
               },
               {
-                "Name": "ALLOWED_SYSCALLS",
-                "Value": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456",
-              },
-              {
                 "Name": "PYTHON_LIB_PATH",
                 "Value": "/usr/local/lib/python3.10,/usr/lib/python3.10,/usr/lib/python3,/usr/lib/x86_64-linux-gnu,/etc/ssl/certs/ca-certificates.crt,/etc/nsswitch.conf,/etc/hosts,/etc/resolv.conf,/run/systemd/resolve/stub-resolv.conf,/run/resolvconf/resolv.conf",
               },
             ],
             "Essential": true,
-            "Image": "langgenius/dify-sandbox:0.2.4",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/custom:dify-sandbox_0.2.4",
+                ],
+              ],
+            },
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1721,6 +1465,31 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Statement": [
             {
               "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-west-2:123456789012:repository/custom",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -1818,11 +1587,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   ],
                 ],
               },
-            },
-            {
-              "Action": "ecr:GetAuthorizationToken",
-              "Effect": "Allow",
-              "Resource": "*",
             },
             {
               "Action": [
@@ -2015,80 +1779,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::ECS::Cluster",
     },
-    "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68": {
-      "DependsOn": [
-        "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
-          "S3Key": "d41c8e6342cd078b5ea5aec11522bdb605eae00f4bb98a3fb0b44c827e9b5ca9.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "ssm:AddTagsToResource",
-                    "ssm:RemoveTagsFromResource",
-                    "ssm:GetParameters",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":ssm:us-west-2:123456789012:parameter/cdk/exports/TestStack/*",
-                      ],
-                    ],
-                  },
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
       "DependsOn": [
         "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
@@ -2145,27 +1835,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "ExportsReader8B249524": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ReaderProps": {
-          "imports": {
-            "/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B": "{{resolve:ssm:/cdk/exports/TestStack/TestUsEast1Stackuseast1FnGetAttWebAcl9BD21CA7Arn6C4CC80B}}",
-            "/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5": "{{resolve:ssm:/cdk/exports/TestStack/TestUsEast1Stackuseast1RefCertificate4E7ABB088DEBDDD5}}",
-          },
-          "prefix": "TestStack",
-          "region": "us-west-2",
-        },
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::CrossRegionExportReader",
-      "UpdateReplacePolicy": "Delete",
-    },
     "PostgresCluster53E5BDAB": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -2207,7 +1876,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Port": 5432,
         "ServerlessV2ScalingConfiguration": {
           "MaxCapacity": 2,
-          "MinCapacity": 0.5,
+          "MinCapacity": 0,
         },
         "StorageEncrypted": true,
         "VpcSecurityGroupIds": [
@@ -2310,10 +1979,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "DBSubnetGroupDescription": "Subnets for Cluster database",
         "SubnetIds": [
           {
-            "Ref": "VpcPrivateSubnet1Subnet536B997A",
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
           },
           {
-            "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
           },
         ],
       },
@@ -2322,10 +1991,8 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "PostgresClusterWriterF88DD8CC": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
-        "VpcPrivateSubnet1DefaultRouteBE02A9ED",
-        "VpcPrivateSubnet1RouteTableAssociation70C59FA6",
-        "VpcPrivateSubnet2DefaultRoute060D2087",
-        "VpcPrivateSubnet2RouteTableAssociationA89CAD56",
+        "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+        "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA",
       ],
       "Properties": {
         "AutoMinorVersionUpgrade": true,
@@ -2703,10 +2370,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Description": "Dify ElastiCache subnets",
         "SubnetIds": [
           {
-            "Ref": "VpcPrivateSubnet1Subnet536B997A",
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
           },
           {
-            "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
           },
         ],
       },
@@ -2904,198 +2571,609 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::VPC",
     },
-    "VpcIGWD7BA715C": {
+    "VpcEndpointsS30075381B": {
       "Properties": {
-        "Tags": [
+        "RouteTableIds": [
           {
-            "Key": "Name",
-            "Value": "TestStack/Vpc",
+            "Ref": "VpcIsolatedSubnet1RouteTable4771E3E5",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2RouteTable1D30AF7D",
           },
         ],
-      },
-      "Type": "AWS::EC2::InternetGateway",
-    },
-    "VpcPrivateSubnet1DefaultRouteBE02A9ED": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId": {
-          "Ref": "VpcPublicSubnet1NATGateway4D7517AA",
-        },
-        "RouteTableId": {
-          "Ref": "VpcPrivateSubnet1RouteTableB2C5B500",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "VpcPrivateSubnet1RouteTableAssociation70C59FA6": {
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "VpcPrivateSubnet1RouteTableB2C5B500",
-        },
-        "SubnetId": {
-          "Ref": "VpcPrivateSubnet1Subnet536B997A",
-        },
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-    },
-    "VpcPrivateSubnet1RouteTableB2C5B500": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PrivateSubnet1",
-          },
-        ],
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::RouteTable",
-    },
-    "VpcPrivateSubnet1Subnet536B997A": {
-      "Properties": {
-        "AvailabilityZone": "dummy1a",
-        "CidrBlock": "10.0.128.0/18",
-        "MapPublicIpOnLaunch": false,
-        "Tags": [
-          {
-            "Key": "aws-cdk:subnet-name",
-            "Value": "Private",
-          },
-          {
-            "Key": "aws-cdk:subnet-type",
-            "Value": "Private",
-          },
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PrivateSubnet1",
-          },
-        ],
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::Subnet",
-    },
-    "VpcPrivateSubnet2DefaultRoute060D2087": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId": {
-          "Ref": "VpcPublicSubnet2NATGateway9182C01D",
-        },
-        "RouteTableId": {
-          "Ref": "VpcPrivateSubnet2RouteTableA678073B",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "VpcPrivateSubnet2RouteTableA678073B": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PrivateSubnet2",
-          },
-        ],
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::RouteTable",
-    },
-    "VpcPrivateSubnet2RouteTableAssociationA89CAD56": {
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "VpcPrivateSubnet2RouteTableA678073B",
-        },
-        "SubnetId": {
-          "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
-        },
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-    },
-    "VpcPrivateSubnet2Subnet3788AAA1": {
-      "Properties": {
-        "AvailabilityZone": "dummy1b",
-        "CidrBlock": "10.0.192.0/18",
-        "MapPublicIpOnLaunch": false,
-        "Tags": [
-          {
-            "Key": "aws-cdk:subnet-name",
-            "Value": "Private",
-          },
-          {
-            "Key": "aws-cdk:subnet-type",
-            "Value": "Private",
-          },
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PrivateSubnet2",
-          },
-        ],
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::Subnet",
-    },
-    "VpcPublicSubnet1DefaultRoute3DA9E72A": {
-      "DependsOn": [
-        "VpcVPCGWBF912B6E",
-      ],
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": {
-          "Ref": "VpcIGWD7BA715C",
-        },
-        "RouteTableId": {
-          "Ref": "VpcPublicSubnet1RouteTable6C95E38E",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "VpcPublicSubnet1EIPD7E02669": {
-      "Properties": {
-        "Domain": "vpc",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet1",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::EIP",
-    },
-    "VpcPublicSubnet1NATGateway4D7517AA": {
-      "DependsOn": [
-        "VpcPublicSubnet1DefaultRoute3DA9E72A",
-        "VpcPublicSubnet1RouteTableAssociation97140677",
-      ],
-      "Properties": {
-        "AllocationId": {
-          "Fn::GetAtt": [
-            "VpcPublicSubnet1EIPD7E02669",
-            "AllocationId",
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".s3",
+            ],
           ],
         },
-        "SubnetId": {
-          "Ref": "VpcPublicSubnet1Subnet5C2D37C4",
+        "VpcEndpointType": "Gateway",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
         },
-        "Tags": [
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsbedrockagentruntime679D4488": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
           {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet1",
+            "Fn::GetAtt": [
+              "VpcEndpointsbedrockagentruntimeSecurityGroupB7FAD5A2",
+              "GroupId",
+            ],
           },
         ],
+        "ServiceName": "com.amazonaws.us-west-2.bedrock-agent-runtime",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
       },
-      "Type": "AWS::EC2::NatGateway",
+      "Type": "AWS::EC2::VPCEndpoint",
     },
-    "VpcPublicSubnet1RouteTable6C95E38E": {
+    "VpcEndpointsbedrockagentruntimeSecurityGroupB7FAD5A2": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/bedrock-agent-runtime/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointsbedrockruntimeBF278953": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointsbedrockruntimeSecurityGroup1EEA6237",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.bedrock-runtime",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsbedrockruntimeSecurityGroup1EEA6237": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/bedrock-runtime/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointsecrapiB6788145": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointsecrapiSecurityGroup3B2D9F24",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.ecr.api",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsecrapiSecurityGroup3B2D9F24": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/ecr.api/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointsecrdkr0FEDE80B": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointsecrdkrSecurityGroup02575FCB",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.ecr.dkr",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsecrdkrSecurityGroup02575FCB": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/ecr.dkr/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointslogs9BDB334D": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointslogsSecurityGroup6564A2A4",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.logs",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointslogsSecurityGroup6564A2A4": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/logs/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointssecretsmanager512D13AA": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointssecretsmanagerSecurityGroupB551A680",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.secretsmanager",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointssecretsmanagerSecurityGroupB551A680": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/secretsmanager/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointsssm8AD5C9C0": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointsssmSecurityGroup1AE8F8A0",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.ssm",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsssmSecurityGroup1AE8F8A0": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/ssm/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpointsssmmessages015FA634": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcEndpointsssmmessagesSecurityGroup74544C6F",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-west-2.ssmmessages",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2Subnet16364B91",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointsssmmessagesSecurityGroup74544C6F": {
+      "Properties": {
+        "GroupDescription": "TestStack/VpcEndpoints/ssmmessages/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "Vpc8378EB38",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "Vpc8378EB38",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcIsolatedSubnet1RouteTable4771E3E5": {
       "Properties": {
         "Tags": [
           {
             "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet1",
+            "Value": "TestStack/Vpc/IsolatedSubnet1",
           },
         ],
         "VpcId": {
@@ -3104,34 +3182,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::RouteTable",
     },
-    "VpcPublicSubnet1RouteTableAssociation97140677": {
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB": {
       "Properties": {
         "RouteTableId": {
-          "Ref": "VpcPublicSubnet1RouteTable6C95E38E",
+          "Ref": "VpcIsolatedSubnet1RouteTable4771E3E5",
         },
         "SubnetId": {
-          "Ref": "VpcPublicSubnet1Subnet5C2D37C4",
+          "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
-    "VpcPublicSubnet1Subnet5C2D37C4": {
+    "VpcIsolatedSubnet1SubnetE48C5737": {
       "Properties": {
         "AvailabilityZone": "dummy1a",
-        "CidrBlock": "10.0.0.0/18",
+        "CidrBlock": "10.0.0.0/17",
         "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
-            "Value": "Public",
+            "Value": "Isolated",
           },
           {
             "Key": "aws-cdk:subnet-type",
-            "Value": "Public",
+            "Value": "Isolated",
           },
           {
             "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet1",
+            "Value": "TestStack/Vpc/IsolatedSubnet1",
           },
         ],
         "VpcId": {
@@ -3140,63 +3218,12 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::Subnet",
     },
-    "VpcPublicSubnet2DefaultRoute97F91067": {
-      "DependsOn": [
-        "VpcVPCGWBF912B6E",
-      ],
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": {
-          "Ref": "VpcIGWD7BA715C",
-        },
-        "RouteTableId": {
-          "Ref": "VpcPublicSubnet2RouteTable94F7E489",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "VpcPublicSubnet2EIP3C605A87": {
-      "Properties": {
-        "Domain": "vpc",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet2",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::EIP",
-    },
-    "VpcPublicSubnet2NATGateway9182C01D": {
-      "DependsOn": [
-        "VpcPublicSubnet2DefaultRoute97F91067",
-        "VpcPublicSubnet2RouteTableAssociationDD5762D8",
-      ],
-      "Properties": {
-        "AllocationId": {
-          "Fn::GetAtt": [
-            "VpcPublicSubnet2EIP3C605A87",
-            "AllocationId",
-          ],
-        },
-        "SubnetId": {
-          "Ref": "VpcPublicSubnet2Subnet691E08A3",
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet2",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::NatGateway",
-    },
-    "VpcPublicSubnet2RouteTable94F7E489": {
+    "VpcIsolatedSubnet2RouteTable1D30AF7D": {
       "Properties": {
         "Tags": [
           {
             "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet2",
+            "Value": "TestStack/Vpc/IsolatedSubnet2",
           },
         ],
         "VpcId": {
@@ -3205,34 +3232,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::RouteTable",
     },
-    "VpcPublicSubnet2RouteTableAssociationDD5762D8": {
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA": {
       "Properties": {
         "RouteTableId": {
-          "Ref": "VpcPublicSubnet2RouteTable94F7E489",
+          "Ref": "VpcIsolatedSubnet2RouteTable1D30AF7D",
         },
         "SubnetId": {
-          "Ref": "VpcPublicSubnet2Subnet691E08A3",
+          "Ref": "VpcIsolatedSubnet2Subnet16364B91",
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
-    "VpcPublicSubnet2Subnet691E08A3": {
+    "VpcIsolatedSubnet2Subnet16364B91": {
       "Properties": {
         "AvailabilityZone": "dummy1b",
-        "CidrBlock": "10.0.64.0/18",
+        "CidrBlock": "10.0.128.0/17",
         "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
-            "Value": "Public",
+            "Value": "Isolated",
           },
           {
             "Key": "aws-cdk:subnet-type",
-            "Value": "Public",
+            "Value": "Isolated",
           },
           {
             "Key": "Name",
-            "Value": "TestStack/Vpc/PublicSubnet2",
+            "Value": "TestStack/Vpc/IsolatedSubnet2",
           },
         ],
         "VpcId": {
@@ -3240,17 +3267,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         },
       },
       "Type": "AWS::EC2::Subnet",
-    },
-    "VpcVPCGWBF912B6E": {
-      "Properties": {
-        "InternetGatewayId": {
-          "Ref": "VpcIGWD7BA715C",
-        },
-        "VpcId": {
-          "Ref": "Vpc8378EB38",
-        },
-      },
-      "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "WebServiceFargateService5BB9529D": {
       "DependsOn": [
@@ -3306,10 +3322,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             ],
             "Subnets": [
               {
-                "Ref": "VpcPrivateSubnet1Subnet536B997A",
+                "Ref": "VpcIsolatedSubnet1SubnetE48C5737",
               },
               {
-                "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
+                "Ref": "VpcIsolatedSubnet2Subnet16364B91",
               },
             ],
           },
@@ -3388,6 +3404,31 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Statement": [
             {
               "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-west-2:123456789012:repository/custom",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -3426,11 +3467,37 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
               {
                 "Name": "CONSOLE_API_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "APP_API_URL",
-                "Value": "https://dify.example.com",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
               },
               {
                 "Name": "HOSTNAME",
@@ -3452,7 +3519,18 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "StartPeriod": 30,
               "Timeout": 5,
             },
-            "Image": "langgenius/dify-web:latest",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/custom:dify-web_latest",
+                ],
+              ],
+            },
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {

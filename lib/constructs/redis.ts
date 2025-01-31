@@ -23,8 +23,8 @@ export class Redis extends Construct implements ec2.IConnectable {
     const { vpc, multiAz } = props;
 
     const subnetGroup = new CfnSubnetGroup(this, 'SubnetGroup', {
-      subnetIds: vpc.privateSubnets.map(({ subnetId }) => subnetId),
-      description: 'private subnet',
+      subnetIds: vpc.privateSubnets.concat(vpc.isolatedSubnets).map(({ subnetId }) => subnetId),
+      description: 'Dify ElastiCache subnets',
     });
 
     const securityGroup = new SecurityGroup(this, 'SecurityGroup', {

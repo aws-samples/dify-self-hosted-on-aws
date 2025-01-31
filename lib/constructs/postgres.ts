@@ -61,6 +61,7 @@ export class Postgres extends Construct implements IConnectable {
           idle_session_timeout: '60000',
         },
       }),
+      vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets.concat(vpc.isolatedSubnets) }),
     });
     if (props.scalesToZero ?? false) {
       (cluster.node.defaultChild as CfnResource).addPropertyOverride('ServerlessV2ScalingConfiguration.MinCapacity', 0);

@@ -11,6 +11,9 @@ import { Alb } from './constructs/alb';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { VpcEndpoints } from './constructs/vpc-endpoints';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { createVpc } from './constructs/vpc';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -18,7 +21,8 @@ import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly allowedIPv4Cidrs?: string[];
   readonly allowedIPv6Cidrs?: string[];
-  readonly cheapVpc?: boolean;
+  readonly useNatInstance?: boolean;
+  readonly vpcIsolated?: boolean;
   readonly vpcId?: string;
   readonly domainName?: string;
   readonly isRedisMultiAz?: boolean;
@@ -31,6 +35,8 @@ export interface DifyOnAwsStackProps extends cdk.StackProps {
 
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
+  readonly internalAlb?: boolean;
+  readonly customEcrRepositoryName?: string;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -42,39 +48,11 @@ export class DifyOnAwsStack extends cdk.Stack {
       difySandboxImageTag: sandboxImageTag = 'latest',
       allowAnySyscalls = false,
       useCloudFront = true,
+      internalAlb = false,
       subDomain = 'dify',
     } = props;
 
-    let vpc: IVpc;
-    if (props.vpcId != null) {
-      vpc = Vpc.fromLookup(this, 'Vpc', { vpcId: props.vpcId });
-    } else {
-      vpc = new Vpc(this, 'Vpc', {
-        ...(props.cheapVpc
-          ? {
-              natGatewayProvider: NatProvider.instanceV2({
-                instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
-              }),
-              natGateways: 1,
-            }
-          : {}),
-        maxAzs: 2,
-        subnetConfiguration: [
-          {
-            subnetType: SubnetType.PUBLIC,
-            name: 'Public',
-            // NAT instance does not work when this set to false.
-            // mapPublicIpOnLaunch: false,
-          },
-          {
-            subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-            name: 'Private',
-          },
-        ],
-      });
-    }
-
-    if (!props.useCloudFront && props.domainName == null) {
+    if (!props.useCloudFront && props.domainName == null && !internalAlb) {
       cdk.Annotations.of(this).addWarningV2(
         'ALBWithoutEncryption',
         'You are exposing ALB to the Internet without TLS encryption. Recommended to set useCloudFront: true or domainName property.',
@@ -86,6 +64,12 @@ export class DifyOnAwsStack extends cdk.Stack {
           domainName: props.domainName,
         })
       : undefined;
+
+    const vpc = createVpc(this, {
+      vpcId: props.vpcId,
+      useNatInstance: props.useNatInstance,
+      isolated: props.vpcIsolated,
+    });
 
     const accessLogBucket = new Bucket(this, 'AccessLogBucket', {
       enforceSSL: true,
@@ -128,8 +112,13 @@ export class DifyOnAwsStack extends cdk.Stack {
           allowedIPv6Cidrs: props.allowedIPv6Cidrs,
           hostedZone,
           accessLogBucket,
+          internal: internalAlb,
           subDomain,
         });
+
+    let customRepository = props.customEcrRepositoryName
+      ? Repository.fromRepositoryName(this, 'CustomRepository', props.customEcrRepositoryName)
+      : undefined;
 
     new ApiService(this, 'ApiService', {
       cluster,
@@ -140,12 +129,14 @@ export class DifyOnAwsStack extends cdk.Stack {
       imageTag,
       sandboxImageTag,
       allowAnySyscalls,
+      customRepository,
     });
 
     new WebService(this, 'WebService', {
       cluster,
       alb,
       imageTag,
+      customRepository,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {
