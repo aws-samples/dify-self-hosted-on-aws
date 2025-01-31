@@ -9,7 +9,7 @@ const propsClosed: EnvironmentProps = {
   awsRegion: 'us-east-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '0.14.2',
+  difyImageTag: '0.15.2',
   allowedIPv4Cidrs: ['0.0.0.0/0'],
   allowedIPv6Cidrs: [],
 

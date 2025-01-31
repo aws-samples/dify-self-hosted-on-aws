@@ -29,6 +29,8 @@ export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly difySandboxImageTag?: string;
   readonly allowAnySyscalls?: boolean;
   readonly useCloudFront?: boolean;
+  readonly subDomain?: string;
+
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
   readonly internalAlb?: boolean;
@@ -45,6 +47,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       allowAnySyscalls = false,
       useCloudFront = true,
       internalAlb = false,
+      subDomain = 'dify',
     } = props;
 
     let vpc: IVpc;
@@ -136,6 +139,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           accessLogBucket,
           cloudFrontCertificate: props.cloudFrontCertificate,
           cloudFrontWebAclArn: props.cloudFrontWebAclArn,
+          subDomain,
         })
       : new Alb(this, 'Alb', {
           vpc,
@@ -144,6 +148,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           hostedZone,
           accessLogBucket,
           internal: internalAlb,
+          subDomain,
         });
 
     let customRepository = props.customEcrRepositoryName
