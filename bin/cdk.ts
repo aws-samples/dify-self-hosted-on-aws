@@ -5,26 +5,20 @@ import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
 import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
-const propsClosed: EnvironmentProps = {
-  awsRegion: 'us-east-2',
+export const props: EnvironmentProps = {
+  awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
   difyImageTag: '0.15.2',
-  allowedIPv4Cidrs: ['0.0.0.0/0'],
-  allowedIPv6Cidrs: [],
+
+  // uncomment the below for cheap configuration:
+  // isRedisMultiAz: false,
+  // cheapVpc: true,
+  // enableAuroraScalesToZero: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
-  allowAnySyscalls: true,
-  isRedisMultiAz: false,
-  useNatInstance: true,
-  enableAuroraScalesToZero: true,
   useCloudFront: false,
-  internalAlb: true,
-  vpcIsolated: true,
-  customEcrRepositoryName: 'dify-images',
 };
-
-export const props = propsClosed;
 
 const app = new cdk.App();
 
