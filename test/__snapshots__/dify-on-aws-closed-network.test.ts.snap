@@ -641,7 +641,7 @@ exports[`Snapshot test 1`] = `
             "Rollback": false,
           },
           "MaximumPercent": 200,
-          "MinimumHealthyPercent": 50,
+          "MinimumHealthyPercent": 100,
         },
         "EnableECSManagedTags": false,
         "EnableExecuteCommand": true,
@@ -860,6 +860,10 @@ exports[`Snapshot test 1`] = `
                 "Value": "us-west-2",
               },
               {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
                 "Name": "DB_DATABASE",
                 "Value": "main",
               },
@@ -884,7 +888,7 @@ exports[`Snapshot test 1`] = `
               ],
               "Interval": 15,
               "Retries": 5,
-              "StartPeriod": 30,
+              "StartPeriod": 60,
               "Timeout": 5,
             },
             "Image": {
@@ -1309,7 +1313,7 @@ exports[`Snapshot test 1`] = `
           {
             "Essential": false,
             "Image": {
-              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:8212bb6032c6f45fe8aa3802d732a1c334e09486001a46c78816d50319722a0b",
+              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:fdbe97431d1530d4b23e594042efd1d8f28074f179eaa6977f851f6b0502b859",
             },
             "MountPoints": [
               {
@@ -1718,6 +1722,7 @@ exports[`Snapshot test 1`] = `
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
+                "bedrock:RetrieveAndGenerate",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -3290,7 +3295,7 @@ exports[`Snapshot test 1`] = `
             "Rollback": false,
           },
           "MaximumPercent": 200,
-          "MinimumHealthyPercent": 50,
+          "MinimumHealthyPercent": 100,
         },
         "EnableECSManagedTags": false,
         "EnableExecuteCommand": true,

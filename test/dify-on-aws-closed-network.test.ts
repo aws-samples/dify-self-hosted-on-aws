@@ -17,6 +17,7 @@ test('Snapshot test', () => {
     enableAuroraScalesToZero: true,
     useCloudFront: false,
     internalAlb: true,
+    vpcIsolated: true,
     customEcrRepositoryName: 'custom',
   };
 

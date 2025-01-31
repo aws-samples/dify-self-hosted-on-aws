@@ -13,6 +13,7 @@ import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { VpcEndpoints } from './constructs/vpc-endpoints';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { createVpc } from './constructs/vpc';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -20,7 +21,8 @@ import { Repository } from 'aws-cdk-lib/aws-ecr';
 export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly allowedIPv4Cidrs?: string[];
   readonly allowedIPv6Cidrs?: string[];
-  readonly cheapVpc?: boolean;
+  readonly useNatInstance?: boolean;
+  readonly vpcIsolated?: boolean;
   readonly vpcId?: string;
   readonly domainName?: string;
   readonly isRedisMultiAz?: boolean;
@@ -50,50 +52,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       subDomain = 'dify',
     } = props;
 
-    let vpc: IVpc;
-    if (props.vpcId != null) {
-      vpc = Vpc.fromLookup(this, 'Vpc', { vpcId: props.vpcId });
-    } else if (internalAlb) {
-      vpc = new Vpc(this, 'Vpc', {
-        maxAzs: 2,
-        subnetConfiguration: [
-          {
-            subnetType: SubnetType.PRIVATE_ISOLATED,
-            name: 'Isolated',
-          },
-        ],
-      });
-    } else {
-      vpc = new Vpc(this, 'Vpc', {
-        ...(props.cheapVpc
-          ? {
-              natGatewayProvider: NatProvider.instanceV2({
-                instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
-                associatePublicIpAddress: true,
-              }),
-              natGateways: 1,
-            }
-          : {}),
-        maxAzs: 2,
-        subnetConfiguration: [
-          {
-            subnetType: SubnetType.PUBLIC,
-            name: 'Public',
-            mapPublicIpOnLaunch: false,
-          },
-          {
-            subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-            name: 'Private',
-          },
-        ],
-      });
-    }
-
-    if (internalAlb) {
-      new VpcEndpoints(this, 'VpcEndpoints', { vpc });
-    }
-
-    if (!props.useCloudFront && props.domainName == null) {
+    if (!props.useCloudFront && props.domainName == null && !internalAlb) {
       cdk.Annotations.of(this).addWarningV2(
         'ALBWithoutEncryption',
         'You are exposing ALB to the Internet without TLS encryption. Recommended to set useCloudFront: true or domainName property.',
@@ -105,6 +64,12 @@ export class DifyOnAwsStack extends cdk.Stack {
           domainName: props.domainName,
         })
       : undefined;
+
+    const vpc = createVpc(this, {
+      vpcId: props.vpcId,
+      useNatInstance: props.useNatInstance,
+      isolated: props.vpcIsolated,
+    });
 
     const accessLogBucket = new Bucket(this, 'AccessLogBucket', {
       enforceSSL: true,

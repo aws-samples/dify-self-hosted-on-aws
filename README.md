@@ -135,12 +135,45 @@ The below are the list of configurable parameters and their default values:
 
 To deploy this project to a closed network (a VPC without Internet Gateway nor NAT Gateway), you can follow the below steps:
 
-* VPCのサブネットをIsolatedのみに
-* VPC Endpoint群を作成
-* ALBをInternalに
-* Difyコンテナイメージの置き場をECRに
-* Sandboxコンテナのpython-requirments.txtを空に
-* DifyのBedrockリージョンはVPCと同じリージョンに
+1. Set configuration parameters in `bin/cdk.ts` as below:
+    ```ts
+    export const props: EnvironmentProps = {
+        // set region and account you want to deploy.
+        awsRegion: 'ap-northeast-1',
+        awsAccount: '123456789012',
+
+        // Set your internal IP address ranges here.
+        allowedIPv4Cidrs: ['10.0.0.0/16'],
+
+        // The below two flags must be set.
+        useCloudFront: false,
+        internalAlb: true,
+
+        // If you cannot access Docker Hub from your vpc subnets, set this property.
+        customEcrRepositoryName: 'dify-images',
+
+        // Optionally you can import an existing VPC.
+        vpcId: 'vpc-12345678',
+
+        // Or you want to let the CDK create VPC, set this property.
+        vpcIsolated: true,
+
+        // Other properties can be configured as you like.
+    };
+    ```
+
+2. Open [`python-requirements.txt`](lib/constructs/dify-services/docker/sandbox/python-requirements.txt) and remove all the dependencies from it
+    * This is **only required** when you cannot access [PyPI](https://pypi.org/) from your vpc subnets.
+3. Copy all the Dify container images in Docker Hub to a ECR repository.
+    * To do this, you can just run `npx ts-node scripts/copy-to-ecr.ts`. (You also need `npm ci` before it.)
+        * This script must be executed in an environment that has access to the Internet.
+        * This script must be executed every time you change `difyImageTag` or `difySandboxImageTag` property.
+    * This is **only required** when you cannot access [Docker Hub](https://www.docker.com/products/docker-hub/) from your vpc subnets.
+4. When you use an existing VPC (`vpcId` property), make sure the required VPC endpoints are provisioned.
+    * See [vpc-endpoints.ts](lib/constructs/vpc-endpoints.ts) for the list of required VPC endpoints.
+5. Deploy the CDK project following the section [Deploy](#deploy).
+6. After the deployment, please configure Bedrock in Dify with the AWS region same as your VPC.
+    * e.g. `ap-northeast-1` in the above example.
 
 
 ## Clean up
@@ -150,6 +183,8 @@ To avoid incurring future charges, clean up the resources you created.
 npx cdk destroy --force
 # If you encountered an error during the deletion, please retry. It happens sometimes.
 ```
+
+If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, please remove the container repository and images in it manually.
 
 ## Cost
 

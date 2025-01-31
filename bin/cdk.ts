@@ -20,10 +20,11 @@ const propsClosed: EnvironmentProps = {
   enableAuroraScalesToZero: true,
   useCloudFront: false,
   internalAlb: true,
+  vpcIsolated: true,
   customEcrRepositoryName: 'dify-images',
 };
 
-const props = propsClosed;
+export const props = propsClosed;
 
 const app = new cdk.App();
 
