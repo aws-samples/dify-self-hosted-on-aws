@@ -94,6 +94,7 @@ export class ApiService extends Construct {
         STORAGE_TYPE: 's3',
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
+        S3_USE_AWS_MANAGED_IAM: 'true',
 
         // postgres settings. the credentials are in secrets property.
         DB_DATABASE: postgres.databaseName,
@@ -128,7 +129,7 @@ export class ApiService extends Construct {
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
         interval: Duration.seconds(15),
-        startPeriod: Duration.seconds(30),
+        startPeriod: Duration.seconds(60),
         timeout: Duration.seconds(5),
         retries: 5,
       },
@@ -266,7 +267,13 @@ export class ApiService extends Construct {
     // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank', 'bedrock:Retrieve'],
+        actions: [
+          'bedrock:InvokeModel',
+          'bedrock:InvokeModelWithResponseStream',
+          'bedrock:Rerank',
+          'bedrock:Retrieve',
+          'bedrock:RetrieveAndGenerate',
+        ],
         resources: ['*'],
       }),
     );
