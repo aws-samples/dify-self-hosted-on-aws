@@ -10,6 +10,7 @@ const propsClosed: EnvironmentProps = {
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
   difyImageTag: '0.14.2',
+  allowedIPv4Cidrs: ['0.0.0.0/0'],
   allowedIPv6Cidrs: [],
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
