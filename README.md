@@ -145,7 +145,7 @@ To deploy this project on a closed network (a VPC without Internet gateway or NA
         // Set your internal IP address ranges here.
         allowedIPv4Cidrs: ['10.0.0.0/16'],
 
-        // The below two flags must be set.
+        // The below two flags must be set for closed network deployment.
         useCloudFront: false,
         internalAlb: true,
 
@@ -154,8 +154,7 @@ To deploy this project on a closed network (a VPC without Internet gateway or NA
 
         // Optionally you can import an existing VPC.
         vpcId: 'vpc-12345678',
-
-        // Or you want to let the CDK create VPC, set this property.
+        // Or you want to let the CDK create an isolated VPC, set this property.
         vpcIsolated: true,
 
         // Other properties can be configured as you like.

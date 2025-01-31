@@ -2254,16 +2254,17 @@ exports[`Snapshot test 1`] = `
         },
         "AutomaticFailoverEnabled": true,
         "CacheNodeType": "cache.t4g.micro",
+        "CacheParameterGroupName": "default.valkey8",
         "CacheSubnetGroupName": {
           "Ref": "RedisSubnetGroup2387CBFF",
         },
         "Engine": "Valkey",
-        "EngineVersion": "7.2",
+        "EngineVersion": "8.0",
         "MultiAZEnabled": true,
         "NumNodeGroups": 1,
         "Port": 6379,
         "ReplicasPerNodeGroup": 1,
-        "ReplicationGroupDescription": "Dify redis cluster",
+        "ReplicationGroupDescription": "Dify cache/queue cluster",
         "SecurityGroupIds": [
           {
             "Fn::GetAtt": [
