@@ -131,7 +131,7 @@ The below are the list of configurable parameters and their default values:
 3. Aurora Postgres ([postgres.ts](./lib/constructs/postgres.ts))
     1. Serverless v2 maximum capacity: 2 ACU
 
-### Deploy to a closed network
+### Deploy to a closed network (a.k.a 閉域要件)
 
 To deploy this project to a closed network (a VPC without Internet Gateway nor NAT Gateway), you can follow the below steps:
 
