@@ -855,6 +855,10 @@ exports[`Snapshot test 1`] = `
                 "Value": "us-west-2",
               },
               {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
                 "Name": "DB_DATABASE",
                 "Value": "main",
               },
@@ -879,7 +883,7 @@ exports[`Snapshot test 1`] = `
               ],
               "Interval": 15,
               "Retries": 5,
-              "StartPeriod": 30,
+              "StartPeriod": 60,
               "Timeout": 5,
             },
             "Image": "langgenius/dify-api:latest",
@@ -1664,6 +1668,7 @@ exports[`Snapshot test 1`] = `
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
+                "bedrock:RetrieveAndGenerate",
               ],
               "Effect": "Allow",
               "Resource": "*",

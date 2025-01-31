@@ -27,6 +27,8 @@ export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly difySandboxImageTag?: string;
   readonly allowAnySyscalls?: boolean;
   readonly useCloudFront?: boolean;
+  readonly subDomain?: string;
+
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
 }
@@ -40,6 +42,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       difySandboxImageTag: sandboxImageTag = 'latest',
       allowAnySyscalls = false,
       useCloudFront = true,
+      subDomain = 'dify',
     } = props;
 
     let vpc: IVpc;
@@ -117,6 +120,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           accessLogBucket,
           cloudFrontCertificate: props.cloudFrontCertificate,
           cloudFrontWebAclArn: props.cloudFrontWebAclArn,
+          subDomain,
         })
       : new Alb(this, 'Alb', {
           vpc,
@@ -124,6 +128,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           allowedIPv6Cidrs: props.allowedIPv6Cidrs,
           hostedZone,
           accessLogBucket,
+          subDomain,
         });
 
     new ApiService(this, 'ApiService', {
