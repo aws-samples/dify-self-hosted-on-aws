@@ -9,6 +9,7 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
+import { IRepository } from 'aws-cdk-lib/aws-ecr';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -27,13 +28,15 @@ export interface ApiServiceProps {
    * @default false
    */
   debug?: boolean;
+
+  customRepository?: IRepository;
 }
 
 export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, debug = false } = props;
+    const { cluster, alb, postgres, redis, storageBucket, debug = false, customRepository } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -56,7 +59,9 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Main', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       // https://docs.dify.ai/getting-started/install-self-hosted/environments
       environment: {
         MODE: 'api',
@@ -135,7 +140,9 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Worker', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       environment: {
         MODE: 'worker',
         // The log level for the application. Supported values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
@@ -186,12 +193,17 @@ export class ApiService extends Construct {
     const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
+        buildArgs: {
+          DISABLE_PYTHON_DEPENDENCIES: 'false',
+        },
       }),
       essential: false,
     });
 
     const sandboxContainer = taskDefinition.addContainer('Sandbox', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-sandbox_${props.sandboxImageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
       environment: {
         GIN_MODE: 'release',
         WORKER_TIMEOUT: '15',

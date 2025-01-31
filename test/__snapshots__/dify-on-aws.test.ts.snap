@@ -1282,7 +1282,7 @@ exports[`Snapshot test 1`] = `
           {
             "Essential": false,
             "Image": {
-              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
+              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:8212bb6032c6f45fe8aa3802d732a1c334e09486001a46c78816d50319722a0b",
             },
             "MountPoints": [
               {
@@ -2310,7 +2310,7 @@ exports[`Snapshot test 1`] = `
     },
     "RedisSubnetGroup2387CBFF": {
       "Properties": {
-        "Description": "private subnet",
+        "Description": "Dify ElastiCache subnets",
         "SubnetIds": [
           {
             "Ref": "VpcPrivateSubnet1Subnet536B997A",
@@ -2729,7 +2729,7 @@ exports[`Snapshot test 1`] = `
       "Properties": {
         "AvailabilityZone": "dummy1a",
         "CidrBlock": "10.0.0.0/18",
-        "MapPublicIpOnLaunch": true,
+        "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
@@ -2830,7 +2830,7 @@ exports[`Snapshot test 1`] = `
       "Properties": {
         "AvailabilityZone": "dummy1b",
         "CidrBlock": "10.0.64.0/18",
-        "MapPublicIpOnLaunch": true,
+        "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",

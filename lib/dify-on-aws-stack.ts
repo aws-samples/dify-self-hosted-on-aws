@@ -11,6 +11,8 @@ import { Alb } from './constructs/alb';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { VpcEndpoints } from './constructs/vpc-endpoints';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -29,6 +31,8 @@ export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly useCloudFront?: boolean;
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
+  readonly internalAlb?: boolean;
+  readonly customEcrRepositoryName?: string;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -40,17 +44,29 @@ export class DifyOnAwsStack extends cdk.Stack {
       difySandboxImageTag: sandboxImageTag = 'latest',
       allowAnySyscalls = false,
       useCloudFront = true,
+      internalAlb = false,
     } = props;
 
     let vpc: IVpc;
     if (props.vpcId != null) {
       vpc = Vpc.fromLookup(this, 'Vpc', { vpcId: props.vpcId });
+    } else if (internalAlb) {
+      vpc = new Vpc(this, 'Vpc', {
+        maxAzs: 2,
+        subnetConfiguration: [
+          {
+            subnetType: SubnetType.PRIVATE_ISOLATED,
+            name: 'Isolated',
+          },
+        ],
+      });
     } else {
       vpc = new Vpc(this, 'Vpc', {
         ...(props.cheapVpc
           ? {
               natGatewayProvider: NatProvider.instanceV2({
                 instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
+                associatePublicIpAddress: true,
               }),
               natGateways: 1,
             }
@@ -60,8 +76,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           {
             subnetType: SubnetType.PUBLIC,
             name: 'Public',
-            // NAT instance does not work when this set to false.
-            // mapPublicIpOnLaunch: false,
+            mapPublicIpOnLaunch: false,
           },
           {
             subnetType: SubnetType.PRIVATE_WITH_EGRESS,
@@ -69,6 +84,10 @@ export class DifyOnAwsStack extends cdk.Stack {
           },
         ],
       });
+    }
+
+    if (internalAlb) {
+      new VpcEndpoints(this, 'VpcEndpoints', { vpc });
     }
 
     if (!props.useCloudFront && props.domainName == null) {
@@ -124,7 +143,12 @@ export class DifyOnAwsStack extends cdk.Stack {
           allowedIPv6Cidrs: props.allowedIPv6Cidrs,
           hostedZone,
           accessLogBucket,
+          internal: internalAlb,
         });
+
+    let customRepository = props.customEcrRepositoryName
+      ? Repository.fromRepositoryName(this, 'CustomRepository', props.customEcrRepositoryName)
+      : undefined;
 
     new ApiService(this, 'ApiService', {
       cluster,
@@ -135,12 +159,14 @@ export class DifyOnAwsStack extends cdk.Stack {
       imageTag,
       sandboxImageTag,
       allowAnySyscalls,
+      customRepository,
     });
 
     new WebService(this, 'WebService', {
       cluster,
       alb,
       imageTag,
+      customRepository,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {
