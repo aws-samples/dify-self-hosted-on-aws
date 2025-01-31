@@ -131,9 +131,9 @@ The below are the list of configurable parameters and their default values:
 3. Aurora Postgres ([postgres.ts](./lib/constructs/postgres.ts))
     1. Serverless v2 maximum capacity: 2 ACU
 
-### Deploy to a closed network (a.k.a 閉域要件)
+### Deploying to a closed network (a.k.a 閉域要件)
 
-To deploy this project to a closed network (a VPC without Internet Gateway nor NAT Gateway), you can follow the below steps:
+To deploy this project on a closed network (a VPC without Internet gateway or NAT gateway), you can follow the steps below:
 
 1. Set configuration parameters in `bin/cdk.ts` as below:
     ```ts
@@ -163,17 +163,17 @@ To deploy this project to a closed network (a VPC without Internet Gateway nor N
     ```
 
 2. Open [`python-requirements.txt`](lib/constructs/dify-services/docker/sandbox/python-requirements.txt) and remove all the dependencies from it
-    * This is **only required** when you cannot access [PyPI](https://pypi.org/) from your vpc subnets.
-3. Copy all the Dify container images in Docker Hub to a ECR repository.
-    * To do this, you can just run `npx ts-node scripts/copy-to-ecr.ts`. (You also need `npm ci` before it.)
+    * This is **only required** if you cannot access [PyPI](https://pypi.org/) from your vpc subnets.
+3. Copy all the dify container images in Docker Hub to an ECR repository.
+    * To do this, you can simply run `npx ts-node scripts/copy-to-ecr.ts`. (You will also need to run `npm ci` before this.)
         * This script must be executed in an environment that has access to the Internet.
         * This script must be executed every time you change `difyImageTag` or `difySandboxImageTag` property.
-    * This is **only required** when you cannot access [Docker Hub](https://www.docker.com/products/docker-hub/) from your vpc subnets.
-4. When you use an existing VPC (`vpcId` property), make sure the required VPC endpoints are provisioned.
+    * This is **only required** if you cannot access [Docker Hub](https://www.docker.com/products/docker-hub/) from your vpc subnets.
+4. If you are using an existing VPC (`vpcId` property), make sure the required VPC endpoints are provisioned before deployment.
     * See [vpc-endpoints.ts](lib/constructs/vpc-endpoints.ts) for the list of required VPC endpoints.
-5. Deploy the CDK project following the section [Deploy](#deploy).
-6. After the deployment, please configure Bedrock in Dify with the AWS region same as your VPC.
-    * e.g. `ap-northeast-1` in the above example.
+5. Deploy the CDK project following the [Deploy](#deploy) section.
+6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC.
+    * e.g. `ap-northeast-1` in the example above.
 
 
 ## Clean up
