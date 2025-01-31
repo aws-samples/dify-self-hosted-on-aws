@@ -5,11 +5,11 @@ import { DifyOnAwsStack } from '../lib/dify-on-aws-stack';
 import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
-const props: EnvironmentProps = {
+export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '0.14.2',
+  difyImageTag: '0.15.2',
 
   // uncomment the below for cheap configuration:
   // isRedisMultiAz: false,
@@ -17,7 +17,6 @@ const props: EnvironmentProps = {
   // enableAuroraScalesToZero: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
-  useCloudFront: false,
 };
 
 const app = new cdk.App();

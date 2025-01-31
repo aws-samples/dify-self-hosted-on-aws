@@ -1040,7 +1040,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Rollback": false,
           },
           "MaximumPercent": 200,
-          "MinimumHealthyPercent": 50,
+          "MinimumHealthyPercent": 100,
         },
         "EnableECSManagedTags": false,
         "EnableExecuteCommand": true,
@@ -1207,6 +1207,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Value": "us-west-2",
               },
               {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
                 "Name": "DB_DATABASE",
                 "Value": "main",
               },
@@ -1231,7 +1235,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               ],
               "Interval": 15,
               "Retries": 5,
-              "StartPeriod": 30,
+              "StartPeriod": 60,
               "Timeout": 5,
             },
             "Image": "langgenius/dify-api:latest",
@@ -1634,7 +1638,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           {
             "Essential": false,
             "Image": {
-              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:6dd4748efa37b115c272fac1c7073d415c85d9e6424554d7fbee56407233f6f0",
+              "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:8212bb6032c6f45fe8aa3802d732a1c334e09486001a46c78816d50319722a0b",
             },
             "MountPoints": [
               {
@@ -2016,6 +2020,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
+                "bedrock:RetrieveAndGenerate",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -2696,16 +2701,17 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         },
         "AutomaticFailoverEnabled": true,
         "CacheNodeType": "cache.t4g.micro",
+        "CacheParameterGroupName": "default.valkey8",
         "CacheSubnetGroupName": {
           "Ref": "RedisSubnetGroup2387CBFF",
         },
         "Engine": "Valkey",
-        "EngineVersion": "7.2",
+        "EngineVersion": "8.0",
         "MultiAZEnabled": true,
         "NumNodeGroups": 1,
         "Port": 6379,
         "ReplicasPerNodeGroup": 1,
-        "ReplicationGroupDescription": "Dify redis cluster",
+        "ReplicationGroupDescription": "Dify cache/queue cluster",
         "SecurityGroupIds": [
           {
             "Fn::GetAtt": [
@@ -2757,7 +2763,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     },
     "RedisSubnetGroup2387CBFF": {
       "Properties": {
-        "Description": "private subnet",
+        "Description": "Dify ElastiCache subnets",
         "SubnetIds": [
           {
             "Ref": "VpcPrivateSubnet1Subnet536B997A",
@@ -3176,7 +3182,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Properties": {
         "AvailabilityZone": "dummy1a",
         "CidrBlock": "10.0.0.0/18",
-        "MapPublicIpOnLaunch": true,
+        "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
@@ -3277,7 +3283,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Properties": {
         "AvailabilityZone": "dummy1b",
         "CidrBlock": "10.0.64.0/18",
-        "MapPublicIpOnLaunch": true,
+        "MapPublicIpOnLaunch": false,
         "Tags": [
           {
             "Key": "aws-cdk:subnet-name",
@@ -3336,7 +3342,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Rollback": false,
           },
           "MaximumPercent": 200,
-          "MinimumHealthyPercent": 50,
+          "MinimumHealthyPercent": 100,
         },
         "EnableECSManagedTags": false,
         "EnableExecuteCommand": true,

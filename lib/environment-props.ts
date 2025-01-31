@@ -29,10 +29,17 @@ export interface EnvironmentProps {
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
-   * Ignored when you import an existing VPC.
+   * This property is ignored when you import an existing VPC (see `vpcId`).
    * @default false
    */
-  cheapVpc?: boolean;
+  useNatInstance?: boolean;
+
+  /**
+   * If true, it creates VPC with only isolated subnets (i.e. without Internet gateway nor NAT Gateways)
+   * This property is ignored when you import an existing VPC (see `vpcId`).
+   * @default false
+   */
+  vpcIsolated?: boolean;
 
   /**
    * If set, it imports the existing VPC instead of creating a new one.
@@ -48,6 +55,12 @@ export interface EnvironmentProps {
    * @default No custom domain is used.
    */
   domainName?: string;
+
+  /**
+   * When domainName is set, your Dify app will be accessible with https://<subDomain>.<domainName>/
+   * @default 'dify'
+   */
+  subDomain?: string;
 
   /**
    * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
@@ -97,4 +110,20 @@ export interface EnvironmentProps {
    * @default true
    */
   useCloudFront?: boolean;
+
+  /**
+   * Deploy alb in private or isolated subnet and does not make accessible from the internet.
+   * This property is ignored when useCloudFront = true.
+   *
+   * @default false (always true when useCloudFront = true)
+   */
+  internalAlb?: boolean;
+
+  /**
+   * If set, ECR tasks pull Dify container images from this ECR private repository instead of Docker Hub.
+   * When you use this, you must run ecr.sh first to push Dify images to the private repository.
+   *
+   * @default Images are pulled from Docker Hub.
+   */
+  customEcrRepositoryName?: string;
 }
