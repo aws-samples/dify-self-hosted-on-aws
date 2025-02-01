@@ -25,7 +25,7 @@ const app = new cdk.App();
 let virginia: UsEast1Stack | undefined = undefined;
 if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {
   // add a unique suffix to prevent collision with different Dify instances in the same account.
-  virginia = new UsEast1Stack(app, `DifyOnAwsUsEast1Stack${props.subDomain && `-${props.subDomain}`}`, {
+  virginia = new UsEast1Stack(app, `DifyOnAwsUsEast1Stack${props.subDomain ? `-${props.subDomain}` : ''}`, {
     env: { region: 'us-east-1', account: props.awsAccount },
     crossRegionReferences: true,
     domainName: props.domainName,
