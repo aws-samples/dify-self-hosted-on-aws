@@ -2,6 +2,7 @@ import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aw
 import { Construct } from 'constructs';
 import { Duration, aws_ecs as ecs } from 'aws-cdk-lib';
 import { IAlb } from '../alb';
+import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
 
 export interface WebServiceProps {
   cluster: ICluster;
@@ -14,13 +15,14 @@ export interface WebServiceProps {
    * @default false
    */
   debug?: boolean;
+  customRepository?: IRepository;
 }
 
 export class WebService extends Construct {
   constructor(scope: Construct, id: string, props: WebServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, debug = false } = props;
+    const { cluster, alb, debug = false, customRepository } = props;
     const port = 3000;
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
@@ -30,7 +32,9 @@ export class WebService extends Construct {
     });
 
     taskDefinition.addContainer('Main', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-web:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-web_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-web:${props.imageTag}`),
       environment: {
         // The log level for the application. Supported values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
         LOG_LEVEL: debug ? 'DEBUG' : 'ERROR',
@@ -80,6 +84,7 @@ export class WebService extends Construct {
         },
       ],
       enableExecuteCommand: true,
+      minHealthyPercent: 100,
     });
 
     alb.addEcsService('Web', service, port, '/', ['/*']);

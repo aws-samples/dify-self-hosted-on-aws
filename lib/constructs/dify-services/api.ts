@@ -9,7 +9,7 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
-import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -28,13 +28,15 @@ export interface ApiServiceProps {
    * @default false
    */
   debug?: boolean;
+
+  customRepository?: IRepository;
 }
 
 export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, debug = false } = props;
+    const { cluster, alb, postgres, redis, storageBucket, debug = false, customRepository } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -56,7 +58,9 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Main', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       // https://docs.dify.ai/getting-started/install-self-hosted/environments
       environment: {
         MODE: 'api',
@@ -94,6 +98,7 @@ export class ApiService extends Construct {
         STORAGE_TYPE: 's3',
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
+        S3_USE_AWS_MANAGED_IAM: 'true',
 
         // postgres settings. the credentials are in secrets property.
         DB_DATABASE: postgres.databaseName,
@@ -135,14 +140,16 @@ export class ApiService extends Construct {
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
         interval: Duration.seconds(15),
-        startPeriod: Duration.seconds(30),
+        startPeriod: Duration.seconds(60),
         timeout: Duration.seconds(5),
         retries: 5,
       },
     });
 
     taskDefinition.addContainer('Worker', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       environment: {
         MODE: 'worker',
         // The log level for the application. Supported values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
@@ -199,12 +206,17 @@ export class ApiService extends Construct {
     const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
+        buildArgs: {
+          DISABLE_PYTHON_DEPENDENCIES: 'false',
+        },
       }),
       essential: false,
     });
 
     const sandboxContainer = taskDefinition.addContainer('Sandbox', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-sandbox_${props.sandboxImageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
       environment: {
         GIN_MODE: 'release',
         WORKER_TIMEOUT: '15',
@@ -331,7 +343,13 @@ export class ApiService extends Construct {
     // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank', 'bedrock:Retrieve'],
+        actions: [
+          'bedrock:InvokeModel',
+          'bedrock:InvokeModelWithResponseStream',
+          'bedrock:Rerank',
+          'bedrock:Retrieve',
+          'bedrock:RetrieveAndGenerate',
+        ],
         resources: ['*'],
       }),
     );
@@ -351,10 +369,11 @@ export class ApiService extends Construct {
         },
       ],
       enableExecuteCommand: true,
+      minHealthyPercent: 100,
     });
 
-    service.connections.allowToDefaultPort(postgres);
-    service.connections.allowToDefaultPort(redis);
+    postgres.connections.allowDefaultPortFrom(service);
+    redis.connections.allowDefaultPortFrom(service);
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);

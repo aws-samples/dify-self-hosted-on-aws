@@ -24,6 +24,8 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { IAlb } from './alb';
+import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
+import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 
 export interface AlbProps {
   vpc: IVpc;
@@ -51,6 +53,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   private listenerPriority = 1;
   private listener: ApplicationListener;
   private vpc: IVpc;
+  private cloudFrontPrefixListCustomResource: AwsCustomResource | undefined;
 
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
@@ -72,7 +75,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       defaultAction: ListenerAction.fixedResponse(400),
     });
     // TODO: Use VPC Origins
-    ['0.0.0.0/0'].forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    listener.connections.allowDefaultPortFrom(Peer.prefixList(this.getCloudFrontManagedPrefixListId()));
 
     let distribution = new Distribution(this, 'Distribution', {
       ...(props.hostedZone
@@ -133,5 +136,36 @@ export class AlbWithCloudFront extends Construct implements IAlb {
         priority: this.listenerPriority++,
       });
     }
+  }
+
+  getCloudFrontManagedPrefixListId() {
+    if (this.cloudFrontPrefixListCustomResource == null) {
+      this.cloudFrontPrefixListCustomResource = new AwsCustomResource(this, 'GetCloudFrontPrefixListId', {
+        onUpdate: {
+          service: 'ec2',
+          action: 'describeManagedPrefixLists',
+          parameters: {
+            Filters: [
+              {
+                Name: 'prefix-list-name',
+                Values: ['com.amazonaws.global.cloudfront.origin-facing'],
+              },
+            ],
+          },
+          physicalResourceId: PhysicalResourceId.of('static'),
+          outputPaths: ['PrefixLists.0.PrefixListId'],
+        },
+        policy: {
+          statements: [
+            new PolicyStatement({
+              effect: Effect.ALLOW,
+              actions: ['ec2:DescribeManagedPrefixLists'],
+              resources: ['*'],
+            }),
+          ],
+        },
+      });
+    }
+    return this.cloudFrontPrefixListCustomResource.getResponseField('PrefixLists.0.PrefixListId');
   }
 }

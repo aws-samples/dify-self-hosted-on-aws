@@ -4,6 +4,7 @@
 export interface EnvironmentProps {
   /**
    * The AWS region where you want to deploy this system.
+   * @example 'us-east-1'
    */
   awsRegion: string;
 
@@ -29,10 +30,17 @@ export interface EnvironmentProps {
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
-   * Ignored when you import an existing VPC.
+   * This property is ignored when you import an existing VPC (see {@link vpcId}.)
    * @default false
    */
-  cheapVpc?: boolean;
+  useNatInstance?: boolean;
+
+  /**
+   * If true, it creates a VPC with only isolated subnets (i.e. without Internet gateway nor NAT Gateways.)
+   * This property is ignored when you import an existing VPC (see {@link vpcId}.)
+   * @default false
+   */
+  vpcIsolated?: boolean;
 
   /**
    * If set, it imports the existing VPC instead of creating a new one.
@@ -44,13 +52,20 @@ export interface EnvironmentProps {
   /**
    * The domain name you use for Dify's service URL.
    * You must own a Route53 public hosted zone for the domain in your account.
-   * This will enable TLS encryption of ALB when useCloudFront = false.
+   * This will enable TLS encryption of ALB when {@link useCloudFront} is false.
    * @default No custom domain is used.
    */
   domainName?: string;
 
   /**
-   * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
+   * Your Dify app will be accessible with `https://<subDomain>.<domainName>`.
+   * This property is ignored when {@link domainName} is not set.
+   * @default 'dify'
+   */
+  subDomain?: string;
+
+  /**
+   * If true, the ElastiCache Valkey cluster is deployed to multiple AZs for fault tolerance.
    * It is generally recommended to enable this, but you can disable it to minimize AWS cost.
    * @default true
    */
@@ -64,11 +79,10 @@ export interface EnvironmentProps {
   enableAuroraScalesToZero?: boolean;
 
   /**
-   * The image tag to deploy Dify container images (api=worker and web).
+   * The image tag to deploy the Dify container images (api and web).
    * The images are pulled from [here](https://hub.docker.com/u/langgenius).
    *
-   * It is recommended to set this to a fixed version,
-   * because otherwise an unexpected version is pulled on a ECS service's scaling activity.
+   * It is recommended to set this to a fixed version to prevent from accidental updates.
    * @default "latest"
    */
   difyImageTag?: string;
@@ -92,9 +106,26 @@ export interface EnvironmentProps {
 
   /**
    * Deploy CloudFront in front of ALB.
-   * Recommended to enable it if you do not own domain.
+   * Recommended to enable it if you do not own any domain (see {@link domainName}.)
    *
    * @default true
    */
   useCloudFront?: boolean;
+
+  /**
+   * Deploy alb in private or isolated subnet and does not make accessible from the internet.
+   * This property cannot be set when {@link useCloudFront} is true.
+   *
+   * @default false
+   */
+  internalAlb?: boolean;
+
+  /**
+   * If set, ECR tasks pull Dify container images from this ECR private repository instead of Docker Hub.
+   * When you use this, you must run `copy-to-ecr.ts` before deployment to push Dify images to the private repository.
+   * (See README.md for more details.)
+   *
+   * @default Images are pulled from Docker Hub.
+   */
+  customEcrRepositoryName?: string;
 }
