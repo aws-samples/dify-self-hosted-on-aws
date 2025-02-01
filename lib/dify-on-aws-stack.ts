@@ -1,5 +1,4 @@
 import * as cdk from 'aws-cdk-lib';
-import { IVpc, InstanceClass, InstanceSize, InstanceType, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
@@ -11,7 +10,6 @@ import { Alb } from './constructs/alb';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
-import { VpcEndpoints } from './constructs/vpc-endpoints';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { createVpc } from './constructs/vpc';
 
@@ -32,11 +30,11 @@ export interface DifyOnAwsStackProps extends cdk.StackProps {
   readonly allowAnySyscalls?: boolean;
   readonly useCloudFront?: boolean;
   readonly subDomain?: string;
+  readonly internalAlb?: boolean;
+  readonly customEcrRepositoryName?: string;
 
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
-  readonly internalAlb?: boolean;
-  readonly customEcrRepositoryName?: string;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -51,6 +49,20 @@ export class DifyOnAwsStack extends cdk.Stack {
       internalAlb = false,
       subDomain = 'dify',
     } = props;
+
+    if (props.vpcId && (props.vpcIsolated != null || props.useNatInstance != null)) {
+      throw new Error(
+        `When you import an existing VPC (${props.vpcId}), you cannot set useNatInstance or vpcIsolated properties!`,
+      );
+    }
+
+    if (useCloudFront && props.internalAlb != null) {
+      throw new Error(`When using CloudFront, you cannot set internalAlb property!`);
+    }
+
+    if (props.domainName == null && props.subDomain != null) {
+      throw new Error('Without domainName, you cannot set subDomain property!');
+    }
 
     if (!props.useCloudFront && props.domainName == null && !internalAlb) {
       cdk.Annotations.of(this).addWarningV2(

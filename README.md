@@ -154,7 +154,7 @@ To deploy this project on a closed network (a VPC without Internet gateway or NA
 
         // Optionally you can import an existing VPC.
         vpcId: 'vpc-12345678',
-        // Or you want to let the CDK create an isolated VPC, set this property.
+        // Or if you want to let the CDK create an isolated VPC, set this property.
         vpcIsolated: true,
 
         // Other properties can be configured as you like.
@@ -165,6 +165,7 @@ To deploy this project on a closed network (a VPC without Internet gateway or NA
     * This is **only required** if you cannot access [PyPI](https://pypi.org/) from your vpc subnets.
 3. Copy all the dify container images in Docker Hub to an ECR repository.
     * To do this, you can simply run `npx ts-node scripts/copy-to-ecr.ts`. (You will also need to run `npm ci` before this.)
+        * You can create a repository with the name of `customEcrRepositoryName` by yourself, or the script creates one if it does not exist.
         * This script must be executed in an environment that has access to the Internet.
         * This script must be executed every time you change `difyImageTag` or `difySandboxImageTag` property.
     * This is **only required** if you cannot access [Docker Hub](https://www.docker.com/products/docker-hub/) from your vpc subnets.
