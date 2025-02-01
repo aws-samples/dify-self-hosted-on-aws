@@ -25,15 +25,12 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { IAlb } from './alb';
 import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export interface AlbProps {
   vpc: IVpc;
 
-  /**
-   * @default 'dify'
-   */
-  subDomain?: string;
+  subDomain: string;
 
   /**
    * @default custom domain and TLS is not configured.
@@ -58,7 +55,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
 
-    const { vpc, subDomain = 'dify', accessLogBucket } = props;
+    const { vpc, subDomain, accessLogBucket } = props;
     const protocol = ApplicationProtocol.HTTP;
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
@@ -158,7 +155,6 @@ export class AlbWithCloudFront extends Construct implements IAlb {
         policy: {
           statements: [
             new PolicyStatement({
-              effect: Effect.ALLOW,
               actions: ['ec2:DescribeManagedPrefixLists'],
               resources: ['*'],
             }),
