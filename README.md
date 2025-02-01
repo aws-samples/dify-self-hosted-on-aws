@@ -54,12 +54,13 @@ You can open the URL with a browser and get started!
 
 ### Deploy from CloudShell
 
-When you deploy from CloudShell, you can use a dedicated script that works even in an environment with limited storage space.
+You can use a dedicated script that works even in an environment with limited storage space such as [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html).
 
-In CloudShell, run the following commands:
+In CloudShell, you can just run the following commands:
 
 ```sh
 git clone https://github.com/aws-samples/dify-self-hosted-on-aws.git
+cd dify-self-hosted-on-aws
 ./simple-deploy.sh
 ```
 
