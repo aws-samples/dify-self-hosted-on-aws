@@ -603,6 +603,14 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
+    "ApiServiceAccessKey5BE4E5FA": {
+      "Properties": {
+        "UserName": {
+          "Ref": "ApiServicePluginUser25B9A473",
+        },
+      },
+      "Type": "AWS::IAM::AccessKey",
+    },
     "ApiServiceEncryptionSecretF73F9ECD": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -726,6 +734,62 @@ exports[`Snapshot test 1`] = `
         "ToPort": 5001,
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "ApiServicePluginUser25B9A473": {
+      "Type": "AWS::IAM::User",
+    },
+    "ApiServicePluginUserDefaultPolicy1BC8533B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StorageBucket19DB2FF8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StorageBucket19DB2FF8",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApiServicePluginUserDefaultPolicy1BC8533B",
+        "Users": [
+          {
+            "Ref": "ApiServicePluginUser25B9A473",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ApiServiceTask878B1807": {
       "Properties": {
@@ -878,6 +942,18 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "CODE_EXECUTION_ENDPOINT",
                 "Value": "http://localhost:8194",
+              },
+              {
+                "Name": "PLUGIN_DAEMON_URL",
+                "Value": "http://localhost:5002",
+              },
+              {
+                "Name": "MARKETPLACE_API_URL",
+                "Value": "https://marketplace.dify.ai",
+              },
+              {
+                "Name": "MARKETPLACE_URL",
+                "Value": "https://marketplace.dify.ai",
               },
             ],
             "Essential": true,
@@ -1069,6 +1145,18 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "INNER_API_KEY_FOR_PLUGIN",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "PLUGIN_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
             ],
           },
           {
@@ -1139,6 +1227,18 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "PGVECTOR_DATABASE",
                 "Value": "pgvector",
+              },
+              {
+                "Name": "PLUGIN_API_URL",
+                "Value": "http://localhost:5002",
+              },
+              {
+                "Name": "MARKETPLACE_API_URL",
+                "Value": "https://marketplace.dify.ai",
+              },
+              {
+                "Name": "MARKETPLACE_URL",
+                "Value": "https://marketplace.dify.ai",
               },
             ],
             "Essential": true,
@@ -1308,6 +1408,12 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "PLUGIN_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
             ],
           },
           {
@@ -1343,10 +1449,6 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "ENABLE_NETWORK",
                 "Value": "true",
-              },
-              {
-                "Name": "PYTHON_LIB_PATH",
-                "Value": "/usr/local/lib/python3.10,/usr/lib/python3.10,/usr/lib/python3,/usr/lib/x86_64-linux-gnu,/etc/ssl/certs/ca-certificates.crt,/etc/nsswitch.conf,/etc/hosts,/etc/resolv.conf,/run/systemd/resolve/stub-resolv.conf,/run/resolvconf/resolv.conf",
               },
             ],
             "Essential": true,
@@ -1389,6 +1491,305 @@ exports[`Snapshot test 1`] = `
             "Secrets": [
               {
                 "Name": "API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+            ],
+          },
+          {
+            "Environment": [
+              {
+                "Name": "GIN_MODE",
+                "Value": "release",
+              },
+              {
+                "Name": "REDIS_HOST",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "RedisFF642DF2",
+                    "PrimaryEndPoint.Address",
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PORT",
+                "Value": "6379",
+              },
+              {
+                "Name": "REDIS_USE_SSL",
+                "Value": "true",
+              },
+              {
+                "Name": "DB_DATABASE",
+                "Value": "dify_plugin",
+              },
+              {
+                "Name": "DB_SSL_MODE",
+                "Value": "disable",
+              },
+              {
+                "Name": "SERVER_PORT",
+                "Value": "5002",
+              },
+              {
+                "Name": "AWS_REGION",
+                "Value": "us-west-2",
+              },
+              {
+                "Name": "PLUGIN_STORAGE_TYPE",
+                "Value": "aws_s3",
+              },
+              {
+                "Name": "PLUGIN_STORAGE_OSS_BUCKET",
+                "Value": {
+                  "Ref": "StorageBucket19DB2FF8",
+                },
+              },
+              {
+                "Name": "PLUGIN_INSTALLED_PATH",
+                "Value": "plugins",
+              },
+              {
+                "Name": "PLUGIN_MAX_EXECUTION_TIMEOUT",
+                "Value": "600",
+              },
+              {
+                "Name": "MAX_PLUGIN_PACKAGE_SIZE",
+                "Value": "52428800",
+              },
+              {
+                "Name": "MAX_BUNDLE_PACKAGE_SIZE",
+                "Value": "52428800",
+              },
+              {
+                "Name": "PLUGIN_REMOTE_INSTALLING_ENABLED",
+                "Value": "false",
+              },
+              {
+                "Name": "ROUTINE_POOL_SIZE",
+                "Value": "10000",
+              },
+              {
+                "Name": "LIFETIME_COLLECTION_HEARTBEAT_INTERVAL",
+                "Value": "5",
+              },
+              {
+                "Name": "LIFETIME_COLLECTION_GC_INTERVAL",
+                "Value": "60",
+              },
+              {
+                "Name": "LIFETIME_STATE_GC_INTERVAL",
+                "Value": "300",
+              },
+              {
+                "Name": "DIFY_INVOCATION_CONNECTION_IDLE_TIMEOUT",
+                "Value": "120",
+              },
+              {
+                "Name": "PYTHON_ENV_INIT_TIMEOUT",
+                "Value": "120",
+              },
+              {
+                "Name": "DIFY_INNER_API_URL",
+                "Value": "http://localhost:5001",
+              },
+              {
+                "Name": "PLUGIN_WORKING_PATH",
+                "Value": "/app/storage/cwd",
+              },
+              {
+                "Name": "FORCE_VERIFYING_SIGNATURE",
+                "Value": "true",
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/misc:dp2",
+                ],
+              ],
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                },
+                "awslogs-region": "us-west-2",
+                "awslogs-stream-prefix": "log",
+              },
+            },
+            "Name": "PluginDaemon",
+            "PortMappings": [
+              {
+                "ContainerPort": 5002,
+                "Protocol": "tcp",
+              },
+            ],
+            "Secrets": [
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "PGVECTOR_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PASSWORD",
+                "ValueFrom": {
+                  "Ref": "RedisAuthToken9E34F6A5",
+                },
+              },
+              {
+                "Name": "CELERY_BROKER_URL",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/",
+                      {
+                        "Ref": "RedisBrokerUrlA8582E06",
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "CODE_EXECUTION_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "DIFY_INNER_API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "SERVER_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
@@ -1603,6 +2004,39 @@ exports[`Snapshot test 1`] = `
             },
             {
               "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-west-2:123456789012:repository/misc",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -1649,6 +2083,11 @@ exports[`Snapshot test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "ApiServiceTaskMainLogGroup4A8BF33F": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ApiServiceTaskPluginDaemonLogGroupB382B492": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
@@ -3507,6 +3946,14 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "PORT",
                 "Value": "3000",
+              },
+              {
+                "Name": "MARKETPLACE_API_URL",
+                "Value": "https://marketplace.dify.ai",
+              },
+              {
+                "Name": "MARKETPLACE_URL",
+                "Value": "https://marketplace.dify.ai",
               },
             ],
             "Essential": true,
