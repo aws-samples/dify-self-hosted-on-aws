@@ -13,8 +13,9 @@ export const props: EnvironmentProps = {
 
   // uncomment the below for cheap configuration:
   // isRedisMultiAz: false,
-  // cheapVpc: true,
+  // useNatInstance: true,
   // enableAuroraScalesToZero: true,
+  // useCloudFront: false,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };
