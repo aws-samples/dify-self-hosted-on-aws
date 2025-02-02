@@ -128,4 +128,37 @@ export interface EnvironmentProps {
    * @default Images are pulled from Docker Hub.
    */
   customEcrRepositoryName?: string;
+
+  /**
+   *
+   * @default No additional environment variables.
+   */
+  additionalEnvironmentVariables?: {
+    key: string;
+    value:
+      | string
+      | {
+          /**
+           * Use this when you want to refer to an existing Systems Manager parameter.
+           */
+          parameterName: string;
+        }
+      | {
+          /**
+           * Use this when you want to refer to an existing Secrets Manager secret.
+           */
+          secretName: string;
+          /**
+           * The name of the field with the value that you want to set as the environment variable value. Only values in JSON format are supported. If you do not specify a JSON field, then the full content of the secret is used.
+           */
+          field?: string;
+        };
+    /**
+     * The list of targets that use this environment variable.
+     * If not set, it is applied to all targets.
+     */
+    targets?: DifyContainerTypes[];
+  }[];
 }
+
+export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'sandbox';
