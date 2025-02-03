@@ -54,12 +54,13 @@ You can open the URL with a browser and get started!
 
 ### Deploy from CloudShell
 
-When you deploy from CloudShell, you can use a dedicated script that works even in an environment with limited storage space.
+You can use a dedicated script that works even in an environment with limited storage space such as [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html).
 
-In CloudShell, run the following commands:
+In CloudShell, you can just run the following commands:
 
 ```sh
 git clone https://github.com/aws-samples/dify-self-hosted-on-aws.git
+cd dify-self-hosted-on-aws
 ./simple-deploy.sh
 ```
 
@@ -133,12 +134,14 @@ The below are the list of configurable parameters and their default values:
 
 ### Deploying to a closed network (a.k.a 閉域要件)
 
-To deploy this project on a closed network (a VPC without Internet gateway or NAT gateway), you can follow the steps below:
+You can deploy the system on a closed network (i.e. a VPC without internet gateway or NAT gateway) with a few simple additional steps.
+
+To deploy on a closed network, please follow the steps below:
 
 1. Set configuration parameters in `bin/cdk.ts` as below:
     ```ts
     export const props: EnvironmentProps = {
-        // set region and account you want to deploy.
+        // set region and account explicitly.
         awsRegion: 'ap-northeast-1',
         awsAccount: '123456789012',
 
@@ -149,30 +152,32 @@ To deploy this project on a closed network (a VPC without Internet gateway or NA
         useCloudFront: false,
         internalAlb: true,
 
-        // If you cannot access Docker Hub from your vpc subnets, set this property.
+        // If Docker Hub is not accessible from your vpc subnets, set this property and run copy-to-ecr script (see step#2)
         customEcrRepositoryName: 'dify-images',
 
-        // Optionally you can import an existing VPC.
-        vpcId: 'vpc-12345678',
-        // Or you want to let the CDK create an isolated VPC, set this property.
+        // To let the CDK create a VPC with closed network, set this property.
         vpcIsolated: true,
+        // Or, optionally you can import an existing VPC.
+        vpcId: 'vpc-12345678',
 
         // Other properties can be configured as you like.
     };
     ```
 
 2. Open [`python-requirements.txt`](lib/constructs/dify-services/docker/sandbox/python-requirements.txt) and remove all the dependencies from it
-    * This is **only required** if you cannot access [PyPI](https://pypi.org/) from your vpc subnets.
-3. Copy all the dify container images in Docker Hub to an ECR repository.
-    * To do this, you can simply run `npx ts-node scripts/copy-to-ecr.ts`. (You will also need to run `npm ci` before this.)
+    * This is **only required** if [PyPI](https://pypi.org/) is not accessible from your vpc subnets.
+3. Copy all the dify container images in Docker Hub to an ECR repository by executing `npx ts-node scripts/copy-to-ecr.ts`.
+    * The script handles all the tasks required to copy images. You will also need to run `npm ci` before this.
+        * You can create an ECR repository with the name of `customEcrRepositoryName` by yourself, or the script creates one if it does not exist yet.
         * This script must be executed in an environment that has access to the Internet.
-        * This script must be executed every time you change `difyImageTag` or `difySandboxImageTag` property.
-    * This is **only required** if you cannot access [Docker Hub](https://www.docker.com/products/docker-hub/) from your vpc subnets.
+        * Please run the script every time you change `difyImageTag` or `difySandboxImageTag` property.
+    * This is **only required** if [Docker Hub](https://www.docker.com/products/docker-hub/) is not accessible from your vpc subnets.
 4. If you are using an existing VPC (`vpcId` property), make sure the required VPC endpoints are provisioned before deployment.
-    * See [vpc-endpoints.ts](lib/constructs/vpc-endpoints.ts) for the list of required VPC endpoints.
+    * See [`vpc-endpoints.ts`](lib/constructs/vpc-endpoints.ts) for the list of required VPC endpoints.
+    * If you let CDK create a VPC (by setting `vpcIsolated: true`), all the endpoints are created automatically.
 5. Deploy the CDK project following the [Deploy](#deploy) section.
-6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC.
-    * e.g. `ap-northeast-1` in the example above.
+6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
+    * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
 
 ## Clean up

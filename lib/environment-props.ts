@@ -4,6 +4,7 @@
 export interface EnvironmentProps {
   /**
    * The AWS region where you want to deploy this system.
+   * @example 'us-east-1'
    */
   awsRegion: string;
 
@@ -29,14 +30,14 @@ export interface EnvironmentProps {
 
   /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
-   * This property is ignored when you import an existing VPC (see `vpcId`).
+   * This property is ignored when you import an existing VPC (see {@link vpcId}.)
    * @default false
    */
   useNatInstance?: boolean;
 
   /**
-   * If true, it creates VPC with only isolated subnets (i.e. without Internet gateway nor NAT Gateways)
-   * This property is ignored when you import an existing VPC (see `vpcId`).
+   * If true, it creates a VPC with only isolated subnets (i.e. without Internet gateway nor NAT Gateways.)
+   * This property is ignored when you import an existing VPC (see {@link vpcId}.)
    * @default false
    */
   vpcIsolated?: boolean;
@@ -51,19 +52,20 @@ export interface EnvironmentProps {
   /**
    * The domain name you use for Dify's service URL.
    * You must own a Route53 public hosted zone for the domain in your account.
-   * This will enable TLS encryption of ALB when useCloudFront = false.
+   * This will enable TLS encryption of ALB when {@link useCloudFront} is false.
    * @default No custom domain is used.
    */
   domainName?: string;
 
   /**
-   * When domainName is set, your Dify app will be accessible with https://<subDomain>.<domainName>/
+   * Your Dify app will be accessible with `https://<subDomain>.<domainName>`.
+   * This property is ignored when {@link domainName} is not set.
    * @default 'dify'
    */
   subDomain?: string;
 
   /**
-   * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
+   * If true, the ElastiCache Valkey cluster is deployed to multiple AZs for fault tolerance.
    * It is generally recommended to enable this, but you can disable it to minimize AWS cost.
    * @default true
    */
@@ -77,11 +79,10 @@ export interface EnvironmentProps {
   enableAuroraScalesToZero?: boolean;
 
   /**
-   * The image tag to deploy Dify container images (api=worker and web).
+   * The image tag to deploy the Dify container images (api and web).
    * The images are pulled from [here](https://hub.docker.com/u/langgenius).
    *
-   * It is recommended to set this to a fixed version,
-   * because otherwise an unexpected version is pulled on a ECS service's scaling activity.
+   * It is recommended to set this to a fixed version to prevent from accidental updates.
    * @default "latest"
    */
   difyImageTag?: string;
@@ -105,7 +106,7 @@ export interface EnvironmentProps {
 
   /**
    * Deploy CloudFront in front of ALB.
-   * Recommended to enable it if you do not own domain.
+   * Recommended to enable it if you do not own any domain (see {@link domainName}.)
    *
    * @default true
    */
@@ -113,17 +114,51 @@ export interface EnvironmentProps {
 
   /**
    * Deploy alb in private or isolated subnet and does not make accessible from the internet.
-   * This property is ignored when useCloudFront = true.
+   * This property cannot be set when {@link useCloudFront} is true.
    *
-   * @default false (always true when useCloudFront = true)
+   * @default false
    */
   internalAlb?: boolean;
 
   /**
    * If set, ECR tasks pull Dify container images from this ECR private repository instead of Docker Hub.
-   * When you use this, you must run ecr.sh first to push Dify images to the private repository.
+   * When you use this, you must run `copy-to-ecr.ts` before deployment to push Dify images to the private repository.
+   * (See README.md for more details.)
    *
    * @default Images are pulled from Docker Hub.
    */
   customEcrRepositoryName?: string;
+
+  /**
+   *
+   * @default No additional environment variables.
+   */
+  additionalEnvironmentVariables?: {
+    key: string;
+    value:
+      | string
+      | {
+          /**
+           * Use this when you want to refer to an existing Systems Manager parameter.
+           */
+          parameterName: string;
+        }
+      | {
+          /**
+           * Use this when you want to refer to an existing Secrets Manager secret.
+           */
+          secretName: string;
+          /**
+           * The name of the field with the value that you want to set as the environment variable value. Only values in JSON format are supported. If you do not specify a JSON field, then the full content of the secret is used.
+           */
+          field?: string;
+        };
+    /**
+     * The list of targets that use this environment variable.
+     * If not set, it is applied to all targets.
+     */
+    targets?: DifyContainerTypes[];
+  }[];
 }
+
+export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'sandbox';

@@ -17,6 +17,25 @@ test('Snapshot test', () => {
     domainName: 'example.com',
     allowAnySyscalls: true,
     useCloudFront: false,
+    additionalEnvironmentVariables: [
+      {
+        key: 'ALL',
+        value: 'foo',
+      },
+      {
+        key: 'API_AND_WEB_ONLY',
+        value: 'foo',
+        targets: ['api', 'web'],
+      },
+      {
+        key: 'SECRET_ON_SM',
+        value: { secretName: 'foo', field: 'bar' },
+      },
+      {
+        key: 'SECRET_ON_SSM',
+        value: { parameterName: 'foo' },
+      },
+    ],
   };
 
   // WHEN

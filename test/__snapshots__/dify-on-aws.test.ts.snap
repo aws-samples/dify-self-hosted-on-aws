@@ -874,6 +874,14 @@ exports[`Snapshot test 1`] = `
                 "Name": "CODE_EXECUTION_ENDPOINT",
                 "Value": "http://localhost:8194",
               },
+              {
+                "Name": "ALL",
+                "Value": "foo",
+              },
+              {
+                "Name": "API_AND_WEB_ONLY",
+                "Value": "foo",
+              },
             ],
             "Essential": true,
             "HealthCheck": {
@@ -1053,6 +1061,36 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "SECRET_ON_SM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-west-2:123456789012:secret:foo:bar::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_ON_SSM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/foo",
+                    ],
+                  ],
+                },
+              },
             ],
           },
           {
@@ -1123,6 +1161,10 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "PGVECTOR_DATABASE",
                 "Value": "pgvector",
+              },
+              {
+                "Name": "ALL",
+                "Value": "foo",
               },
             ],
             "Essential": true,
@@ -1281,6 +1323,36 @@ exports[`Snapshot test 1`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "SECRET_ON_SM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-west-2:123456789012:secret:foo:bar::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_ON_SSM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/foo",
+                    ],
+                  ],
+                },
+              },
             ],
           },
           {
@@ -1325,6 +1397,10 @@ exports[`Snapshot test 1`] = `
                 "Name": "PYTHON_LIB_PATH",
                 "Value": "/usr/local/lib/python3.10,/usr/lib/python3.10,/usr/lib/python3,/usr/lib/x86_64-linux-gnu,/etc/ssl/certs/ca-certificates.crt,/etc/nsswitch.conf,/etc/hosts,/etc/resolv.conf,/run/systemd/resolve/stub-resolv.conf,/run/resolvconf/resolv.conf",
               },
+              {
+                "Name": "ALL",
+                "Value": "foo",
+              },
             ],
             "Essential": true,
             "Image": "langgenius/dify-sandbox:0.2.4",
@@ -1357,6 +1433,36 @@ exports[`Snapshot test 1`] = `
                 "Name": "API_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "SECRET_ON_SM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-west-2:123456789012:secret:foo:bar::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_ON_SSM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/foo",
+                    ],
+                  ],
                 },
               },
             ],
@@ -1494,6 +1600,46 @@ exports[`Snapshot test 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-west-2:123456789012:secret:foo-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:DescribeParameters",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:GetParameterHistory",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-west-2:123456789012:parameter/foo",
+                  ],
+                ],
               },
             },
             {
@@ -3015,6 +3161,46 @@ exports[`Snapshot test 1`] = `
                 ],
               },
             },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-west-2:123456789012:secret:foo-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:DescribeParameters",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:GetParameterHistory",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-west-2:123456789012:parameter/foo",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -3056,6 +3242,14 @@ exports[`Snapshot test 1`] = `
                 "Name": "PORT",
                 "Value": "3000",
               },
+              {
+                "Name": "ALL",
+                "Value": "foo",
+              },
+              {
+                "Name": "API_AND_WEB_ONLY",
+                "Value": "foo",
+              },
             ],
             "Essential": true,
             "HealthCheck": {
@@ -3084,6 +3278,38 @@ exports[`Snapshot test 1`] = `
               {
                 "ContainerPort": 3000,
                 "Protocol": "tcp",
+              },
+            ],
+            "Secrets": [
+              {
+                "Name": "SECRET_ON_SM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-west-2:123456789012:secret:foo:bar::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_ON_SSM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/foo",
+                    ],
+                  ],
+                },
               },
             ],
           },

@@ -1,5 +1,4 @@
 import * as cdk from 'aws-cdk-lib';
-import { IVpc, InstanceClass, InstanceSize, InstanceType, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
@@ -11,32 +10,16 @@ import { Alb } from './constructs/alb';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
-import { VpcEndpoints } from './constructs/vpc-endpoints';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { createVpc } from './constructs/vpc';
+import { EnvironmentProps } from './environment-props';
 
 /**
  * Mostly inherited from EnvironmentProps
  */
-export interface DifyOnAwsStackProps extends cdk.StackProps {
-  readonly allowedIPv4Cidrs?: string[];
-  readonly allowedIPv6Cidrs?: string[];
-  readonly useNatInstance?: boolean;
-  readonly vpcIsolated?: boolean;
-  readonly vpcId?: string;
-  readonly domainName?: string;
-  readonly isRedisMultiAz?: boolean;
-  readonly enableAuroraScalesToZero?: boolean;
-  readonly difyImageTag?: string;
-  readonly difySandboxImageTag?: string;
-  readonly allowAnySyscalls?: boolean;
-  readonly useCloudFront?: boolean;
-  readonly subDomain?: string;
-
+export interface DifyOnAwsStackProps extends cdk.StackProps, Omit<EnvironmentProps, 'awsRegion' | 'awsAccount'> {
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
-  readonly internalAlb?: boolean;
-  readonly customEcrRepositoryName?: string;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -51,6 +34,20 @@ export class DifyOnAwsStack extends cdk.Stack {
       internalAlb = false,
       subDomain = 'dify',
     } = props;
+
+    if (props.vpcId && (props.vpcIsolated != null || props.useNatInstance != null)) {
+      throw new Error(
+        `When you import an existing VPC (${props.vpcId}), you cannot set useNatInstance or vpcIsolated properties!`,
+      );
+    }
+
+    if (useCloudFront && props.internalAlb != null) {
+      throw new Error(`When using CloudFront, you cannot set internalAlb property!`);
+    }
+
+    if (props.domainName == null && props.subDomain != null) {
+      throw new Error('Without domainName, you cannot set subDomain property!');
+    }
 
     if (!props.useCloudFront && props.domainName == null && !internalAlb) {
       cdk.Annotations.of(this).addWarningV2(
@@ -130,6 +127,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       sandboxImageTag,
       allowAnySyscalls,
       customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new WebService(this, 'WebService', {
@@ -137,6 +135,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       alb,
       imageTag,
       customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {
