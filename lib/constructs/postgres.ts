@@ -44,7 +44,7 @@ export class Postgres extends Construct implements IConnectable {
     const cluster = new rds.DatabaseCluster(this, 'Cluster', {
       engine,
       vpc,
-      serverlessV2MinCapacity: 0.5,
+      serverlessV2MinCapacity: props.scalesToZero ? 0 : 0.5,
       serverlessV2MaxCapacity: 2.0,
       writer: rds.ClusterInstance.serverlessV2(this.writerId, {
         autoMinorVersionUpgrade: true,
@@ -63,9 +63,6 @@ export class Postgres extends Construct implements IConnectable {
       }),
       vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets.concat(vpc.isolatedSubnets) }),
     });
-    if (props.scalesToZero ?? false) {
-      (cluster.node.defaultChild as CfnResource).addPropertyOverride('ServerlessV2ScalingConfiguration.MinCapacity', 0);
-    }
 
     if (props.createBastion) {
       const host = new ec2.BastionHostLinux(this, 'BastionHost', {

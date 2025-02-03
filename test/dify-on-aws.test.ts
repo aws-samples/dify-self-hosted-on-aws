@@ -17,6 +17,7 @@ test('Snapshot test', () => {
     domainName: 'example.com',
     allowAnySyscalls: true,
     useCloudFront: false,
+    enableAuroraScalesToZero: true,
     additionalEnvironmentVariables: [
       {
         key: 'ALL',
