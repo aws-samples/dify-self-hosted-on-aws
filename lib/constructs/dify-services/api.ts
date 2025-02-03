@@ -118,7 +118,7 @@ export class ApiService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
-        
+
         ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
