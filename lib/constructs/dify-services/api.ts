@@ -10,6 +10,8 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
 import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
+import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
+import { EnvironmentProps } from '../../environment-props';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -30,6 +32,8 @@ export interface ApiServiceProps {
   debug?: boolean;
 
   customRepository?: IRepository;
+
+  additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
 }
 
 export class ApiService extends Construct {
@@ -114,6 +118,8 @@ export class ApiService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
+        
+        ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -136,6 +142,8 @@ export class ApiService extends Construct {
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         INNER_API_KEY_FOR_PLUGIN: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+
+        ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
@@ -183,6 +191,8 @@ export class ApiService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
+
+        ...getAdditionalEnvironmentVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -200,6 +210,8 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+
+        ...getAdditionalSecretVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
     });
 
@@ -229,6 +241,7 @@ export class ApiService extends Construct {
                 .join(','),
             }
           : {}),
+        ...getAdditionalEnvironmentVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -236,6 +249,7 @@ export class ApiService extends Construct {
       portMappings: [{ containerPort: 8194 }],
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        ...getAdditionalSecretVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
     });
 

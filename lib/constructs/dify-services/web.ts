@@ -2,7 +2,9 @@ import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aw
 import { Construct } from 'constructs';
 import { Duration, aws_ecs as ecs } from 'aws-cdk-lib';
 import { IAlb } from '../alb';
-import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
+import { IRepository } from 'aws-cdk-lib/aws-ecr';
+import { EnvironmentProps } from '../../environment-props';
+import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 
 export interface WebServiceProps {
   cluster: ICluster;
@@ -16,6 +18,8 @@ export interface WebServiceProps {
    */
   debug?: boolean;
   customRepository?: IRepository;
+
+  additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
 }
 
 export class WebService extends Construct {
@@ -55,6 +59,11 @@ export class WebService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
+
+        ...getAdditionalEnvironmentVariables(this, 'web', props.additionalEnvironmentVariables),
+      },
+      secrets: {
+        ...getAdditionalSecretVariables(this, 'web', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',

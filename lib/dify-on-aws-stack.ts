@@ -12,27 +12,12 @@ import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { createVpc } from './constructs/vpc';
+import { EnvironmentProps } from './environment-props';
 
 /**
  * Mostly inherited from EnvironmentProps
  */
-export interface DifyOnAwsStackProps extends cdk.StackProps {
-  readonly allowedIPv4Cidrs?: string[];
-  readonly allowedIPv6Cidrs?: string[];
-  readonly useNatInstance?: boolean;
-  readonly vpcIsolated?: boolean;
-  readonly vpcId?: string;
-  readonly domainName?: string;
-  readonly isRedisMultiAz?: boolean;
-  readonly enableAuroraScalesToZero?: boolean;
-  readonly difyImageTag?: string;
-  readonly difySandboxImageTag?: string;
-  readonly allowAnySyscalls?: boolean;
-  readonly useCloudFront?: boolean;
-  readonly subDomain?: string;
-  readonly internalAlb?: boolean;
-  readonly customEcrRepositoryName?: string;
-
+export interface DifyOnAwsStackProps extends cdk.StackProps, Omit<EnvironmentProps, 'awsRegion' | 'awsAccount'> {
   readonly cloudFrontWebAclArn?: string;
   readonly cloudFrontCertificate?: ICertificate;
 }
@@ -142,6 +127,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       sandboxImageTag,
       allowAnySyscalls,
       customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new WebService(this, 'WebService', {
@@ -149,6 +135,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       alb,
       imageTag,
       customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {
