@@ -10,6 +10,8 @@ import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
 import { IRepository } from 'aws-cdk-lib/aws-ecr';
+import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
+import { EnvironmentProps } from '../../environment-props';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -30,6 +32,8 @@ export interface ApiServiceProps {
   debug?: boolean;
 
   customRepository?: IRepository;
+
+  additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
 }
 
 export class ApiService extends Construct {
@@ -110,6 +114,8 @@ export class ApiService extends Construct {
 
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194', // Fargate の task 内通信は localhost 宛,
+
+        ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -130,6 +136,7 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
@@ -172,6 +179,8 @@ export class ApiService extends Construct {
         // pgvector configurations
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
+
+        ...getAdditionalEnvironmentVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -188,6 +197,8 @@ export class ApiService extends Construct {
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+
+        ...getAdditionalSecretVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
     });
 
@@ -232,6 +243,8 @@ export class ApiService extends Construct {
           '/run/systemd/resolve/stub-resolv.conf',
           '/run/resolvconf/resolv.conf',
         ].join(','),
+
+        ...getAdditionalEnvironmentVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -239,6 +252,7 @@ export class ApiService extends Construct {
       portMappings: [{ containerPort: 8194 }],
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        ...getAdditionalSecretVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
     });
 
