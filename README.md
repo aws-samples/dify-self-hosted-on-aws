@@ -188,10 +188,10 @@ You can connect to [Notion](https://www.notion.com/) data by the following steps
 2. Create a Screts Manager secret for the token:
 ```sh
  NOTION_INTERNAL_SECRET="NOTION_SECRET_REPLACE_THIS"
- aws secretsmanager create-secret \                                                                      
+ aws secretsmanager create-secret \
     --name NOTION_INTERNAL_SECRET \
     --description "Secret for Notion internal use" \
-    --secret-string ${NOTION_INTERNAL_SECRET}                             
+    --secret-string ${NOTION_INTERNAL_SECRET}
 ```
 
 3. Set `additionalEnvironmentVariables` in `bin/cdk.ts` as below:
