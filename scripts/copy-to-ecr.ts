@@ -64,7 +64,7 @@ async function processImage(dockerHubImage: string, repositoryName: string, awsC
     const ecrImageTag = dockerHubImage.replace(':', '_');
     const ecrImageUri = `${accountId}.dkr.ecr.${region}.amazonaws.com/${repositoryName}:${ecrImageTag}`;
 
-    await execAsync(`docker buildx imagetools create --tag "${ecrImageUri}" "${targetImage}"`);
+    await execAsync(`docker buildx imagetools create --tag "${ecrImageUri}" "${targetImage}" --provenance=false`);
     console.log(`Successfully processed image: ${targetImage}`);
   } catch (error) {
     throw new Error(`Failed to process image ${dockerHubImage}: ${error}`);
