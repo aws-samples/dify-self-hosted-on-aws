@@ -179,6 +179,42 @@ To deploy on a closed network, please follow the steps below:
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
+### Connect to Notion
+
+You can connect to [Notion](https://www.notion.com/) data by the following steps:
+
+1. Obtain the Notion Secret Token: [Notion - Authorization](https://developers.notion.com/docs/authorization).
+
+2. Create a Screts Manager secret for the token:
+```sh
+ NOTION_INTERNAL_SECRET="NOTION_SECRET_REPLACE_THIS"
+ aws secretsmanager create-secret \
+    --name NOTION_INTERNAL_SECRET \
+    --description "Secret for Notion internal use" \
+    --secret-string ${NOTION_INTERNAL_SECRET}
+```
+
+3. Set `additionalEnvironmentVariables` in `bin/cdk.ts` as below:
+```ts
+export const props: EnvironmentProps = {
+  // ADD THIS
+  additionalEnvironmentVariables: [
+    {
+      key: 'NOTION_INTEGRATION_TYPE',
+      value: 'internal',
+      targets: ['api'], 
+    },
+    {
+      key: 'NOTION_INTERNAL_SECRET',
+      value: { secretName: 'NOTION_INTERNAL_SECRET'},
+      targets: ['api'], 
+    },
+  ],
+}
+```
+
+4. Deploy the stack by `cdk deploy` command.
+5. Now you can [import data from Notion](https://docs.dify.ai/guides/knowledge-base/create-knowledge-and-upload-documents/1.-import-text-data/1.1-import-data-from-notion).
 
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
