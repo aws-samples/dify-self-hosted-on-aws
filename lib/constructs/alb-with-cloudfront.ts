@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib';
+import { CfnResource, Duration, Names, Stack } from 'aws-cdk-lib';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -25,15 +25,12 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { IAlb } from './alb';
 import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
-import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export interface AlbProps {
   vpc: IVpc;
 
-  /**
-   * @default 'dify'
-   */
-  subDomain?: string;
+  subDomain: string;
 
   /**
    * @default custom domain and TLS is not configured.
@@ -58,13 +55,13 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
 
-    const { vpc, subDomain = 'dify', accessLogBucket } = props;
+    const { vpc, subDomain, accessLogBucket } = props;
     const protocol = ApplicationProtocol.HTTP;
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
-      vpcSubnets: vpc.selectSubnets({ subnets: vpc.publicSubnets }),
-      internetFacing: true,
+      vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets }),
+      internetFacing: false,
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;
@@ -74,10 +71,10 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       open: false,
       defaultAction: ListenerAction.fixedResponse(400),
     });
-    // TODO: Use VPC Origins
     listener.connections.allowDefaultPortFrom(Peer.prefixList(this.getCloudFrontManagedPrefixListId()));
 
     let distribution = new Distribution(this, 'Distribution', {
+      comment: `Dify distribution (${Stack.of(this).stackName} - ${Stack.of(this).region})`,
       ...(props.hostedZone
         ? {
             domainNames: [`${subDomain}.${props.hostedZone.zoneName}`],
@@ -98,6 +95,35 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     });
     this.url = `https://${distribution.domainName}`;
 
+    // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudfront-vpcorigin.html
+    const vpcOrigin = new CfnResource(scope, 'VpcOrigin', {
+      type: 'AWS::CloudFront::VpcOrigin',
+      properties: {
+        VpcOriginEndpointConfig: {
+          Arn: alb.loadBalancerArn,
+          HTTPPort: 80,
+          Name: Names.uniqueResourceName(this, { maxLength: 64, separator: '-' }),
+          OriginProtocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
+        },
+      },
+    });
+    // "DifyOnAwsStack/Alb/Distribution/Resource"
+    (distribution.node.defaultChild as CfnResource).addPropertyOverride('DistributionConfig.Origins.0', {
+      Id: 'VpcOrigin',
+      DomainName: alb.loadBalancerDnsName,
+      // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-distribution-vpcoriginconfig.html
+      VpcOriginConfig: {
+        VpcOriginId: vpcOrigin.getAtt('Id'),
+      },
+    });
+    (distribution.node.defaultChild as CfnResource).addPropertyDeletionOverride(
+      'DistributionConfig.Origins.0.CustomOriginConfig',
+    );
+    (distribution.node.defaultChild as CfnResource).addPropertyOverride(
+      'DistributionConfig.DefaultCacheBehavior.TargetOriginId',
+      'VpcOrigin',
+    );
+
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {
         zone: props.hostedZone,
@@ -112,7 +138,8 @@ export class AlbWithCloudFront extends Construct implements IAlb {
   }
 
   public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
-    const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
+    // we need different target group ids for different albs because a single target group can be attached to only one alb.
+    const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
       vpc: this.vpc,
       targets: [ecsService],
       protocol: ApplicationProtocol.HTTP,
@@ -158,7 +185,6 @@ export class AlbWithCloudFront extends Construct implements IAlb {
         policy: {
           statements: [
             new PolicyStatement({
-              effect: Effect.ALLOW,
               actions: ['ec2:DescribeManagedPrefixLists'],
               resources: ['*'],
             }),
