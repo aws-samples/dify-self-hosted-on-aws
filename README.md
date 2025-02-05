@@ -235,14 +235,6 @@ npx cdk destroy --force
 
 If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, please remove the container repository and images in it manually.
 
-## If you have multiple AWS profiles
-
-If you have multiple AWS profiles, you can specify the profile to use by the `--profile` option.
-
-```shell
-npx cdk deploy --profile={your_profile_name_here}
-```
-
 ## Troubleshooting
 
 ### An error occurs when deploying the ECS Fargate API, and the deployment does not complete, resulting in a timeout error
