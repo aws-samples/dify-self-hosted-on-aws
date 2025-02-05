@@ -719,7 +719,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "VpcOriginConfig": {
                 "VpcOriginId": {
                   "Fn::GetAtt": [
-                    "VpcOrigin",
+                    "AlbVpcOrigin7F5FE0CB",
                     "Id",
                   ],
                 },
@@ -976,6 +976,19 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "ToPort": 3000,
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "AlbVpcOrigin7F5FE0CB": {
+      "Properties": {
+        "VpcOriginEndpointConfig": {
+          "Arn": {
+            "Ref": "AlbC1372A32",
+          },
+          "HTTPPort": 80,
+          "Name": "TestStack-Alb-4064853B",
+          "OriginProtocolPolicy": "http-only",
+        },
+      },
+      "Type": "AWS::CloudFront::VpcOrigin",
     },
     "AlbWebTargetGroupInternal92BC2C4D": {
       "Properties": {
@@ -2980,19 +2993,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
       },
       "Type": "AWS::EC2::InternetGateway",
-    },
-    "VpcOrigin": {
-      "Properties": {
-        "VpcOriginEndpointConfig": {
-          "Arn": {
-            "Ref": "AlbC1372A32",
-          },
-          "HTTPPort": 80,
-          "Name": "TestStack-Alb-4064853B",
-          "OriginProtocolPolicy": "http-only",
-        },
-      },
-      "Type": "AWS::CloudFront::VpcOrigin",
     },
     "VpcPrivateSubnet1DefaultRouteBE02A9ED": {
       "Properties": {

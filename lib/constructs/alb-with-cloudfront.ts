@@ -96,7 +96,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     this.url = `https://${distribution.domainName}`;
 
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudfront-vpcorigin.html
-    const vpcOrigin = new CfnResource(scope, 'VpcOrigin', {
+    const vpcOrigin = new CfnResource(this, 'VpcOrigin', {
       type: 'AWS::CloudFront::VpcOrigin',
       properties: {
         VpcOriginEndpointConfig: {
