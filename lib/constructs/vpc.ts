@@ -1,4 +1,4 @@
-import { IVpc, NatProvider, InstanceType, InstanceClass, InstanceSize, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { InstanceClass, InstanceSize, InstanceType, IVpc, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { VpcEndpoints } from './vpc-endpoints';
 
