@@ -250,7 +250,7 @@ Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the abo
 
 ## Troubleshooting
 
-### CDK deployment fails  while in ECS deployment with cannotPullContainerError
+### CDK deployment fails while in ECS deployment with cannotPullContainerError
 
 It is a known issue that when the containerd option is enabled in Docker Desktop, CDK deployment fails with the default configuration ([aws/aws-cdk#31549](https://github.com/aws/aws-cdk/issues/31549)). You may receive the following error each time ECS Fargate tasks attempt to start.
 
