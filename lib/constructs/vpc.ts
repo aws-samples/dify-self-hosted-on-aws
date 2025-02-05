@@ -1,4 +1,4 @@
-import { IVpc, NatProvider, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { IVpc, NatProvider, InstanceType, InstanceClass, InstanceSize, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { VpcEndpoints } from './vpc-endpoints';
 
@@ -27,10 +27,16 @@ export const createVpc = (
     vpc = new Vpc(scope, 'Vpc', {
       ...(useNatInstance
         ? {
-            natGatewayProvider: NatProvider.gateway(),
+            natGatewayProvider: NatProvider.instanceV2({
+              instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
+              associatePublicIpAddress: true,
+            }),
             natGateways: 1,
           }
-        : {}),
+        : {
+            natGatewayProvider: NatProvider.gateway(),
+            natGateways: 1,
+          }),
       maxAzs: 2,
       subnetConfiguration: [
         {
