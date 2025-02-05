@@ -2407,7 +2407,7 @@ exports[`Snapshot test 1`] = `
         "Port": 5432,
         "ServerlessV2ScalingConfiguration": {
           "MaxCapacity": 2,
-          "MinCapacity": 0.5,
+          "MinCapacity": 0,
         },
         "StorageEncrypted": true,
         "VpcSecurityGroupIds": [

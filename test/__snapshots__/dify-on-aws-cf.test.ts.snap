@@ -598,7 +598,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "AlbApiTargetGroup4B6AF19C": {
+    "AlbApiTargetGroupInternal2EB9930E": {
       "Properties": {
         "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/health",
@@ -629,10 +629,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "AlbC1372A32": {
       "DependsOn": [
         "AccessLogBucketPolicyF52D2D01",
-        "VpcPublicSubnet1DefaultRoute3DA9E72A",
-        "VpcPublicSubnet1RouteTableAssociation97140677",
-        "VpcPublicSubnet2DefaultRoute97F91067",
-        "VpcPublicSubnet2RouteTableAssociationDD5762D8",
       ],
       "Properties": {
         "LoadBalancerAttributes": [
@@ -655,7 +651,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Value": "dify-alb",
           },
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [
           {
             "Fn::GetAtt": [
@@ -666,10 +662,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
         "Subnets": [
           {
-            "Ref": "VpcPublicSubnet1Subnet5C2D37C4",
+            "Ref": "VpcPrivateSubnet1Subnet536B997A",
           },
           {
-            "Ref": "VpcPublicSubnet2Subnet691E08A3",
+            "Ref": "VpcPrivateSubnet2Subnet3788AAA1",
           },
         ],
         "Type": "application",
@@ -682,6 +678,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Aliases": [
             "dify.example.com",
           ],
+          "Comment": "Dify distribution (TestStack - us-west-2)",
           "DefaultCacheBehavior": {
             "AllowedMethods": [
               "GET",
@@ -695,7 +692,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "CachePolicyId": "4cc15a8a-d715-48a4-82b8-cc0b614638fe",
             "Compress": true,
             "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
-            "TargetOriginId": "TestStackAlbDistributionOrigin1D9B11DF5",
+            "TargetOriginId": "VpcOrigin",
             "ViewerProtocolPolicy": "redirect-to-https",
           },
           "Enabled": true,
@@ -712,19 +709,21 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           },
           "Origins": [
             {
-              "CustomOriginConfig": {
-                "OriginProtocolPolicy": "http-only",
-                "OriginSSLProtocols": [
-                  "TLSv1.2",
-                ],
-              },
               "DomainName": {
                 "Fn::GetAtt": [
                   "AlbC1372A32",
                   "DNSName",
                 ],
               },
-              "Id": "TestStackAlbDistributionOrigin1D9B11DF5",
+              "Id": "VpcOrigin",
+              "VpcOriginConfig": {
+                "VpcOriginId": {
+                  "Fn::GetAtt": [
+                    "AlbVpcOrigin7F5FE0CB",
+                    "Id",
+                  ],
+                },
+              },
             },
           ],
           "ViewerCertificate": {
@@ -810,7 +809,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
             "Type": "forward",
           },
@@ -841,7 +840,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
             "Type": "forward",
           },
@@ -870,7 +869,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "Actions": [
           {
             "TargetGroupArn": {
-              "Ref": "AlbWebTargetGroupC65B2BDF",
+              "Ref": "AlbWebTargetGroupInternal92BC2C4D",
             },
             "Type": "forward",
           },
@@ -978,7 +977,20 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
-    "AlbWebTargetGroupC65B2BDF": {
+    "AlbVpcOrigin7F5FE0CB": {
+      "Properties": {
+        "VpcOriginEndpointConfig": {
+          "Arn": {
+            "Ref": "AlbC1372A32",
+          },
+          "HTTPPort": 80,
+          "Name": "TestStack-Alb-4064853B",
+          "OriginProtocolPolicy": "http-only",
+        },
+      },
+      "Type": "AWS::CloudFront::VpcOrigin",
+    },
+    "AlbWebTargetGroupInternal92BC2C4D": {
       "Properties": {
         "HealthCheckIntervalSeconds": 20,
         "HealthCheckPath": "/",
@@ -1062,7 +1074,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "ContainerName": "Main",
             "ContainerPort": 5001,
             "TargetGroupArn": {
-              "Ref": "AlbApiTargetGroup4B6AF19C",
+              "Ref": "AlbApiTargetGroupInternal2EB9930E",
             },
           },
         ],
@@ -3795,7 +3807,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "ContainerName": "Main",
             "ContainerPort": 3000,
             "TargetGroupArn": {
-              "Ref": "AlbWebTargetGroupC65B2BDF",
+              "Ref": "AlbWebTargetGroupInternal92BC2C4D",
             },
           },
         ],

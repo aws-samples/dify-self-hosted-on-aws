@@ -9,10 +9,10 @@ const difySandboxImageTag = props.difySandboxImageTag ?? 'latest';
 const repositoryName = props.customEcrRepositoryName;
 
 const DOCKER_HUB_IMAGES = [
-  `dify-web:${difyImageTag}`,
-  `dify-api:${difyImageTag}`,
-  `dify-sandbox:${difySandboxImageTag}`,
-  `dify-plugin-daemon:main-local`,
+  `langgenius/dify-web:${difyImageTag}`,
+  `langgenius/dify-api:${difyImageTag}`,
+  `langgenius/dify-sandbox:${difySandboxImageTag}`,
+  `langgenius/dify-plugin-daemon:main-local`,
 ];
 
 interface AWSConfig {
@@ -60,12 +60,11 @@ async function ensureECRRepository(repositoryName: string, awsConfig: AWSConfig)
 async function processImage(dockerHubImage: string, repositoryName: string, awsConfig: AWSConfig): Promise<void> {
   try {
     const { accountId, region } = awsConfig;
-    const targetImage = `langgenius/${dockerHubImage}`;
     const ecrImageTag = dockerHubImage.replace(':', '_');
     const ecrImageUri = `${accountId}.dkr.ecr.${region}.amazonaws.com/${repositoryName}:${ecrImageTag}`;
 
-    await execAsync(`docker buildx imagetools create --tag "${ecrImageUri}" "${targetImage}"`);
-    console.log(`Successfully processed image: ${targetImage}`);
+    await execAsync(`docker buildx imagetools create --tag "${ecrImageUri}" "${dockerHubImage}"`);
+    console.log(`Successfully processed image: ${dockerHubImage}`);
   } catch (error) {
     throw new Error(`Failed to process image ${dockerHubImage}: ${error}`);
   }

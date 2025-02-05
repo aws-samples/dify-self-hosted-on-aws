@@ -36,10 +36,14 @@ npm ci
 # bootstrap the AWS account (required only once per account and region)
 npx cdk bootstrap
 # deploy the CDK stack
+export BUILDX_NO_DEFAULT_ATTESTATIONS=1 # see https://github.com/aws/aws-cdk/issues/31549
 npx cdk deploy --all
 ```
 
 The initial deployment usually takes about 20 minutes. After a successful deployment, you will get the URL for the app.
+
+> [!WARNING]
+> If your deployment failed on ECS deployment, please refer to [Troubleshooting](#troubleshooting) section.
 
 ```
  ✅  DifyOnAwsCdkStack
@@ -179,6 +183,42 @@ To deploy on a closed network, please follow the steps below:
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
+### Connect to Notion
+
+You can connect to [Notion](https://www.notion.com/) data by the following steps:
+
+1. Obtain the Notion Secret Token: [Notion - Authorization](https://developers.notion.com/docs/authorization).
+
+2. Create a Screts Manager secret for the token:
+```sh
+ NOTION_INTERNAL_SECRET="NOTION_SECRET_REPLACE_THIS"
+ aws secretsmanager create-secret \
+    --name NOTION_INTERNAL_SECRET \
+    --description "Secret for Notion internal use" \
+    --secret-string ${NOTION_INTERNAL_SECRET}
+```
+
+3. Set `additionalEnvironmentVariables` in `bin/cdk.ts` as below:
+```ts
+export const props: EnvironmentProps = {
+  // ADD THIS
+  additionalEnvironmentVariables: [
+    {
+      key: 'NOTION_INTEGRATION_TYPE',
+      value: 'internal',
+      targets: ['api'], 
+    },
+    {
+      key: 'NOTION_INTERNAL_SECRET',
+      value: { secretName: 'NOTION_INTERNAL_SECRET'},
+      targets: ['api'], 
+    },
+  ],
+}
+```
+
+4. Deploy the stack by `cdk deploy` command.
+5. Now you can [import data from Notion](https://docs.dify.ai/guides/knowledge-base/create-knowledge-and-upload-documents/1.-import-text-data/1.1-import-data-from-notion).
 
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
@@ -203,10 +243,31 @@ The following table provides a sample cost breakdown for deploying this system i
 | ECS (Fargate) | Dify-api/worker 1 task running 24/7 (1024CPU) | $10.7 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
+| VPC | Public IP address x1 | $3.6 |
 | Secrets Manager | Secret x3 | $1.2 |
-| TOTAL | estimate per month | $44.3 |
+| TOTAL | estimate per month | $47.9 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
+
+
+## Troubleshooting
+
+### CDK deployment fails while in ECS deployment with cannotPullContainerError
+
+It is a known issue that when the containerd option is enabled in Docker Desktop, CDK deployment fails with the default configuration ([aws/aws-cdk#31549](https://github.com/aws/aws-cdk/issues/31549)). You may receive the following error each time ECS Fargate tasks attempt to start.
+
+> cannotPullContainerError: ref pull has been retried 1 time(s): failed to unpack image on snapshotter overlayfs: mismatched image rootfs and manifest layers
+
+If you are having trouble starting Fargate's API tasks and your deployments keep failing, please try the following:
+
+1. [Cancel a stack update](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-update-cancel.html) for `DifyOnAwsStack` if your deployment is in progress.
+2. [Delete all the images](https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html) with a size of 0MB from the bootstrap ECR repository. (the repo looks like `cdk-hnb659fds-container-assets-<account>-<region>`.)
+1. Open the [Docker Desktop dashboard](https://docs.docker.com/desktop/use-desktop/).
+2. Disable General -> Use containerd for pulling and storing images.
+3. Restart Docker Desktop.
+4. run `cdk deploy` again.
+
+Please double check that your ECS tasks are no longer referencing 0MB images after all the above steps.
 
 ## Security
 

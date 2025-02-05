@@ -20,10 +20,7 @@ export interface AlbProps {
   allowedIPv4Cidrs?: string[];
   allowedIPv6Cidrs?: string[];
 
-  /**
-   * @default 'dify'
-   */
-  subDomain?: string;
+  subDomain: string;
 
   /**
    * @default custom domain and TLS is not configured.
@@ -56,7 +53,7 @@ export class Alb extends Construct implements IAlb {
 
     const {
       vpc,
-      subDomain = 'dify',
+      subDomain,
       accessLogBucket,
       allowedIPv4Cidrs = ['0.0.0.0/0'],
       allowedIPv6Cidrs = ['::/0'],
