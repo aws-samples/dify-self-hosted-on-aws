@@ -36,10 +36,14 @@ npm ci
 # bootstrap the AWS account (required only once per account and region)
 npx cdk bootstrap
 # deploy the CDK stack
+export BUILDX_NO_DEFAULT_ATTESTATIONS=1 # see https://github.com/aws/aws-cdk/issues/31549
 npx cdk deploy --all
 ```
 
 The initial deployment usually takes about 20 minutes. After a successful deployment, you will get the URL for the app.
+
+> [!WARNING]
+> If your deployment failed on ECS deployment, please refer to [Troubleshooting](#troubleshooting) section.
 
 ```
  ✅  DifyOnAwsCdkStack
@@ -242,6 +246,26 @@ The following table provides a sample cost breakdown for deploying this system i
 | TOTAL | estimate per month | $43.1 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
+
+
+## Troubleshooting
+
+### CDK deployment fails while in ECS deployment with cannotPullContainerError
+
+It is a known issue that when the containerd option is enabled in Docker Desktop, CDK deployment fails with the default configuration ([aws/aws-cdk#31549](https://github.com/aws/aws-cdk/issues/31549)). You may receive the following error each time ECS Fargate tasks attempt to start.
+
+> cannotPullContainerError: ref pull has been retried 1 time(s): failed to unpack image on snapshotter overlayfs: mismatched image rootfs and manifest layers
+
+If you are having trouble starting Fargate's API tasks and your deployments keep failing, please try the following:
+
+1. [Cancel a stack update](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-update-cancel.html) for `DifyOnAwsStack` if your deployment is in progress.
+2. [Delete all the images](https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html) with a size of 0MB from the bootstrap ECR repository. (the repo looks like `cdk-hnb659fds-container-assets-<account>-<region>`.)
+1. Open the [Docker Desktop dashboard](https://docs.docker.com/desktop/use-desktop/).
+2. Disable General -> Use containerd for pulling and storing images.
+3. Restart Docker Desktop.
+4. run `cdk deploy` again.
+
+Please double check that your ECS tasks are no longer referencing 0MB images after all the above steps.
 
 ## Security
 
