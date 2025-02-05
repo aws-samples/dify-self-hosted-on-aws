@@ -1,6 +1,6 @@
 import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
-import { Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { AccessKey, ManagedPolicy, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
 import { Postgres } from '../postgres';
@@ -34,6 +34,8 @@ export interface ApiServiceProps {
   customRepository?: IRepository;
 
   additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
+
+  autoMigration: boolean;
 }
 
 export class ApiService extends Construct {
@@ -166,7 +168,7 @@ export class ApiService extends Construct {
         DEBUG: debug ? 'true' : 'false',
 
         // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
-        MIGRATION_ENABLED: 'true',
+        MIGRATION_ENABLED: props.autoMigration ? 'true' : 'false',
 
         // Enable pessimistic disconnect handling for recover from Aurora automatic pause
         SQLALCHEMY_POOL_PRE_PING: 'True',
@@ -353,8 +355,6 @@ export class ApiService extends Construct {
     });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
 
-    // we can use IAM role once this issue will be closed
-    // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
         actions: [
@@ -368,7 +368,6 @@ export class ApiService extends Construct {
       }),
     );
 
-    // Service
     const service = new ecs.FargateService(this, 'FargateService', {
       cluster,
       taskDefinition,
@@ -391,5 +390,13 @@ export class ApiService extends Construct {
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+
+    new CfnOutput(Stack.of(this), 'ConsoleListTasksCommand', {
+      value: `aws ecs list-tasks --region ${Stack.of(this).region} --cluster ${cluster.clusterName} --service-name ${service.serviceName} --desired-status RUNNING`,
+    });
+
+    new CfnOutput(Stack.of(this), 'ConsoleConnectToTaskCommand', {
+      value: `aws ecs execute-command --region ${Stack.of(this).region} --cluster ${cluster.clusterName} --container Main --interactive --command "bash" --task TASK_ID`,
+    });
   }
 }
