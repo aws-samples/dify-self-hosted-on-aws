@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib';
+import { CfnResource, Duration, Names, Stack } from 'aws-cdk-lib';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -74,6 +74,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     listener.connections.allowDefaultPortFrom(Peer.prefixList(this.getCloudFrontManagedPrefixListId()));
 
     let distribution = new Distribution(this, 'Distribution', {
+      comment: `Dify distribution (${Stack.of(this).stackName} - ${Stack.of(this).region})`,
       ...(props.hostedZone
         ? {
             domainNames: [`${subDomain}.${props.hostedZone.zoneName}`],
@@ -93,6 +94,35 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       logFilePrefix: 'dify-cloudfront/',
     });
     this.url = `https://${distribution.domainName}`;
+
+    // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudfront-vpcorigin.html
+    const vpcOrigin = new CfnResource(scope, 'VpcOrigin', {
+      type: 'AWS::CloudFront::VpcOrigin',
+      properties: {
+        VpcOriginEndpointConfig: {
+          Arn: alb.loadBalancerArn,
+          HTTPPort: 80,
+          Name: Names.uniqueResourceName(this, { maxLength: 64, separator: '-' }),
+          OriginProtocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
+        },
+      },
+    });
+    // "DifyOnAwsStack/Alb/Distribution/Resource"
+    (distribution.node.defaultChild as CfnResource).addPropertyOverride('DistributionConfig.Origins.0', {
+      Id: 'VpcOrigin',
+      DomainName: alb.loadBalancerDnsName,
+      // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-distribution-vpcoriginconfig.html
+      VpcOriginConfig: {
+        VpcOriginId: vpcOrigin.getAtt('Id'),
+      },
+    });
+    (distribution.node.defaultChild as CfnResource).addPropertyDeletionOverride(
+      'DistributionConfig.Origins.0.CustomOriginConfig',
+    );
+    (distribution.node.defaultChild as CfnResource).addPropertyOverride(
+      'DistributionConfig.DefaultCacheBehavior.TargetOriginId',
+      'VpcOrigin',
+    );
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {

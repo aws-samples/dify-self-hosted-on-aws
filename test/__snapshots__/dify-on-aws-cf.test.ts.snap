@@ -678,6 +678,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Aliases": [
             "dify.example.com",
           ],
+          "Comment": "Dify distribution (TestStack - us-west-2)",
           "DefaultCacheBehavior": {
             "AllowedMethods": [
               "GET",
@@ -691,7 +692,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "CachePolicyId": "4cc15a8a-d715-48a4-82b8-cc0b614638fe",
             "Compress": true,
             "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
-            "TargetOriginId": "TestStackAlbDistributionOrigin1D9B11DF5",
+            "TargetOriginId": "VpcOrigin",
             "ViewerProtocolPolicy": "redirect-to-https",
           },
           "Enabled": true,
@@ -708,19 +709,21 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           },
           "Origins": [
             {
-              "CustomOriginConfig": {
-                "OriginProtocolPolicy": "http-only",
-                "OriginSSLProtocols": [
-                  "TLSv1.2",
-                ],
-              },
               "DomainName": {
                 "Fn::GetAtt": [
                   "AlbC1372A32",
                   "DNSName",
                 ],
               },
-              "Id": "TestStackAlbDistributionOrigin1D9B11DF5",
+              "Id": "VpcOrigin",
+              "VpcOriginConfig": {
+                "VpcOriginId": {
+                  "Fn::GetAtt": [
+                    "VpcOrigin",
+                    "Id",
+                  ],
+                },
+              },
             },
           ],
           "ViewerCertificate": {
@@ -2977,6 +2980,19 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
       },
       "Type": "AWS::EC2::InternetGateway",
+    },
+    "VpcOrigin": {
+      "Properties": {
+        "VpcOriginEndpointConfig": {
+          "Arn": {
+            "Ref": "AlbC1372A32",
+          },
+          "HTTPPort": 80,
+          "Name": "TestStack-Alb-4064853B",
+          "OriginProtocolPolicy": "http-only",
+        },
+      },
+      "Type": "AWS::CloudFront::VpcOrigin",
     },
     "VpcPrivateSubnet1DefaultRouteBE02A9ED": {
       "Properties": {
