@@ -33,10 +33,7 @@ export const createVpc = (
             }),
             natGateways: 1,
           }
-        : {
-            natGatewayProvider: NatProvider.gateway(),
-            natGateways: 1,
-          }),
+        : {}),
       maxAzs: 2,
       subnetConfiguration: [
         {
