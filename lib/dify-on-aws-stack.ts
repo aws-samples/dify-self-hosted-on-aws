@@ -1,99 +1,25 @@
 import * as cdk from 'aws-cdk-lib';
-import {
-  AmazonLinuxCpuType,
-  IVpc,
-  InstanceClass,
-  InstanceSize,
-  InstanceType,
-  MachineImage,
-  NatProvider,
-  SubnetType,
-  Vpc,
-} from 'aws-cdk-lib/aws-ec2';
-import { Cluster } from 'aws-cdk-lib/aws-ecs';
+import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { Postgres } from './constructs/postgres';
 import { Redis } from './constructs/redis';
-import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { WebService } from './constructs/dify-services/web';
 import { ApiService } from './constructs/dify-services/api';
-import { WorkerService } from './constructs/dify-services/worker';
 import { Alb } from './constructs/alb';
-import { PublicHostedZone } from 'aws-cdk-lib/aws-route53';
+import { HostedZone } from 'aws-cdk-lib/aws-route53';
+import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
+import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { createVpc } from './constructs/vpc';
+import { EnvironmentProps } from './environment-props';
 
-interface DifyOnAwsStackProps extends cdk.StackProps {
-  /**
-   * The IP address ranges in CIDR notation that have access to the app.
-   * @example ['1.1.1.1/30']
-   */
-  allowedCidrs: string[];
-
-  /**
-   * Use t4g.nano NAT instances instead of NAT Gateway.
-   * Ignored when you import an existing VPC.
-   * @default false
-   */
-  cheapVpc?: boolean;
-
-  /**
-   * If set, it imports the existing VPC instead of creating a new one.
-   * The VPC must have one or more public and private subnets.
-   * @default create a new VPC
-   */
-  vpcId?: string;
-
-  /**
-   * The domain name you use for Dify's service URL.
-   * You must own a Route53 public hosted zone for the domain in your account.
-   * @default No custom domain is used.
-   */
-  domainName?: string;
-
-  /**
-   * The ID of Route53 hosted zone for the domain.
-   * @default No custom domain is used.
-   */
-  hostedZoneId?: string;
-
-  /**
-   * If true, the ElastiCache Redis cluster is deployed to multiple AZs for fault tolerance.
-   * It is generally recommended to enable this, but you can disable it to minimize AWS cost.
-   * @default true
-   */
-  isRedisMultiAz?: boolean;
-
-  /**
-   *
-   * @default false
-   */
-  enableAuroraScalesToZero?: boolean;
-
-  /**
-   * The image tag to deploy Dify container images (api=worker and web).
-   * The images are pulled from [here](https://hub.docker.com/u/langgenius).
-   *
-   * It is recommended to set this to a fixed version,
-   * because otherwise an unexpected version is pulled on a ECS service's scaling activity.
-   * @default "latest"
-   */
-  difyImageTag?: string;
-
-  /**
-   * The image tag to deploy the Dify sandbox container image.
-   * The image is pulled from [here](https://hub.docker.com/r/langgenius/dify-sandbox/tags).
-   *
-   * @default "latest"
-   */
-  difySandboxImageTag?: string;
-
-  /**
-   * If true, Dify sandbox allows any system calls when executing code.
-   * Do NOT set this property if you are not sure code executed in the sandbox
-   * can be trusted or not.
-   *
-   * @default false
-   */
-  allowAnySyscalls?: boolean;
+/**
+ * Mostly inherited from EnvironmentProps
+ */
+export interface DifyOnAwsStackProps extends cdk.StackProps, Omit<EnvironmentProps, 'awsRegion' | 'awsAccount'> {
+  readonly cloudFrontWebAclArn?: string;
+  readonly cloudFrontCertificate?: ICertificate;
 }
 
 export class DifyOnAwsStack extends cdk.Stack {
@@ -104,52 +30,54 @@ export class DifyOnAwsStack extends cdk.Stack {
       difyImageTag: imageTag = 'latest',
       difySandboxImageTag: sandboxImageTag = 'latest',
       allowAnySyscalls = false,
+      useCloudFront = true,
+      internalAlb = false,
+      subDomain = 'dify',
     } = props;
 
-    let vpc: IVpc;
-    if (props.vpcId != null) {
-      vpc = Vpc.fromLookup(this, 'Vpc', { vpcId: props.vpcId });
-    } else {
-      vpc = new Vpc(this, 'Vpc', {
-        ...(props.cheapVpc
-          ? {
-              natGatewayProvider: NatProvider.instanceV2({
-                instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
-              }),
-              natGateways: 1,
-            }
-          : {}),
-        maxAzs: 2,
-        subnetConfiguration: [
-          {
-            subnetType: SubnetType.PUBLIC,
-            name: 'Public',
-            // NAT instance does not work when this set to false.
-            // mapPublicIpOnLaunch: false,
-          },
-          {
-            subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-            name: 'Private',
-          },
-        ],
-      });
+    if (props.vpcId && (props.vpcIsolated != null || props.useNatInstance != null)) {
+      throw new Error(
+        `When you import an existing VPC (${props.vpcId}), you cannot set useNatInstance or vpcIsolated properties!`,
+      );
     }
 
-    if ((props.hostedZoneId != null) !== (props.domainName != null)) {
-      throw new Error(`You have to set both hostedZoneId and domainName! Or leave both blank.`);
+    if (useCloudFront && props.internalAlb != null) {
+      throw new Error(`When using CloudFront, you cannot set internalAlb property!`);
     }
 
-    const hostedZone =
-      props.domainName && props.hostedZoneId
-        ? PublicHostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-            zoneName: props.domainName,
-            hostedZoneId: props.hostedZoneId,
-          })
-        : undefined;
+    if (props.domainName == null && props.subDomain != null) {
+      throw new Error('Without domainName, you cannot set subDomain property!');
+    }
+
+    if (!props.useCloudFront && props.domainName == null && !internalAlb) {
+      cdk.Annotations.of(this).addWarningV2(
+        'ALBWithoutEncryption',
+        'You are exposing ALB to the Internet without TLS encryption. Recommended to set useCloudFront: true or domainName property.',
+      );
+    }
+
+    const hostedZone = props.domainName
+      ? HostedZone.fromLookup(this, 'HostedZone', {
+          domainName: props.domainName,
+        })
+      : undefined;
+
+    const vpc = createVpc(this, {
+      vpcId: props.vpcId,
+      useNatInstance: props.useNatInstance,
+      isolated: props.vpcIsolated,
+    });
+
+    const accessLogBucket = new Bucket(this, 'AccessLogBucket', {
+      enforceSSL: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      autoDeleteObjects: true,
+    });
 
     const cluster = new Cluster(this, 'Cluster', {
       vpc,
-      containerInsights: true,
+      containerInsightsV2: ContainerInsights.ENABLED,
     });
 
     const postgres = new Postgres(this, 'Postgres', {
@@ -166,9 +94,30 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = new Alb(this, 'Alb', { vpc, allowedCidrs: props.allowedCidrs, hostedZone });
+    const alb = useCloudFront
+      ? new AlbWithCloudFront(this, 'Alb', {
+          vpc,
+          hostedZone,
+          accessLogBucket,
+          cloudFrontCertificate: props.cloudFrontCertificate,
+          cloudFrontWebAclArn: props.cloudFrontWebAclArn,
+          subDomain,
+        })
+      : new Alb(this, 'Alb', {
+          vpc,
+          allowedIPv4Cidrs: props.allowedIPv4Cidrs,
+          allowedIPv6Cidrs: props.allowedIPv6Cidrs,
+          hostedZone,
+          accessLogBucket,
+          internal: internalAlb,
+          subDomain,
+        });
 
-    const api = new ApiService(this, 'ApiService', {
+    let customRepository = props.customEcrRepositoryName
+      ? Repository.fromRepositoryName(this, 'CustomRepository', props.customEcrRepositoryName)
+      : undefined;
+
+    new ApiService(this, 'ApiService', {
       cluster,
       alb,
       postgres,
@@ -177,21 +126,16 @@ export class DifyOnAwsStack extends cdk.Stack {
       imageTag,
       sandboxImageTag,
       allowAnySyscalls,
+      customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new WebService(this, 'WebService', {
       cluster,
       alb,
       imageTag,
-    });
-
-    new WorkerService(this, 'WorkerService', {
-      cluster,
-      postgres,
-      redis,
-      storageBucket,
-      encryptionSecret: api.encryptionSecret,
-      imageTag,
+      customRepository,
+      additionalEnvironmentVariables: props.additionalEnvironmentVariables,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {

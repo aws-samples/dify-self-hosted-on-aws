@@ -8,11 +8,14 @@ import { Redis } from '../redis';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
-import { Alb } from '../alb';
+import { IAlb } from '../alb';
+import { IRepository } from 'aws-cdk-lib/aws-ecr';
+import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
+import { EnvironmentProps } from '../../environment-props';
 
 export interface ApiServiceProps {
   cluster: ICluster;
-  alb: Alb;
+  alb: IAlb;
 
   postgres: Postgres;
   redis: Redis;
@@ -27,22 +30,30 @@ export interface ApiServiceProps {
    * @default false
    */
   debug?: boolean;
+
+  customRepository?: IRepository;
+
+  additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
 }
 
 export class ApiService extends Construct {
-  public readonly encryptionSecret: Secret;
-
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, debug = false } = props;
+    const { cluster, alb, postgres, redis, storageBucket, debug = false, customRepository } = props;
     const port = 5001;
+    const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
       cpu: 1024,
       // 512だとOOMが起きたので、増やした
       memoryLimitMiB: 2048,
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
+      volumes: [
+        {
+          name: volumeName,
+        },
+      ],
     });
 
     const encryptionSecret = new Secret(this, 'EncryptionSecret', {
@@ -50,10 +61,11 @@ export class ApiService extends Construct {
         passwordLength: 42,
       },
     });
-    this.encryptionSecret = encryptionSecret;
 
     taskDefinition.addContainer('Main', {
-      image: ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       // https://docs.dify.ai/getting-started/install-self-hosted/environments
       environment: {
         MODE: 'api',
@@ -91,6 +103,7 @@ export class ApiService extends Construct {
         STORAGE_TYPE: 's3',
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
+        S3_USE_AWS_MANAGED_IAM: 'true',
 
         // postgres settings. the credentials are in secrets property.
         DB_DATABASE: postgres.databaseName,
@@ -101,6 +114,8 @@ export class ApiService extends Construct {
 
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194', // Fargate の task 内通信は localhost 宛,
+
+        ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -121,23 +136,86 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
         interval: Duration.seconds(15),
-        startPeriod: Duration.seconds(30),
+        startPeriod: Duration.seconds(60),
         timeout: Duration.seconds(5),
         retries: 5,
       },
     });
 
-    taskDefinition.addContainer('Sandbox', {
+    taskDefinition.addContainer('Worker', {
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      environment: {
+        MODE: 'worker',
+        // The log level for the application. Supported values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+        LOG_LEVEL: debug ? 'DEBUG' : 'ERROR',
+        // enable DEBUG mode to output more logs
+        DEBUG: debug ? 'true' : 'false',
+
+        // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
+        MIGRATION_ENABLED: 'true',
+
+        // Enable pessimistic disconnect handling for recover from Aurora automatic pause
+        SQLALCHEMY_POOL_PRE_PING: 'True',
+
+        // The configurations of redis connection.
+        REDIS_HOST: redis.endpoint,
+        REDIS_PORT: redis.port.toString(),
+        REDIS_USE_SSL: 'true',
+        REDIS_DB: '0',
+
+        // The S3 storage configurations, only available when STORAGE_TYPE is `s3`.
+        STORAGE_TYPE: 's3',
+        S3_BUCKET_NAME: storageBucket.bucketName,
+        S3_REGION: Stack.of(storageBucket).region,
+
+        DB_DATABASE: postgres.databaseName,
+        // pgvector configurations
+        VECTOR_STORE: 'pgvector',
+        PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
+
+        ...getAdditionalEnvironmentVariables(this, 'worker', props.additionalEnvironmentVariables),
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      secrets: {
+        DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        DB_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        PGVECTOR_USER: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        PGVECTOR_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        PGVECTOR_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        PGVECTOR_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
+        CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
+        SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+
+        ...getAdditionalSecretVariables(this, 'worker', props.additionalEnvironmentVariables),
+      },
+    });
+
+    const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
         buildArgs: {
-          DIFY_VERSION: props.sandboxImageTag,
+          DISABLE_PYTHON_DEPENDENCIES: 'false',
         },
       }),
+      essential: false,
+    });
+
+    const sandboxContainer = taskDefinition.addContainer('Sandbox', {
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-sandbox_${props.sandboxImageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-sandbox:${props.sandboxImageTag}`),
       environment: {
         GIN_MODE: 'release',
         WORKER_TIMEOUT: '15',
@@ -165,6 +243,8 @@ export class ApiService extends Construct {
           '/run/systemd/resolve/stub-resolv.conf',
           '/run/resolvconf/resolv.conf',
         ].join(','),
+
+        ...getAdditionalEnvironmentVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
@@ -172,7 +252,23 @@ export class ApiService extends Construct {
       portMappings: [{ containerPort: 8194 }],
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        ...getAdditionalSecretVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
+    });
+
+    sandboxFileContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: false,
+    });
+    sandboxContainer.addMountPoints({
+      containerPath: '/dependencies',
+      sourceVolume: volumeName,
+      readOnly: true,
+    });
+    sandboxContainer.addContainerDependencies({
+      container: sandboxFileContainer,
+      condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
@@ -197,7 +293,13 @@ export class ApiService extends Construct {
     // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Rerank', 'bedrock:Retrieve'],
+        actions: [
+          'bedrock:InvokeModel',
+          'bedrock:InvokeModelWithResponseStream',
+          'bedrock:Rerank',
+          'bedrock:Retrieve',
+          'bedrock:RetrieveAndGenerate',
+        ],
         resources: ['*'],
       }),
     );
@@ -217,10 +319,11 @@ export class ApiService extends Construct {
         },
       ],
       enableExecuteCommand: true,
+      minHealthyPercent: 100,
     });
 
-    service.connections.allowToDefaultPort(postgres);
-    service.connections.allowToDefaultPort(redis);
+    postgres.connections.allowDefaultPortFrom(service);
+    redis.connections.allowDefaultPortFrom(service);
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);

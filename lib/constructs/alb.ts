@@ -1,7 +1,7 @@
 import { Duration } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { IVpc, Peer, Port } from 'aws-cdk-lib/aws-ec2';
-import { FargateService, IService } from 'aws-cdk-lib/aws-ecs';
+import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
+import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -12,24 +12,36 @@ import {
 } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { LoadBalancerTarget } from 'aws-cdk-lib/aws-route53-targets';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 export interface AlbProps {
   vpc: IVpc;
-  allowedCidrs: string[];
+  allowedIPv4Cidrs?: string[];
+  allowedIPv6Cidrs?: string[];
 
-  /**
-   * @default 'dify'
-   */
-  subDomain?: string;
+  subDomain: string;
 
   /**
    * @default custom domain and TLS is not configured.
    */
   hostedZone?: IHostedZone;
+
+  accessLogBucket: IBucket;
+
+  /**
+   * If true, the alb is deployed to private or isolated subnet.
+   * @default false
+   */
+  internal?: boolean;
 }
 
-export class Alb extends Construct {
+export interface IAlb {
+  url: string;
+  addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]): void;
+}
+
+export class Alb extends Construct implements IAlb {
   public url: string;
 
   private listenerPriority = 1;
@@ -39,7 +51,14 @@ export class Alb extends Construct {
   constructor(scope: Construct, id: string, props: AlbProps) {
     super(scope, id);
 
-    const { vpc, subDomain = 'dify' } = props;
+    const {
+      vpc,
+      subDomain,
+      accessLogBucket,
+      allowedIPv4Cidrs = ['0.0.0.0/0'],
+      allowedIPv6Cidrs = ['::/0'],
+      internal = false,
+    } = props;
     const protocol = props.hostedZone ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP;
     const certificate = props.hostedZone
       ? new Certificate(this, 'Certificate', {
@@ -50,9 +69,12 @@ export class Alb extends Construct {
 
     const alb = new ApplicationLoadBalancer(this, 'Resource', {
       vpc,
-      vpcSubnets: vpc.selectSubnets({ subnets: vpc.publicSubnets }),
-      internetFacing: true,
+      vpcSubnets: vpc.selectSubnets({
+        subnets: internal ? vpc.privateSubnets.concat(vpc.isolatedSubnets) : vpc.publicSubnets,
+      }),
+      internetFacing: !internal,
     });
+    alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;
 
     const listener = alb.addListener('Listener', {
@@ -61,7 +83,8 @@ export class Alb extends Construct {
       defaultAction: ListenerAction.fixedResponse(400),
       certificates: certificate ? [certificate] : undefined,
     });
-    props.allowedCidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    allowedIPv4Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv4(cidr)));
+    allowedIPv6Cidrs.forEach((cidr) => listener.connections.allowDefaultPortFrom(Peer.ipv6(cidr)));
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {

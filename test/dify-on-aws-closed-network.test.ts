@@ -14,29 +14,11 @@ test('Snapshot test', () => {
     allowedIPv4Cidrs: ['0.0.0.0/0'],
     allowedIPv6Cidrs: ['::/0'],
     difySandboxImageTag: '0.2.4',
-    domainName: 'example.com',
-    allowAnySyscalls: true,
-    useCloudFront: false,
     enableAuroraScalesToZero: true,
-    additionalEnvironmentVariables: [
-      {
-        key: 'ALL',
-        value: 'foo',
-      },
-      {
-        key: 'API_AND_WEB_ONLY',
-        value: 'foo',
-        targets: ['api', 'web'],
-      },
-      {
-        key: 'SECRET_ON_SM',
-        value: { secretName: 'foo', field: 'bar' },
-      },
-      {
-        key: 'SECRET_ON_SSM',
-        value: { parameterName: 'foo' },
-      },
-    ],
+    useCloudFront: false,
+    internalAlb: true,
+    vpcIsolated: true,
+    customEcrRepositoryName: 'custom',
   };
 
   // WHEN

@@ -39,6 +39,31 @@ To send us a pull request, please:
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
+### Useful commands
+
+When you want to run CDK snapshot test, you can run the following commands:
+
+```sh
+# check snapshot diff
+npm run test
+
+# update snapshot
+npm run test -- -u
+```
+
+Please commit the snapshot file when you have made changes to the CDK code.
+
+When you want to format TypeScript code, you can run the following commands:
+
+```sh
+# apply format
+npm run format
+
+# check if there are any format errors
+npm run format:check
+```
+
+Or you can use [VSCode prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to automatically format code e.g. when you save a file.
 
 ## Finding contributions to work on
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any 'help wanted' issues is a great place to start.

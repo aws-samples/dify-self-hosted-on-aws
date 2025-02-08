@@ -15,7 +15,7 @@ Key Features:
 * Easily integrate with Bedrock models and Knowledge Bases
 
 本リポジトリの使い方について、日本語で書かれた記事もあります: 
-* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f)
+* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f) ( [CloudShell版](https://note.com/yukkie1114/n/n8e055c4e7566) )
 * [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
 
 ## Prerequisites
@@ -26,7 +26,7 @@ You must have the following dependencies installed to deploy this app:
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and IAM profile with Administrator policy
 
 ## Deploy
-You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`DifyOnAwsStackProps` interface](./lib/dify-on-aws-stack.ts) for all the available parameters.
+You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`EnvironmentProps` interface](./lib/environment-props.ts) for all the available parameters.
 
 Then you can run the following commands to deploy the entire stack.
 
@@ -36,10 +36,14 @@ npm ci
 # bootstrap the AWS account (required only once per account and region)
 npx cdk bootstrap
 # deploy the CDK stack
-npx cdk deploy
+export BUILDX_NO_DEFAULT_ATTESTATIONS=1 # see https://github.com/aws/aws-cdk/issues/31549
+npx cdk deploy --all
 ```
 
 The initial deployment usually takes about 20 minutes. After a successful deployment, you will get the URL for the app.
+
+> [!WARNING]
+> If your deployment failed on ECS deployment, please refer to [Troubleshooting](#troubleshooting) section.
 
 ```
  ✅  DifyOnAwsCdkStack
@@ -51,6 +55,20 @@ DifyOnAwsStack.DifyUrl = https://dify.example.com
 ```
 
 You can open the URL with a browser and get started!
+
+### Deploy from CloudShell
+
+You can use a dedicated script that works even in an environment with limited storage space such as [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html).
+
+In CloudShell, you can just run the following commands:
+
+```sh
+git clone https://github.com/aws-samples/dify-self-hosted-on-aws.git
+cd dify-self-hosted-on-aws
+./simple-deploy.sh
+```
+
+Then follow the prompts from the shell script. You will finally get the `DifyOnAwsStack.DifyUrl` output in the CLI.
 
 ## Tips
 
@@ -71,7 +89,7 @@ IAM policies are already configured properly, so you can just select a correct A
 
 ### Add Python packages available in code execution
 
-You can add Python packages that is available in Dify code execution feature. Edit [sandbox-python-requirements.txt](./lib/constructs/dify-services/docker/sandbox-python-requirements.txt) following the [Requirements File Format](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
+You can add Python packages that is available in Dify code execution feature. Edit [python-requirements.txt](./lib/constructs/dify-services/docker/python-requirements.txt) following the [Requirements File Format](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
 
 In some libraries, you have to allow additonal system calls in Dify sandbox. This CDK project let you to allow all the system calls by `allowAnySysCalls` flag in [`bin/cdk.ts`](bin/cdk.ts).
 
@@ -100,6 +118,108 @@ You can use the [External Knowledge Base feature](https://docs.dify.ai/guides/kn
 
 For more information, please refer to this article: [Dify can also do RAG on documents with charts and graphs!](https://qiita.com/mabuchs/items/85fb2dad19ec441c870c)
 
+### Scaling out / Scaling up
+
+Although this system is designed with infrastructure scalability in mind, there are several tuning knobs that you might want to explicitly set as you prepare for larger numbers of users.
+
+The below are the list of configurable parameters and their default values:
+
+1. ECS Task ([api.ts](./lib/constructs/dify-services/api.ts), [web.ts](./lib/constructs/dify-services/web.ts))
+    1. Size
+        1. api/worker: 1024vCPU / 2048MB
+        2. web: 256vCPU / 512MB
+    2. Desired Count
+        1. 1 task for each service
+2. ElastiCache ([redis.ts](./lib/constructs/redis.ts))
+    1. Node Type: `cache.t4g.micro`
+    2. Node Count: 1
+3. Aurora Postgres ([postgres.ts](./lib/constructs/postgres.ts))
+    1. Serverless v2 maximum capacity: 2 ACU
+
+### Deploying to a closed network (a.k.a 閉域要件)
+
+You can deploy the system on a closed network (i.e. a VPC without internet gateway or NAT gateway) with a few simple additional steps.
+
+To deploy on a closed network, please follow the steps below:
+
+1. Set configuration parameters in `bin/cdk.ts` as below:
+    ```ts
+    export const props: EnvironmentProps = {
+        // set region and account explicitly.
+        awsRegion: 'ap-northeast-1',
+        awsAccount: '123456789012',
+
+        // Set your internal IP address ranges here.
+        allowedIPv4Cidrs: ['10.0.0.0/16'],
+
+        // The below two flags must be set for closed network deployment.
+        useCloudFront: false,
+        internalAlb: true,
+
+        // If Docker Hub is not accessible from your vpc subnets, set this property and run copy-to-ecr script (see step#2)
+        customEcrRepositoryName: 'dify-images',
+
+        // To let the CDK create a VPC with closed network, set this property.
+        vpcIsolated: true,
+        // Or, optionally you can import an existing VPC.
+        vpcId: 'vpc-12345678',
+
+        // Other properties can be configured as you like.
+    };
+    ```
+
+2. Open [`python-requirements.txt`](lib/constructs/dify-services/docker/sandbox/python-requirements.txt) and remove all the dependencies from it
+    * This is **only required** if [PyPI](https://pypi.org/) is not accessible from your vpc subnets.
+3. Copy all the dify container images in Docker Hub to an ECR repository by executing `npx ts-node scripts/copy-to-ecr.ts`.
+    * The script handles all the tasks required to copy images. You will also need to run `npm ci` before this.
+        * You can create an ECR repository with the name of `customEcrRepositoryName` by yourself, or the script creates one if it does not exist yet.
+        * This script must be executed in an environment that has access to the Internet.
+        * Please run the script every time you change `difyImageTag` or `difySandboxImageTag` property.
+    * This is **only required** if [Docker Hub](https://www.docker.com/products/docker-hub/) is not accessible from your vpc subnets.
+4. If you are using an existing VPC (`vpcId` property), make sure the required VPC endpoints are provisioned before deployment.
+    * See [`vpc-endpoints.ts`](lib/constructs/vpc-endpoints.ts) for the list of required VPC endpoints.
+    * If you let CDK create a VPC (by setting `vpcIsolated: true`), all the endpoints are created automatically.
+5. Deploy the CDK project following the [Deploy](#deploy) section.
+6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
+    * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
+
+### Connect to Notion
+
+You can connect to [Notion](https://www.notion.com/) data by the following steps:
+
+1. Obtain the Notion Secret Token: [Notion - Authorization](https://developers.notion.com/docs/authorization).
+
+2. Create a Screts Manager secret for the token:
+```sh
+ NOTION_INTERNAL_SECRET="NOTION_SECRET_REPLACE_THIS"
+ aws secretsmanager create-secret \
+    --name NOTION_INTERNAL_SECRET \
+    --description "Secret for Notion internal use" \
+    --secret-string ${NOTION_INTERNAL_SECRET}
+```
+
+3. Set `additionalEnvironmentVariables` in `bin/cdk.ts` as below:
+```ts
+export const props: EnvironmentProps = {
+  // ADD THIS
+  additionalEnvironmentVariables: [
+    {
+      key: 'NOTION_INTEGRATION_TYPE',
+      value: 'internal',
+      targets: ['api'], 
+    },
+    {
+      key: 'NOTION_INTERNAL_SECRET',
+      value: { secretName: 'NOTION_INTERNAL_SECRET'},
+      targets: ['api'], 
+    },
+  ],
+}
+```
+
+4. Deploy the stack by `cdk deploy` command.
+5. Now you can [import data from Notion](https://docs.dify.ai/guides/knowledge-base/create-knowledge-and-upload-documents/1.-import-text-data/1.1-import-data-from-notion).
+
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
 
@@ -107,6 +227,8 @@ To avoid incurring future charges, clean up the resources you created.
 npx cdk destroy --force
 # If you encountered an error during the deletion, please retry. It happens sometimes.
 ```
+
+If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, please remove the container repository and images in it manually.
 
 ## Cost
 
@@ -118,13 +240,33 @@ The following table provides a sample cost breakdown for deploying this system i
 | RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
 | ECS (Fargate) | Dify-web 1 task running 24/7 (256CPU) | $2.7 |
-| ECS (Fargate) | Dify-api 1 task running 24/7 (1024CPU) | $10.7 |
-| ECS (Fargate) | Dify-worker 1 task running 24/7 (1024CPU) | $10.7 |
+| ECS (Fargate) | Dify-api/worker 1 task running 24/7 (1024CPU) | $10.7 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
-| TOTAL | estimate per month | $53.8 |
+| VPC | Public IP address x1 | $3.6 |
+| TOTAL | estimate per month | $46.7 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
+
+
+## Troubleshooting
+
+### CDK deployment fails while in ECS deployment with cannotPullContainerError
+
+It is a known issue that when the containerd option is enabled in Docker Desktop, CDK deployment fails with the default configuration ([aws/aws-cdk#31549](https://github.com/aws/aws-cdk/issues/31549)). You may receive the following error each time ECS Fargate tasks attempt to start.
+
+> cannotPullContainerError: ref pull has been retried 1 time(s): failed to unpack image on snapshotter overlayfs: mismatched image rootfs and manifest layers
+
+If you are having trouble starting Fargate's API tasks and your deployments keep failing, please try the following:
+
+1. [Cancel a stack update](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-update-cancel.html) for `DifyOnAwsStack` if your deployment is in progress.
+2. [Delete all the images](https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html) with a size of 0MB from the bootstrap ECR repository. (the repo looks like `cdk-hnb659fds-container-assets-<account>-<region>`.)
+1. Open the [Docker Desktop dashboard](https://docs.docker.com/desktop/use-desktop/).
+2. Disable General -> Use containerd for pulling and storing images.
+3. Restart Docker Desktop.
+4. run `cdk deploy` again.
+
+Please double check that your ECS tasks are no longer referencing 0MB images after all the above steps.
 
 ## Security
 

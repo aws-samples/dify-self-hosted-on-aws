@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
+      - ls -la
+      - npm ci
+  build:
+    commands:
+      - echo Build started on `date`
+      - npx cdk bootstrap
+      - npx cdk deploy --require-approval=never --all
+  post_build:
+    commands:
+      - echo Build completed on `date`

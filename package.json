@@ -1,11 +1,13 @@
 {
   "name": "dify-on-aws-cdk",
-  "version": "0.1.0",
   "bin": {
     "dify-on-aws-cdk": "bin/cdk.js"
   },
   "scripts": {
     "build": "tsc",
+    "format": "prettier --write './**/*.ts'",
+    "format:check": "prettier --check './**/*.ts'",
+    "synth": "cdk -a 'npx ts-node --prefer-ts-exts bin/deploy.ts' --version-reporting false --path-metadata false synth > deploy.yaml",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk"
@@ -16,6 +18,7 @@
     "aws-cdk": "^2.148.0",
     "esbuild": "^0.21.5",
     "jest": "^29.7.0",
+    "prettier": "^3.4.2",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "~5.4.5"
