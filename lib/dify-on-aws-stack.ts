@@ -49,6 +49,19 @@ export class DifyOnAwsStack extends cdk.Stack {
       throw new Error('Without domainName, you cannot set subDomain property!');
     }
 
+    {
+      const filtered =
+        props.additionalEnvironmentVariables
+          ?.map((v) => v.value)
+          .filter((v) => typeof v != 'string' && 'secretName' in v)
+          .filter((v) => /-......$/.test(v.secretName))
+          .map((v) => v.secretName) ?? [];
+      if (filtered.length > 0) {
+        // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_secretsmanager.Secret.html#static-fromwbrsecretwbrnamewbrv2scope-id-secretname
+        throw new Error(`secretName cannot ends with a hyphen and 6 characters! ${filtered.join(', ')}`);
+      }
+    }
+
     if (!props.useCloudFront && props.domainName == null && !internalAlb) {
       cdk.Annotations.of(this).addWarningV2(
         'ALBWithoutEncryption',
