@@ -220,6 +220,12 @@ export const props: EnvironmentProps = {
 4. Deploy the stack by `cdk deploy` command.
 5. Now you can [import data from Notion](https://docs.dify.ai/guides/knowledge-base/create-knowledge-and-upload-documents/1.-import-text-data/1.1-import-data-from-notion).
 
+### Setup Email (SMTP) for user invitation
+
+You can let Dify send emails to invite new users or reset passwords. To enable the feature, set `setupEmail` property to `true` in `bin/cdk.ts` first. Note that you can only configure one email server (Amazon SES Identity) per `domainName` property.
+
+After a successful deployment, you have to move out from SES sandbox to send emails to non-verified addresses and domains. Please refer to the document for more details: [Request production access (Moving out of the Amazon SES sandbox)](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
+
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
 

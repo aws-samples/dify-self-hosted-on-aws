@@ -348,7 +348,7 @@ exports[`Snapshot test 1`] = `
     },
     "AlbApiTargetGroup4B6AF19C": {
       "Properties": {
-        "HealthCheckIntervalSeconds": 20,
+        "HealthCheckIntervalSeconds": 30,
         "HealthCheckPath": "/health",
         "HealthyThresholdCount": 2,
         "Matcher": {
@@ -367,7 +367,7 @@ exports[`Snapshot test 1`] = `
           },
         ],
         "TargetType": "ip",
-        "UnhealthyThresholdCount": 6,
+        "UnhealthyThresholdCount": 10,
         "VpcId": {
           "Ref": "Vpc8378EB38",
         },
@@ -624,7 +624,7 @@ exports[`Snapshot test 1`] = `
     },
     "AlbWebTargetGroupC65B2BDF": {
       "Properties": {
-        "HealthCheckIntervalSeconds": 20,
+        "HealthCheckIntervalSeconds": 30,
         "HealthCheckPath": "/",
         "HealthyThresholdCount": 2,
         "Matcher": {
@@ -643,7 +643,7 @@ exports[`Snapshot test 1`] = `
           },
         ],
         "TargetType": "ip",
-        "UnhealthyThresholdCount": 6,
+        "UnhealthyThresholdCount": 10,
         "VpcId": {
           "Ref": "Vpc8378EB38",
         },
@@ -890,8 +890,8 @@ exports[`Snapshot test 1`] = `
                 "curl -f http://localhost:5001/health || exit 1",
               ],
               "Interval": 15,
-              "Retries": 5,
-              "StartPeriod": 60,
+              "Retries": 10,
+              "StartPeriod": 90,
               "Timeout": 5,
             },
             "Image": "langgenius/dify-api:latest",
@@ -1106,6 +1106,22 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "DEBUG",
                 "Value": "false",
+              },
+              {
+                "Name": "CONSOLE_WEB_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "CONSOLE_API_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "SERVICE_API_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "APP_WEB_URL",
+                "Value": "https://dify.example.com",
               },
               {
                 "Name": "MIGRATION_ENABLED",
