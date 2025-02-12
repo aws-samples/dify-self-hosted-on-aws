@@ -13,6 +13,7 @@ import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { createVpc } from './constructs/vpc';
 import { EnvironmentProps } from './environment-props';
+import { EmailService } from './constructs/email';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -42,11 +43,15 @@ export class DifyOnAwsStack extends cdk.Stack {
     }
 
     if (useCloudFront && props.internalAlb != null) {
-      throw new Error(`When using CloudFront, you cannot set internalAlb property!`);
+      throw new Error(`You cannot set internalAlb property when useCloudFront is true!`);
     }
 
     if (props.domainName == null && props.subDomain != null) {
-      throw new Error('Without domainName, you cannot set subDomain property!');
+      throw new Error('You cannot set subDomain property without domainName!');
+    }
+
+    if (props.setupEmail && props.domainName == null) {
+      throw new Error('You cannot enable setupEmailServer without domainName!');
     }
 
     {
@@ -125,6 +130,13 @@ export class DifyOnAwsStack extends cdk.Stack {
           subDomain,
         });
 
+    const email =
+      hostedZone && props.setupEmail
+        ? new EmailService(this, 'Email', {
+            hostedZone,
+          })
+        : undefined;
+
     let customRepository = props.customEcrRepositoryName
       ? Repository.fromRepositoryName(this, 'CustomRepository', props.customEcrRepositoryName)
       : undefined;
@@ -135,6 +147,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       postgres,
       redis,
       storageBucket,
+      email,
       imageTag,
       sandboxImageTag,
       allowAnySyscalls,

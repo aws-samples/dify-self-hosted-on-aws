@@ -108,10 +108,10 @@ export class Alb extends Construct implements IAlb {
       deregistrationDelay: Duration.seconds(10),
       healthCheck: {
         path: healthCheckPath,
-        interval: Duration.seconds(20),
+        interval: Duration.seconds(30),
         healthyHttpCodes: '200-299,307',
         healthyThresholdCount: 2,
-        unhealthyThresholdCount: 6,
+        unhealthyThresholdCount: 10,
       },
     });
     // a condition only accepts an array with up to 5 elements

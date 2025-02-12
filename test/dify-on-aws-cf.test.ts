@@ -16,6 +16,7 @@ test('Snapshot test (with CloudFront)', () => {
     difySandboxImageTag: '0.2.4',
     domainName: 'example.com',
     allowAnySyscalls: true,
+    setupEmail: true,
   };
 
   // WHEN
