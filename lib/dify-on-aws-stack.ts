@@ -13,6 +13,7 @@ import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { createVpc } from './constructs/vpc';
 import { EnvironmentProps } from './environment-props';
+import { EmailService } from './constructs/email';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -42,11 +43,27 @@ export class DifyOnAwsStack extends cdk.Stack {
     }
 
     if (useCloudFront && props.internalAlb != null) {
-      throw new Error(`When using CloudFront, you cannot set internalAlb property!`);
+      throw new Error(`You cannot set internalAlb property when useCloudFront is true!`);
     }
 
     if (props.domainName == null && props.subDomain != null) {
-      throw new Error('Without domainName, you cannot set subDomain property!');
+      throw new Error('You cannot set subDomain property without domainName!');
+    }
+
+    if (props.setupEmail && props.domainName == null) {
+      throw new Error('You cannot enable setupEmailServer without domainName!');
+    }
+
+    {
+      const filtered = (props.additionalEnvironmentVariables ?? [])
+        .map((v) => v.value)
+        .filter((v) => typeof v != 'string' && 'secretName' in v)
+        .filter((v) => /-......$/.test(v.secretName))
+        .map((v) => v.secretName);
+      if (filtered.length > 0) {
+        // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_secretsmanager.Secret.html#static-fromwbrsecretwbrnamewbrv2scope-id-secretname
+        throw new Error(`secretName cannot ends with a hyphen and 6 characters! ${filtered.join(', ')}`);
+      }
     }
 
     if (!props.useCloudFront && props.domainName == null && !internalAlb) {
@@ -113,6 +130,13 @@ export class DifyOnAwsStack extends cdk.Stack {
           subDomain,
         });
 
+    const email =
+      hostedZone && props.setupEmail
+        ? new EmailService(this, 'Email', {
+            hostedZone,
+          })
+        : undefined;
+
     let customRepository = props.customEcrRepositoryName
       ? Repository.fromRepositoryName(this, 'CustomRepository', props.customEcrRepositoryName)
       : undefined;
@@ -123,6 +147,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       postgres,
       redis,
       storageBucket,
+      email,
       imageTag,
       sandboxImageTag,
       allowAnySyscalls,

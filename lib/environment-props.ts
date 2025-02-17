@@ -159,6 +159,12 @@ export interface EnvironmentProps {
      */
     targets?: DifyContainerTypes[];
   }[];
+
+  /**
+   * If true, CDK configures SES and SMTP credentials using {@link domainName}.
+   * @default false
+   */
+  setupEmail?: boolean;
 }
 
 export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'sandbox';

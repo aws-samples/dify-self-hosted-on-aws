@@ -9,13 +9,12 @@ export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '0.15.2',
+  difyImageTag: '0.15.3',
 
   // uncomment the below for cheap configuration:
   // isRedisMultiAz: false,
   // useNatInstance: true,
   // enableAuroraScalesToZero: true,
-  // useCloudFront: false,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };

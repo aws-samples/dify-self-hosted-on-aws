@@ -12,6 +12,7 @@ import { IAlb } from '../alb';
 import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 import { EnvironmentProps } from '../../environment-props';
+import { EmailService } from '../email';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -20,6 +21,7 @@ export interface ApiServiceProps {
   postgres: Postgres;
   redis: Redis;
   storageBucket: IBucket;
+  email?: EmailService;
 
   imageTag: string;
   sandboxImageTag: string;
@@ -42,7 +44,7 @@ export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, debug = false, customRepository } = props;
+    const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -121,6 +123,16 @@ export class ApiService extends Construct {
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
 
+        ...(email
+          ? {
+              MAIL_TYPE: 'smtp',
+              SMTP_SERVER: email.serverAddress,
+              SMTP_PORT: email.serverPort,
+              SMTP_USE_TLS: 'true',
+              MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
+            }
+          : {}),
+
         ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
@@ -144,15 +156,21 @@ export class ApiService extends Construct {
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         INNER_API_KEY_FOR_PLUGIN: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        ...(email
+          ? {
+              SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
+              SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
+            }
+          : {}),
 
         ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       healthCheck: {
         command: ['CMD-SHELL', `curl -f http://localhost:${port}/health || exit 1`],
         interval: Duration.seconds(15),
-        startPeriod: Duration.seconds(60),
+        startPeriod: Duration.seconds(90),
         timeout: Duration.seconds(5),
-        retries: 5,
+        retries: 10,
       },
     });
 
@@ -166,6 +184,11 @@ export class ApiService extends Construct {
         LOG_LEVEL: debug ? 'DEBUG' : 'ERROR',
         // enable DEBUG mode to output more logs
         DEBUG: debug ? 'true' : 'false',
+
+        CONSOLE_WEB_URL: alb.url,
+        CONSOLE_API_URL: alb.url,
+        SERVICE_API_URL: alb.url,
+        APP_WEB_URL: alb.url,
 
         // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
         MIGRATION_ENABLED: props.autoMigration ? 'true' : 'false',
@@ -193,6 +216,15 @@ export class ApiService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
+        ...(email
+          ? {
+              MAIL_TYPE: 'smtp',
+              SMTP_SERVER: email.serverAddress,
+              SMTP_PORT: email.serverPort,
+              SMTP_USE_TLS: 'true',
+              MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
+            }
+          : {}),
 
         ...getAdditionalEnvironmentVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
@@ -212,6 +244,12 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        ...(email
+          ? {
+              SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
+              SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
+            }
+          : {}),
 
         ...getAdditionalSecretVariables(this, 'worker', props.additionalEnvironmentVariables),
       },
