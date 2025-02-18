@@ -36,6 +36,8 @@ export interface ApiServiceProps {
   customRepository?: IRepository;
 
   additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
+
+  useFargateSpot: boolean;
 }
 
 export class ApiService extends Construct {
@@ -351,11 +353,11 @@ export class ApiService extends Construct {
       capacityProviderStrategies: [
         {
           capacityProvider: 'FARGATE',
-          weight: 0,
+          weight: props.useFargateSpot ? 0 : 1,
         },
         {
           capacityProvider: 'FARGATE_SPOT',
-          weight: 1,
+          weight: props.useFargateSpot ? 1 : 0,
         },
       ],
       enableExecuteCommand: true,

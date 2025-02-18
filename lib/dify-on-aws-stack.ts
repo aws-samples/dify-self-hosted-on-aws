@@ -33,6 +33,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       allowAnySyscalls = false,
       useCloudFront = true,
       internalAlb = false,
+      useFargateSpot = false,
       subDomain = 'dify',
     } = props;
 
@@ -153,6 +154,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       allowAnySyscalls,
       customRepository,
       additionalEnvironmentVariables: props.additionalEnvironmentVariables,
+      useFargateSpot,
     });
 
     new WebService(this, 'WebService', {
@@ -161,6 +163,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       imageTag,
       customRepository,
       additionalEnvironmentVariables: props.additionalEnvironmentVariables,
+      useFargateSpot,
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {

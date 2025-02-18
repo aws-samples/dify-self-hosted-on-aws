@@ -238,7 +238,7 @@ If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, p
 
 ## Cost
 
-The following table provides a sample cost breakdown for deploying this system in the us-east-1 (N. Virginia) region for one month (when deployed using cheap configuration).
+The following table provides a sample cost breakdown for deploying this system in the us-east-1 (N. Virginia) region for one month (when deployed using less expensive configuration).
 
 
 | AWS service | Dimensions | Cost [USD] |

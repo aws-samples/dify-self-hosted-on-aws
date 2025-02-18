@@ -11,10 +11,11 @@ export const props: EnvironmentProps = {
   // Set Dify version
   difyImageTag: '0.15.3',
 
-  // uncomment the below for cheap configuration:
+  // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
   // useNatInstance: true,
   // enableAuroraScalesToZero: true,
+  // useFargateSpot: true,
 
   // Please see EnvironmentProps in lib/environment-props.ts for all the available properties
 };
