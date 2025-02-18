@@ -79,6 +79,13 @@ export interface EnvironmentProps {
   enableAuroraScalesToZero?: boolean;
 
   /**
+   * If enabled, Dify runs on Fargate spot capacity. Note that because Fargate spot can be interrupted,
+   * it is recommended to use the option for non-critical use case.
+   * @default false
+   */
+  useFargateSpot?: boolean;
+
+  /**
    * The image tag to deploy the Dify container images (api and web).
    * The images are pulled from [here](https://hub.docker.com/u/langgenius).
    *

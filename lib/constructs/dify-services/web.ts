@@ -20,6 +20,7 @@ export interface WebServiceProps {
   customRepository?: IRepository;
 
   additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
+  useFargateSpot: boolean;
 }
 
 export class WebService extends Construct {
@@ -85,11 +86,11 @@ export class WebService extends Construct {
       capacityProviderStrategies: [
         {
           capacityProvider: 'FARGATE',
-          weight: 0,
+          weight: props.useFargateSpot ? 0 : 1,
         },
         {
           capacityProvider: 'FARGATE_SPOT',
-          weight: 1,
+          weight: props.useFargateSpot ? 1 : 0,
         },
       ],
       enableExecuteCommand: true,
