@@ -4,6 +4,41 @@ exports[`Snapshot test 1`] = `
 {
   "Description": "Dify on AWS (uksb-zea0rh9k0v)",
   "Outputs": {
+    "ConsoleConnectToTaskCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "aws ecs execute-command --region us-west-2 --cluster ",
+            {
+              "Ref": "ClusterEB0386A7",
+            },
+            " --container Main --interactive --command "bash" --task TASK_ID",
+          ],
+        ],
+      },
+    },
+    "ConsoleListTasksCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "aws ecs list-tasks --region us-west-2 --cluster ",
+            {
+              "Ref": "ClusterEB0386A7",
+            },
+            " --service-name ",
+            {
+              "Fn::GetAtt": [
+                "ApiServiceFargateServiceE4EA9E4E",
+                "Name",
+              ],
+            },
+            " --desired-status RUNNING",
+          ],
+        ],
+      },
+    },
     "DifyUrl": {
       "Value": {
         "Fn::Join": [
@@ -975,7 +1010,7 @@ exports[`Snapshot test 1`] = `
                   {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/custom:dify-api_latest",
+                  "/misc:dify-api",
                 ],
               ],
             },
@@ -1668,7 +1703,7 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "FORCE_VERIFYING_SIGNATURE",
-                "Value": "true",
+                "Value": "false",
               },
             ],
             "Essential": true,
@@ -1680,7 +1715,7 @@ exports[`Snapshot test 1`] = `
                   {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/misc:dp2",
+                  "/misc:dp3",
                 ],
               ],
             },
@@ -1839,18 +1874,6 @@ exports[`Snapshot test 1`] = `
                 },
               },
               {
-                "Name": "SECRET_KEY",
-                "ValueFrom": {
-                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-                },
-              },
-              {
-                "Name": "CODE_EXECUTION_API_KEY",
-                "ValueFrom": {
-                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-                },
-              },
-              {
                 "Name": "DIFY_INNER_API_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
@@ -1947,7 +1970,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ecr:us-west-2:123456789012:repository/custom",
+                    ":ecr:us-west-2:123456789012:repository/misc",
                   ],
                 ],
               },
@@ -2026,6 +2049,26 @@ exports[`Snapshot test 1`] = `
             },
             {
               "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-west-2:123456789012:repository/custom",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -2067,26 +2110,6 @@ exports[`Snapshot test 1`] = `
                 "Fn::GetAtt": [
                   "ApiServiceTaskSandboxLogGroupDDF292A0",
                   "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":ecr:us-west-2:123456789012:repository/misc",
-                  ],
                 ],
               },
             },

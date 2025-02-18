@@ -67,9 +67,10 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Main', {
-      image: customRepository
-        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
-        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'RepoApi', 'misc'), 'dify-api'),
+      // image: customRepository
+      //   ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+      //   : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       // https://docs.dify.ai/getting-started/install-self-hosted/environments
       environment: {
         MODE: 'api',
@@ -352,7 +353,7 @@ export class ApiService extends Construct {
         PYTHON_ENV_INIT_TIMEOUT: '120',
         DIFY_INNER_API_URL: 'http://localhost:5001',
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
-        FORCE_VERIFYING_SIGNATURE: 'true',
+        FORCE_VERIFYING_SIGNATURE: 'false',
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
