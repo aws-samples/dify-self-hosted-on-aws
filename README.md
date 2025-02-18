@@ -241,7 +241,7 @@ If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, p
 The following table provides a sample cost breakdown for deploying this system in the us-east-1 (N. Virginia) region for one month (when deployed using less expensive configuration).
 
 
-| AWS service | Dimensions | Cost [USD] |
+| AWS service | Dimensions | Cost [USD/month] |
 | --------------------| ----------------- | -------------------------------|
 | RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
@@ -250,7 +250,8 @@ The following table provides a sample cost breakdown for deploying this system i
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
 | VPC | Public IP address x1 | $3.6 |
-| TOTAL | estimate per month | $46.7 |
+| Secrets Manager | Secret x3 | $1.2 |
+| TOTAL | estimate per month | $47.9 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 
