@@ -1039,11 +1039,11 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "CapacityProviderStrategy": [
           {
             "CapacityProvider": "FARGATE",
-            "Weight": 0,
+            "Weight": 1,
           },
           {
             "CapacityProvider": "FARGATE_SPOT",
-            "Weight": 1,
+            "Weight": 0,
           },
         ],
         "Cluster": {
@@ -3717,11 +3717,11 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "CapacityProviderStrategy": [
           {
             "CapacityProvider": "FARGATE",
-            "Weight": 0,
+            "Weight": 1,
           },
           {
             "CapacityProvider": "FARGATE_SPOT",
-            "Weight": 1,
+            "Weight": 0,
           },
         ],
         "Cluster": {
