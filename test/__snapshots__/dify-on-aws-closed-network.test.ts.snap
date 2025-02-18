@@ -638,14 +638,6 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
-    "ApiServiceAccessKey5BE4E5FA": {
-      "Properties": {
-        "UserName": {
-          "Ref": "ApiServicePluginUser25B9A473",
-        },
-      },
-      "Type": "AWS::IAM::AccessKey",
-    },
     "ApiServiceEncryptionSecretF73F9ECD": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -769,62 +761,6 @@ exports[`Snapshot test 1`] = `
         "ToPort": 5001,
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "ApiServicePluginUser25B9A473": {
-      "Type": "AWS::IAM::User",
-    },
-    "ApiServicePluginUserDefaultPolicy1BC8533B": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "StorageBucket19DB2FF8",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "StorageBucket19DB2FF8",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "ApiServicePluginUserDefaultPolicy1BC8533B",
-        "Users": [
-          {
-            "Ref": "ApiServicePluginUser25B9A473",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "ApiServiceTask878B1807": {
       "Properties": {
@@ -1010,7 +946,7 @@ exports[`Snapshot test 1`] = `
                   {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/misc:dify-api",
+                  "/custom:dify-api_latest",
                 ],
               ],
             },
@@ -1187,7 +1123,7 @@ exports[`Snapshot test 1`] = `
                 },
               },
               {
-                "Name": "PLUGIN_API_KEY",
+                "Name": "PLUGIN_DAEMON_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
@@ -1512,7 +1448,7 @@ exports[`Snapshot test 1`] = `
                 },
               },
               {
-                "Name": "PLUGIN_API_KEY",
+                "Name": "PLUGIN_DAEMON_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
@@ -1667,7 +1603,15 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "PLUGIN_REMOTE_INSTALLING_ENABLED",
-                "Value": "false",
+                "Value": "true",
+              },
+              {
+                "Name": "PLUGIN_REMOTE_INSTALLING_HOST",
+                "Value": "localhost",
+              },
+              {
+                "Name": "PLUGIN_REMOTE_INSTALLING_PORT",
+                "Value": "5003",
               },
               {
                 "Name": "ROUTINE_POOL_SIZE",
@@ -1703,7 +1647,7 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "FORCE_VERIFYING_SIGNATURE",
-                "Value": "false",
+                "Value": "true",
               },
             ],
             "Essential": true,
@@ -1715,7 +1659,7 @@ exports[`Snapshot test 1`] = `
                   {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/misc:dp3",
+                  "/custom:dify-plugin-daemon_main-local",
                 ],
               ],
             },
@@ -1733,6 +1677,10 @@ exports[`Snapshot test 1`] = `
             "PortMappings": [
               {
                 "ContainerPort": 5002,
+                "Protocol": "tcp",
+              },
+              {
+                "ContainerPort": 5003,
                 "Protocol": "tcp",
               },
             ],
@@ -1970,7 +1918,7 @@ exports[`Snapshot test 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":ecr:us-west-2:123456789012:repository/misc",
+                    ":ecr:us-west-2:123456789012:repository/custom",
                   ],
                 ],
               },
@@ -2045,26 +1993,6 @@ exports[`Snapshot test 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-              },
-            },
-            {
-              "Action": [
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":ecr:us-west-2:123456789012:repository/custom",
-                  ],
-                ],
               },
             },
             {

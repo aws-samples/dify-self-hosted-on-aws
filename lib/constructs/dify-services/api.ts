@@ -67,10 +67,9 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('Main', {
-      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'RepoApi', 'misc'), 'dify-api'),
-      // image: customRepository
-      //   ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
-      //   : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
       // https://docs.dify.ai/getting-started/install-self-hosted/environments
       environment: {
         MODE: 'api',
@@ -157,7 +156,7 @@ export class ApiService extends Construct {
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         INNER_API_KEY_FOR_PLUGIN: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
-        PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         ...(email
           ? {
               SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
@@ -245,7 +244,7 @@ export class ApiService extends Construct {
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
-        PLUGIN_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         ...(email
           ? {
               SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
@@ -310,13 +309,10 @@ export class ApiService extends Construct {
       condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
-    const user = new User(this, 'PluginUser', {});
-    const accessKey = new AccessKey(this, 'AccessKey', { user });
-    storageBucket.grantReadWrite(user);
-
     taskDefinition.addContainer('PluginDaemon', {
-      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp3'),
-      // image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_main-local`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
       environment: {
         GIN_MODE: 'release',
 
@@ -330,8 +326,6 @@ export class ApiService extends Construct {
 
         SERVER_PORT: '5002',
 
-        // AWS_ACCESS_KEY: accessKey.accessKeyId,
-        // AWS_SECRET_KEY: accessKey.secretAccessKey.unsafeUnwrap(),
         AWS_REGION: Stack.of(this).region,
 
         // TODO: set this to aws_s3 for persistence
@@ -341,9 +335,9 @@ export class ApiService extends Construct {
         PLUGIN_MAX_EXECUTION_TIMEOUT: '600',
         MAX_PLUGIN_PACKAGE_SIZE: '52428800',
         MAX_BUNDLE_PACKAGE_SIZE: '52428800',
-        PLUGIN_REMOTE_INSTALLING_ENABLED: 'false',
-        // PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
-        // PLUGIN_REMOTE_INSTALLING_PORT: port.toString(),
+        PLUGIN_REMOTE_INSTALLING_ENABLED: 'true',
+        PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
+        PLUGIN_REMOTE_INSTALLING_PORT: '5003',
 
         ROUTINE_POOL_SIZE: '10000',
         LIFETIME_COLLECTION_HEARTBEAT_INTERVAL: '5',
@@ -351,9 +345,9 @@ export class ApiService extends Construct {
         LIFETIME_STATE_GC_INTERVAL: '300',
         DIFY_INVOCATION_CONNECTION_IDLE_TIMEOUT: '120',
         PYTHON_ENV_INIT_TIMEOUT: '120',
-        DIFY_INNER_API_URL: 'http://localhost:5001',
+        DIFY_INNER_API_URL: `http://localhost:${port}`,
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
-        FORCE_VERIFYING_SIGNATURE: 'false',
+        FORCE_VERIFYING_SIGNATURE: 'true',
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
@@ -372,7 +366,7 @@ export class ApiService extends Construct {
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
       }),
-      portMappings: [{ containerPort: 5002 }],
+      portMappings: [{ containerPort: 5002 }, { containerPort: 5003 }],
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
