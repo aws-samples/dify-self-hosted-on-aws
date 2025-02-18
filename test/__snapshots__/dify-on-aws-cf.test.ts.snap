@@ -261,6 +261,41 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     },
   },
   "Outputs": {
+    "ConsoleConnectToTaskCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "aws ecs execute-command --region us-west-2 --cluster ",
+            {
+              "Ref": "ClusterEB0386A7",
+            },
+            " --container Main --interactive --command "bash" --task TASK_ID",
+          ],
+        ],
+      },
+    },
+    "ConsoleListTasksCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "aws ecs list-tasks --region us-west-2 --cluster ",
+            {
+              "Ref": "ClusterEB0386A7",
+            },
+            " --service-name ",
+            {
+              "Fn::GetAtt": [
+                "ApiServiceFargateServiceE4EA9E4E",
+                "Name",
+              ],
+            },
+            " --desired-status RUNNING",
+          ],
+        ],
+      },
+    },
     "DifyUrl": {
       "Value": "https://dify.example.com",
     },
@@ -692,7 +727,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "CachePolicyId": "4cc15a8a-d715-48a4-82b8-cc0b614638fe",
             "Compress": true,
             "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
-            "TargetOriginId": "VpcOrigin",
+            "TargetOriginId": "VpcOriginV2",
             "ViewerProtocolPolicy": "redirect-to-https",
           },
           "Enabled": true,
@@ -715,11 +750,11 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   "DNSName",
                 ],
               },
-              "Id": "VpcOrigin",
+              "Id": "VpcOriginV2",
               "VpcOriginConfig": {
                 "VpcOriginId": {
                   "Fn::GetAtt": [
-                    "AlbVpcOrigin7F5FE0CB",
+                    "AlbVpcOriginV25EF6E242",
                     "Id",
                   ],
                 },
@@ -977,14 +1012,14 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
-    "AlbVpcOrigin7F5FE0CB": {
+    "AlbVpcOriginV25EF6E242": {
       "Properties": {
         "VpcOriginEndpointConfig": {
           "Arn": {
             "Ref": "AlbC1372A32",
           },
           "HTTPPort": 80,
-          "Name": "TestStack-Alb-4064853B",
+          "Name": "TestStack-Alb-4064853B-us-west-2",
           "OriginProtocolPolicy": "http-only",
         },
       },
@@ -1318,6 +1353,26 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Name": "MARKETPLACE_URL",
                 "Value": "https://marketplace.dify.ai",
               },
+              {
+                "Name": "MAIL_TYPE",
+                "Value": "smtp",
+              },
+              {
+                "Name": "SMTP_SERVER",
+                "Value": "email-smtp.us-west-2.amazonaws.com",
+              },
+              {
+                "Name": "SMTP_PORT",
+                "Value": "465",
+              },
+              {
+                "Name": "SMTP_USE_TLS",
+                "Value": "true",
+              },
+              {
+                "Name": "MAIL_DEFAULT_SEND_FROM",
+                "Value": "no-reply@example.com",
+              },
             ],
             "Essential": true,
             "HealthCheck": {
@@ -1326,11 +1381,22 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "curl -f http://localhost:5001/health || exit 1",
               ],
               "Interval": 15,
-              "Retries": 5,
-              "StartPeriod": 60,
+              "Retries": 10,
+              "StartPeriod": 90,
               "Timeout": 5,
             },
-            "Image": "langgenius/dify-api:latest",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/misc:dify-api",
+                ],
+              ],
+            },
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1509,6 +1575,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
               },
+              {
+                "Name": "SMTP_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SMTP_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
             ],
           },
           {
@@ -1524,6 +1618,22 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               {
                 "Name": "DEBUG",
                 "Value": "false",
+              },
+              {
+                "Name": "CONSOLE_WEB_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "CONSOLE_API_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "SERVICE_API_URL",
+                "Value": "https://dify.example.com",
+              },
+              {
+                "Name": "APP_WEB_URL",
+                "Value": "https://dify.example.com",
               },
               {
                 "Name": "MIGRATION_ENABLED",
@@ -1591,6 +1701,26 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               {
                 "Name": "MARKETPLACE_URL",
                 "Value": "https://marketplace.dify.ai",
+              },
+              {
+                "Name": "MAIL_TYPE",
+                "Value": "smtp",
+              },
+              {
+                "Name": "SMTP_SERVER",
+                "Value": "email-smtp.us-west-2.amazonaws.com",
+              },
+              {
+                "Name": "SMTP_PORT",
+                "Value": "465",
+              },
+              {
+                "Name": "SMTP_USE_TLS",
+                "Value": "true",
+              },
+              {
+                "Name": "MAIL_DEFAULT_SEND_FROM",
+                "Value": "no-reply@example.com",
               },
             ],
             "Essential": true,
@@ -1753,6 +1883,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Name": "PLUGIN_API_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "SMTP_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SMTP_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+                      },
+                      ":password::",
+                    ],
+                  ],
                 },
               },
             ],
@@ -1934,7 +2092,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
               {
                 "Name": "FORCE_VERIFYING_SIGNATURE",
-                "Value": "true",
+                "Value": "false",
               },
             ],
             "Essential": true,
@@ -1946,7 +2104,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/misc:dp2",
+                  "/misc:dp3",
                 ],
               ],
             },
@@ -2105,18 +2263,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 },
               },
               {
-                "Name": "SECRET_KEY",
-                "ValueFrom": {
-                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-                },
-              },
-              {
-                "Name": "CODE_EXECUTION_API_KEY",
-                "ValueFrom": {
-                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
-                },
-              },
-              {
                 "Name": "DIFY_INNER_API_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
@@ -2200,6 +2346,31 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Statement": [
             {
               "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-west-2:123456789012:repository/misc",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -2267,6 +2438,16 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             },
             {
               "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+              },
+            },
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
@@ -2299,11 +2480,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
             },
             {
-              "Action": "ecr:GetAuthorizationToken",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            {
               "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
@@ -2313,26 +2489,6 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Fn::GetAtt": [
                   "ApiServiceTaskSandboxLogGroupDDF292A0",
                   "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":ecr:us-west-2:123456789012:repository/misc",
-                  ],
                 ],
               },
             },
@@ -2662,6 +2818,183 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "EmailDmarcRecord52AA55C0": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": "_dmarc.example.com.",
+        "ResourceRecords": [
+          ""v=DMARC1; p=none; rua=mailto:dmarcreports@example.com"",
+        ],
+        "TTL": "3600",
+        "Type": "TXT",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailIdentityCD6BD173": {
+      "Properties": {
+        "EmailIdentity": "example.com",
+        "MailFromAttributes": {
+          "MailFromDomain": "bounce.example.com",
+        },
+      },
+      "Type": "AWS::SES::EmailIdentity",
+    },
+    "EmailIdentityDkimDnsToken1AC8FBCD6": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": {
+          "Fn::GetAtt": [
+            "EmailIdentityCD6BD173",
+            "DkimDNSTokenName1",
+          ],
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "EmailIdentityCD6BD173",
+              "DkimDNSTokenValue1",
+            ],
+          },
+        ],
+        "TTL": "1800",
+        "Type": "CNAME",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailIdentityDkimDnsToken2B3E721B6": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": {
+          "Fn::GetAtt": [
+            "EmailIdentityCD6BD173",
+            "DkimDNSTokenName2",
+          ],
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "EmailIdentityCD6BD173",
+              "DkimDNSTokenValue2",
+            ],
+          },
+        ],
+        "TTL": "1800",
+        "Type": "CNAME",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailIdentityDkimDnsToken3063E158F": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": {
+          "Fn::GetAtt": [
+            "EmailIdentityCD6BD173",
+            "DkimDNSTokenName3",
+          ],
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "EmailIdentityCD6BD173",
+              "DkimDNSTokenValue3",
+            ],
+          },
+        ],
+        "TTL": "1800",
+        "Type": "CNAME",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailIdentityMailFromMxRecord2B99574B": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": "bounce.example.com.",
+        "ResourceRecords": [
+          "10 feedback-smtp.us-west-2.amazonses.com",
+        ],
+        "TTL": "1800",
+        "Type": "MX",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailIdentityMailFromTxtRecord4B108A46": {
+      "Properties": {
+        "HostedZoneId": "DUMMY",
+        "Name": "bounce.example.com.",
+        "ResourceRecords": [
+          ""v=spf1 include:amazonses.com ~all"",
+        ],
+        "TTL": "1800",
+        "Type": "TXT",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "EmailSmtpCredentialsLambdaC8E98BEF": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "EmailSmtpCredentialsSecretFF95C79F",
+        "EmailSmtpCredentialsUserAAAE4D61",
+      ],
+      "Properties": {
+        "SecretId": {
+          "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEvent1376F76C",
+            "Arn",
+          ],
+        },
+        "UserName": {
+          "Ref": "EmailSmtpCredentialsUserAAAE4D61",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EmailSmtpCredentialsPolicyC27A5F90": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ses:SendRawEmail",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EmailSmtpCredentialsPolicyC27A5F90",
+        "Users": [
+          {
+            "Ref": "EmailSmtpCredentialsUserAAAE4D61",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EmailSmtpCredentialsSecretFF95C79F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "SES Smtp Credentials (username, password) for ",
+              {
+                "Ref": "EmailSmtpCredentialsUserAAAE4D61",
+              },
+            ],
+          ],
+        },
+        "GenerateSecretString": {},
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EmailSmtpCredentialsUserAAAE4D61": {
+      "Type": "AWS::IAM::User",
+    },
     "ExportsReader8B249524": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -2682,6 +3015,83 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "Custom::CrossRegionExportReader",
       "UpdateReplacePolicy": "Delete",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+      "DependsOn": [
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
+          "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:DeleteRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "Roles": [
+          {
+            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "PostgresCluster53E5BDAB": {
       "DeletionPolicy": "Delete",
@@ -4084,6 +4494,257 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D": {
+      "DependsOn": [
+        "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRoleDefaultPolicyA3895E80",
+        "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRole18BEBF78",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
+          "S3Key": "681d284a27fcbbccf41227929a9c13895a5859749b289f961ca68f3b8d47d137.zip",
+        },
+        "Description": "src/provider/credentials-handler.lambda.ts",
+        "Environment": {
+          "Variables": {
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+          },
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRole18BEBF78",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerLogRetention5C8B4A91": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRole18BEBF78": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRoleDefaultPolicyA3895E80": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:CreateAccessKey",
+                "iam:DeleteAccessKey",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "EmailSmtpCredentialsUserAAAE4D61",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "secretsmanager:PutSecretValue",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Ref": "EmailSmtpCredentialsSecretFF95C79F",
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRoleDefaultPolicyA3895E80",
+        "Roles": [
+          {
+            "Ref": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandlerServiceRole18BEBF78",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEvent1376F76C": {
+      "DependsOn": [
+        "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleDefaultPolicyB231CF26",
+        "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleFE45B538",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
+          "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (TestStack/cdk-ses-smtp-credentials.CredentialsProvider/ses-smtp-credentials-provider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleFE45B538",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventLogRetentionCD61E4D7": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEvent1376F76C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 1,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleDefaultPolicyB231CF26": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleDefaultPolicyB231CF26",
+        "Roles": [
+          {
+            "Ref": "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleFE45B538",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleFE45B538": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
   "Rules": {
