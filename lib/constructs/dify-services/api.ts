@@ -313,7 +313,7 @@ export class ApiService extends Construct {
     storageBucket.grantReadWrite(user);
 
     taskDefinition.addContainer('PluginDaemon', {
-      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp2'),
+      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp3'),
       // image: ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
       environment: {
         GIN_MODE: 'release',
@@ -364,8 +364,6 @@ export class ApiService extends Construct {
         PGVECTOR_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
-        SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
-        CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         DIFY_INNER_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         SERVER_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
       },
