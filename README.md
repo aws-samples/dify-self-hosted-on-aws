@@ -284,3 +284,25 @@ This library is licensed under the MIT-0 License. See the LICENSE file. You shou
 
 ## Acknowledgement
 This CDK code is heavily inspired by [dify-aws-terraform](https://github.com/sonodar/dify-aws-terraform).
+
+## OpenSearch Serverless Support
+
+### Enabling OpenSearch Serverless for Vector DB
+
+To use Amazon OpenSearch Serverless as your Vector Database, set the following parameters in your CDK deployment:
+
+\`\`\`typescript
+const vpc = new ec2.Vpc(this, 'DifyVPC');
+
+new DifyStack(app, 'DifyStack', {
+  useOpenSearchServerless: true,
+  openSearchDomainName: 'my-dify-vector-db',
+  vpc: vpc
+});
+\`\`\`
+
+#### Considerations
+- Ensure you have the necessary IAM permissions
+- Configure network access and security groups
+- Hybrid search capabilities are supported
+- Default setting remains RDS if not explicitly changed
