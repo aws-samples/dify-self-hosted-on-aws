@@ -58,8 +58,8 @@ export class VectorDatabaseConstruct extends Construct {
           ],
         }),
         vpcOptions: {
-          subnetIds: props.vpc.selectSubnets({ 
-            subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS 
+          subnetIds: props.vpc.selectSubnets({
+            subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
           }).subnetIds,
           securityGroupIds: [],
         },
