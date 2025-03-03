@@ -310,9 +310,10 @@ export class ApiService extends Construct {
     });
 
     taskDefinition.addContainer('PluginDaemon', {
-      image: customRepository
-        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_main-local`)
-        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
+      image: ecs.ContainerImage.fromEcrRepository(Repository.fromRepositoryName(this, 'Repo', 'misc'), 'dp7'),
+      // image: customRepository
+      //   ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_main-local`)
+      //   : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
       environment: {
         GIN_MODE: 'release',
 
@@ -347,7 +348,7 @@ export class ApiService extends Construct {
         PYTHON_ENV_INIT_TIMEOUT: '120',
         DIFY_INNER_API_URL: `http://localhost:${port}`,
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
-        FORCE_VERIFYING_SIGNATURE: 'true',
+        FORCE_VERIFYING_SIGNATURE: 'false',
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
