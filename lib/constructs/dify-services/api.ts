@@ -13,6 +13,7 @@ import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 import { EnvironmentProps } from '../../environment-props';
 import { EmailService } from '../email';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -422,6 +423,22 @@ export class ApiService extends Construct {
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+
+    new AwsCustomResource(this, 'CreatePluginsPlaceholder', {
+      onUpdate: {
+        service: 's3',
+        action: 'putObject',
+        parameters: {
+          Bucket: storageBucket.bucketName,
+          Key: 'plugins',
+          Body: 'placeholder. see https://github.com/langgenius/dify-plugin-daemon/issues/35',
+        },
+        physicalResourceId: PhysicalResourceId.of('id'),
+      },
+      policy: AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [storageBucket.bucketArn, storageBucket.arnForObjects('*')],
+      }),
+    });
 
     new CfnOutput(Stack.of(this), 'ConsoleListTasksCommand', {
       value: `aws ecs list-tasks --region ${Stack.of(this).region} --cluster ${cluster.clusterName} --service-name ${service.serviceName} --desired-status RUNNING`,
