@@ -316,7 +316,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
-          "S3Key": "ce2f3595a340d6c519a65888ef97e3b9b64f053f83608e32cc28162e22d7d99a.zip",
+          "S3Key": "4cd2f2411231aa073e609dc99a49b5c5e974252bf9abf0f9350d237d17cce8be.zip",
         },
         "Handler": "index.handler",
         "Role": {
@@ -4691,6 +4691,16 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialshandler320CA55D",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
