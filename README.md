@@ -28,6 +28,9 @@ You must have the following dependencies installed to deploy this app:
 ## Deploy
 You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`EnvironmentProps` interface](./lib/environment-props.ts) for all the available parameters.
 
+> [!IMPORTANT]
+> > If you are upgrading from Dify v0 to v1, please refer to [Upgrading Dify v0 to v1](#upgrading-dify-v0-to-v1).
+
 Then you can run the following commands to deploy the entire stack.
 
 ```sh
@@ -225,6 +228,24 @@ export const props: EnvironmentProps = {
 You can let Dify send emails to invite new users or reset passwords. To enable the feature, set `setupEmail` property to `true` in `bin/cdk.ts` first. Note that you can only configure one email server (Amazon SES Identity) per `domainName` property.
 
 After a successful deployment, you have to move out from SES sandbox to send emails to non-verified addresses and domains. Please refer to the document for more details: [Request production access (Moving out of the Amazon SES sandbox)](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
+
+### Upgrading Dify v0 to v1
+When you upgrade Dify from v0 to v1, you need to execute some migration steps described below.
+
+1. Set `autoMigration: false` in lib/dify-on-aws-stack.ts (`ApiService` construct).
+2. Deploy the project with `difyImageTag: 1.0.0` (`bin/cdk.ts`), and you will get two commands required for the next steps
+   ```sh
+    DifyOnAwsStack.ConsoleConnectToTaskCommand = aws ecs execute-command --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted --container Main --interactive --command "bash" --task TASK_ID
+    DifyOnAwsStack.ConsoleListTasksCommand = aws ecs list-tasks --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted  --service-name DifyOnAwsStack-ApiServiceFargateServiceE4EA9E4E-redacted --desired-status RUNNING
+   ```
+3. Run commands in `ConsoleListTasksCommand` to get the ECS task ARN
+4. Replace `TASK_ID` in `ConsoleConnectToTaskCommand` with the task ARN and run it
+5. You can now run commands in Dify environment, run the below two commands (c.f. [Dify v1.0.0 release note](https://github.com/langgenius/dify/releases/tag/1.0.0)):
+   ```sh
+   poetry run flask extract-plugins --workers=20
+   poetry run flask install-plugins --workers=2
+   ```
+6. After the commands run successfully, set `autoMigration: false`, and deploy CDK again. You should be now onboard with Dify v1.
 
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
