@@ -58,6 +58,9 @@ export class WebService extends Construct {
         HOSTNAME: '0.0.0.0',
         PORT: port.toString(),
 
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
+
         ...getAdditionalEnvironmentVariables(this, 'web', props.additionalEnvironmentVariables),
       },
       secrets: {

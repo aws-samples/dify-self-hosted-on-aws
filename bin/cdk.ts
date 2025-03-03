@@ -9,7 +9,7 @@ export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '0.15.3',
+  difyImageTag: '1.0.0',
 
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,

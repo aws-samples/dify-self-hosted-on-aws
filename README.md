@@ -28,6 +28,9 @@ You must have the following dependencies installed to deploy this app:
 ## Deploy
 You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`EnvironmentProps` interface](./lib/environment-props.ts) for all the available parameters.
 
+> [!IMPORTANT]
+> > If you are upgrading from Dify v0 to v1, please refer to [Upgrading Dify v0 to v1](#upgrading-dify-v0-to-v1).
+
 Then you can run the following commands to deploy the entire stack.
 
 ```sh
@@ -226,6 +229,24 @@ You can let Dify send emails to invite new users or reset passwords. To enable t
 
 After a successful deployment, you have to move out from SES sandbox to send emails to non-verified addresses and domains. Please refer to the document for more details: [Request production access (Moving out of the Amazon SES sandbox)](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 
+### Upgrading Dify v0 to v1
+When you upgrade Dify from v0 to v1, you need to execute some migration steps described below.
+
+1. Set `autoMigration: false` in lib/dify-on-aws-stack.ts (`ApiService` construct).
+2. Deploy the project with `difyImageTag: 1.0.0` (`bin/cdk.ts`), and you will get two commands required for the next steps
+   ```sh
+    DifyOnAwsStack.ConsoleConnectToTaskCommand = aws ecs execute-command --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted --container Main --interactive --command "bash" --task TASK_ID
+    DifyOnAwsStack.ConsoleListTasksCommand = aws ecs list-tasks --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted  --service-name DifyOnAwsStack-ApiServiceFargateServiceE4EA9E4E-redacted --desired-status RUNNING
+   ```
+3. Run commands in `ConsoleListTasksCommand` to get the ECS task ARN
+4. Replace `TASK_ID` in `ConsoleConnectToTaskCommand` with the task ARN and run it
+5. You can now run commands in Dify environment, run the below two commands (c.f. [Dify v1.0.0 release note](https://github.com/langgenius/dify/releases/tag/1.0.0)):
+   ```sh
+   poetry run flask extract-plugins --workers=20
+   poetry run flask install-plugins --workers=2
+   ```
+6. After the commands run successfully, set `autoMigration: false`, and deploy CDK again. You should be now onboard with Dify v1.
+
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
 
@@ -241,7 +262,7 @@ If you set `customEcrRepositoryName` and have run the `copy-to-ecr.ts` script, p
 The following table provides a sample cost breakdown for deploying this system in the us-east-1 (N. Virginia) region for one month (when deployed using less expensive configuration).
 
 
-| AWS service | Dimensions | Cost [USD] |
+| AWS service | Dimensions | Cost [USD/month] |
 | --------------------| ----------------- | -------------------------------|
 | RDS Aurora | Postgres Serverless v2 (0 ACU) | $0 |
 | ElastiCache | Valkey t4g.micro | $9.2 |
@@ -250,7 +271,8 @@ The following table provides a sample cost breakdown for deploying this system i
 | Application Load Balancer | ALB-hour per month | $17.5 |
 | VPC | NAT Instances t4g.nano x1 | $3.0 |
 | VPC | Public IP address x1 | $3.6 |
-| TOTAL | estimate per month | $46.7 |
+| Secrets Manager | Secret x3 | $1.2 |
+| TOTAL | estimate per month | $47.9 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 

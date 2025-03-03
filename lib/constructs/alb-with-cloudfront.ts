@@ -95,21 +95,22 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     });
     this.url = `https://${distribution.domainName}`;
 
+    const vpcOriginId = 'VpcOriginV2';
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudfront-vpcorigin.html
-    const vpcOrigin = new CfnResource(this, 'VpcOrigin', {
+    const vpcOrigin = new CfnResource(this, vpcOriginId, {
       type: 'AWS::CloudFront::VpcOrigin',
       properties: {
         VpcOriginEndpointConfig: {
           Arn: alb.loadBalancerArn,
           HTTPPort: 80,
-          Name: Names.uniqueResourceName(this, { maxLength: 64, separator: '-' }),
+          Name: `${Names.uniqueResourceName(this, { maxLength: 42, separator: '-' })}-${Stack.of(this).region}`,
           OriginProtocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
         },
       },
     });
     // "DifyOnAwsStack/Alb/Distribution/Resource"
     (distribution.node.defaultChild as CfnResource).addPropertyOverride('DistributionConfig.Origins.0', {
-      Id: 'VpcOrigin',
+      Id: vpcOriginId,
       DomainName: alb.loadBalancerDnsName,
       // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-distribution-vpcoriginconfig.html
       VpcOriginConfig: {
@@ -121,7 +122,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     );
     (distribution.node.defaultChild as CfnResource).addPropertyOverride(
       'DistributionConfig.DefaultCacheBehavior.TargetOriginId',
-      'VpcOrigin',
+      vpcOriginId,
     );
 
     if (props.hostedZone) {

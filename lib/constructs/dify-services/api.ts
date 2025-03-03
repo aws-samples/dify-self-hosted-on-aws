@@ -1,18 +1,19 @@
 import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
-import { Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { AccessKey, ManagedPolicy, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
 import { Postgres } from '../postgres';
 import { Redis } from '../redis';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 import { IAlb } from '../alb';
-import { IRepository } from 'aws-cdk-lib/aws-ecr';
+import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 import { EnvironmentProps } from '../../environment-props';
 import { EmailService } from '../email';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 
 export interface ApiServiceProps {
   cluster: ICluster;
@@ -37,6 +38,7 @@ export interface ApiServiceProps {
 
   additionalEnvironmentVariables: EnvironmentProps['additionalEnvironmentVariables'];
 
+  autoMigration: boolean;
   useFargateSpot: boolean;
 }
 
@@ -50,8 +52,7 @@ export class ApiService extends Construct {
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
       cpu: 1024,
-      // 512だとOOMが起きたので、増やした
-      memoryLimitMiB: 2048,
+      memoryLimitMiB: 2048, // We got OOM frequently when RAM=512MB
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
       volumes: [
         {
@@ -117,7 +118,12 @@ export class ApiService extends Construct {
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
         // The sandbox service endpoint.
-        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194', // Fargate の task 内通信は localhost 宛,
+        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
+
+        PLUGIN_DAEMON_URL: 'http://localhost:5002',
+
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
 
         ...(email
           ? {
@@ -150,6 +156,8 @@ export class ApiService extends Construct {
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        INNER_API_KEY_FOR_PLUGIN: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         ...(email
           ? {
               SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
@@ -185,7 +193,7 @@ export class ApiService extends Construct {
         APP_WEB_URL: alb.url,
 
         // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
-        MIGRATION_ENABLED: 'true',
+        MIGRATION_ENABLED: props.autoMigration ? 'true' : 'false',
 
         // Enable pessimistic disconnect handling for recover from Aurora automatic pause
         SQLALCHEMY_POOL_PRE_PING: 'True',
@@ -206,6 +214,10 @@ export class ApiService extends Construct {
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
+        PLUGIN_API_URL: 'http://localhost:5002',
+
+        MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
+        MARKETPLACE_URL: 'https://marketplace.dify.ai',
         ...(email
           ? {
               MAIL_TYPE: 'smtp',
@@ -233,6 +245,7 @@ export class ApiService extends Construct {
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         ...(email
           ? {
               SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
@@ -270,22 +283,6 @@ export class ApiService extends Construct {
                 .join(','),
             }
           : {}),
-        PYTHON_LIB_PATH: [
-          // Originally from here:
-          // https://github.com/langgenius/dify-sandbox/blob/main/internal/static/config_default_amd64.go
-          '/usr/local/lib/python3.10',
-          '/usr/lib/python3.10',
-          '/usr/lib/python3',
-          // copy all the lib. **DO NOT** add a trailing slash!
-          '/usr/lib/x86_64-linux-gnu',
-          '/etc/ssl/certs/ca-certificates.crt',
-          '/etc/nsswitch.conf',
-          '/etc/hosts',
-          '/etc/resolv.conf',
-          '/run/systemd/resolve/stub-resolv.conf',
-          '/run/resolvconf/resolv.conf',
-        ].join(','),
-
         ...getAdditionalEnvironmentVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
@@ -313,6 +310,66 @@ export class ApiService extends Construct {
       condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
+    taskDefinition.addContainer('PluginDaemon', {
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_main-local`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
+      environment: {
+        GIN_MODE: 'release',
+
+        // The configurations of redis connection.
+        REDIS_HOST: redis.endpoint,
+        REDIS_PORT: redis.port.toString(),
+        REDIS_USE_SSL: 'true',
+
+        DB_DATABASE: 'dify_plugin',
+        DB_SSL_MODE: 'disable',
+
+        SERVER_PORT: '5002',
+
+        AWS_REGION: Stack.of(this).region,
+
+        // TODO: set this to aws_s3 for persistence
+        PLUGIN_STORAGE_TYPE: 'aws_s3',
+        PLUGIN_STORAGE_OSS_BUCKET: storageBucket.bucketName,
+        PLUGIN_INSTALLED_PATH: 'plugins',
+        PLUGIN_MAX_EXECUTION_TIMEOUT: '600',
+        MAX_PLUGIN_PACKAGE_SIZE: '52428800',
+        MAX_BUNDLE_PACKAGE_SIZE: '52428800',
+        PLUGIN_REMOTE_INSTALLING_ENABLED: 'true',
+        PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
+        PLUGIN_REMOTE_INSTALLING_PORT: '5003',
+
+        ROUTINE_POOL_SIZE: '10000',
+        LIFETIME_COLLECTION_HEARTBEAT_INTERVAL: '5',
+        LIFETIME_COLLECTION_GC_INTERVAL: '60',
+        LIFETIME_STATE_GC_INTERVAL: '300',
+        DIFY_INVOCATION_CONNECTION_IDLE_TIMEOUT: '120',
+        PYTHON_ENV_INIT_TIMEOUT: '120',
+        DIFY_INNER_API_URL: `http://localhost:${port}`,
+        PLUGIN_WORKING_PATH: '/app/storage/cwd',
+        FORCE_VERIFYING_SIGNATURE: 'true',
+      },
+      secrets: {
+        DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        DB_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        PGVECTOR_USER: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        PGVECTOR_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        PGVECTOR_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        PGVECTOR_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
+        CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
+        DIFY_INNER_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+        SERVER_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      portMappings: [{ containerPort: 5002 }, { containerPort: 5003 }],
+    });
+
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'external-knowledge-api'), {
         platform: Platform.LINUX_AMD64,
@@ -331,8 +388,6 @@ export class ApiService extends Construct {
     });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
 
-    // we can use IAM role once this issue will be closed
-    // https://github.com/langgenius/dify/issues/3471
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
         actions: [
@@ -346,7 +401,6 @@ export class ApiService extends Construct {
       }),
     );
 
-    // Service
     const service = new ecs.FargateService(this, 'FargateService', {
       cluster,
       taskDefinition,
@@ -369,5 +423,29 @@ export class ApiService extends Construct {
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+
+    new AwsCustomResource(this, 'CreatePluginsPlaceholder', {
+      onUpdate: {
+        service: 's3',
+        action: 'putObject',
+        parameters: {
+          Bucket: storageBucket.bucketName,
+          Key: 'plugins',
+          Body: 'placeholder. see https://github.com/langgenius/dify-plugin-daemon/issues/35',
+        },
+        physicalResourceId: PhysicalResourceId.of('id'),
+      },
+      policy: AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [storageBucket.bucketArn, storageBucket.arnForObjects('*')],
+      }),
+    });
+
+    new CfnOutput(Stack.of(this), 'ConsoleListTasksCommand', {
+      value: `aws ecs list-tasks --region ${Stack.of(this).region} --cluster ${cluster.clusterName} --service-name ${service.serviceName} --desired-status RUNNING`,
+    });
+
+    new CfnOutput(Stack.of(this), 'ConsoleConnectToTaskCommand', {
+      value: `aws ecs execute-command --region ${Stack.of(this).region} --cluster ${cluster.clusterName} --container Main --interactive --command "bash" --task TASK_ID`,
+    });
   }
 }
