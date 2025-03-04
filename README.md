@@ -241,7 +241,7 @@ When you upgrade Dify from v0 to v1, you need to execute some migration steps de
    poetry run flask extract-plugins --workers=20
    poetry run flask install-plugins --workers=2
    ```
-6. After the commands run successfully, set `autoMigration: false`, and deploy CDK again. You should be now onboard with Dify v1.
+6. After the commands run successfully, set `autoMigration: true`, and deploy CDK again. You should be now onboard with Dify v1.
 
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
