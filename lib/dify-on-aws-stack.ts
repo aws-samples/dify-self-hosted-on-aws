@@ -1,19 +1,19 @@
 import * as cdk from 'aws-cdk-lib';
-import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
-import { Construct } from 'constructs';
-import { Postgres } from './constructs/postgres';
-import { Redis } from './constructs/redis';
-import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
-import { WebService } from './constructs/dify-services/web';
-import { ApiService } from './constructs/dify-services/api';
-import { Alb } from './constructs/alb';
-import { HostedZone } from 'aws-cdk-lib/aws-route53';
-import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
+import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
+import { HostedZone } from 'aws-cdk-lib/aws-route53';
+import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
+import { Alb } from './constructs/alb';
+import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
+import { ApiService } from './constructs/dify-services/api';
+import { WebService } from './constructs/dify-services/web';
+import { EmailService } from './constructs/email';
+import { Postgres } from './constructs/postgres';
+import { Redis } from './constructs/redis';
 import { createVpc } from './constructs/vpc';
 import { EnvironmentProps } from './environment-props';
-import { EmailService } from './constructs/email';
 
 /**
  * Mostly inherited from EnvironmentProps
@@ -112,7 +112,7 @@ export class DifyOnAwsStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    const alb = useCloudFront
+    const endpoint = useCloudFront
       ? new AlbWithCloudFront(this, 'Alb', {
           vpc,
           hostedZone,
@@ -144,7 +144,7 @@ export class DifyOnAwsStack extends cdk.Stack {
 
     new ApiService(this, 'ApiService', {
       cluster,
-      alb,
+      endpoint,
       postgres,
       redis,
       storageBucket,
@@ -160,7 +160,7 @@ export class DifyOnAwsStack extends cdk.Stack {
 
     new WebService(this, 'WebService', {
       cluster,
-      alb,
+      endpoint,
       imageTag,
       customRepository,
       additionalEnvironmentVariables: props.additionalEnvironmentVariables,
@@ -168,7 +168,10 @@ export class DifyOnAwsStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'DifyUrl', {
-      value: alb.url,
+      value: endpoint.url,
+    });
+    new cdk.CfnOutput(this, 'DifyApiUrl', {
+      value: endpoint.alb.url,
     });
   }
 }

@@ -10,7 +10,6 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront';
 import { LoadBalancerV2Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
-import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -19,13 +18,13 @@ import {
   ListenerAction,
   ListenerCondition,
 } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
-import { Construct } from 'constructs';
-import { IAlb } from './alb';
 import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Construct } from 'constructs';
+import { IAlb, IEndpoint } from './alb';
 
 export interface AlbProps {
   vpc: IVpc;
@@ -44,11 +43,12 @@ export interface AlbProps {
   cloudFrontWebAclArn?: string;
 }
 
-export class AlbWithCloudFront extends Construct implements IAlb {
+export class AlbWithCloudFront extends Construct implements IEndpoint {
   public url: string;
+  public readonly alb: IAlb;
 
   private listenerPriority = 1;
-  private listener: ApplicationListener;
+  public readonly listener: ApplicationListener;
   private vpc: IVpc;
   private cloudFrontPrefixListCustomResource: AwsCustomResource | undefined;
 
@@ -72,6 +72,37 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       defaultAction: ListenerAction.fixedResponse(400),
     });
     listener.connections.allowDefaultPortFrom(Peer.prefixList(this.getCloudFrontManagedPrefixListId()));
+    this.alb = {
+      url: this.url,
+      connections: listener.connections,
+      addEcsService: (id, ecsService, port, healthCheckPath, paths) => {
+        // we need different target group ids for different albs because a single target group can be attached to only one alb.
+        const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
+          vpc: this.vpc,
+          targets: [ecsService],
+          protocol: ApplicationProtocol.HTTP,
+          port: port,
+          deregistrationDelay: Duration.seconds(10),
+          healthCheck: {
+            path: healthCheckPath,
+            interval: Duration.seconds(20),
+            healthyHttpCodes: '200-299,307',
+            healthyThresholdCount: 2,
+            unhealthyThresholdCount: 6,
+          },
+        });
+        // a condition only accepts an array with up to 5 elements
+        // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
+        for (let i = 0; i < Math.floor((paths.length + 4) / 5); i++) {
+          const slice = paths.slice(i * 5, (i + 1) * 5);
+          this.listener.addTargetGroups(`${id}${i}`, {
+            targetGroups: [group],
+            conditions: [ListenerCondition.pathPatterns(slice)],
+            priority: this.listenerPriority++,
+          });
+        }
+      },
+    };
 
     let distribution = new Distribution(this, 'Distribution', {
       comment: `Dify distribution (${Stack.of(this).stackName} - ${Stack.of(this).region})`,
@@ -136,34 +167,6 @@ export class AlbWithCloudFront extends Construct implements IAlb {
 
     this.vpc = vpc;
     this.listener = listener;
-  }
-
-  public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
-    // we need different target group ids for different albs because a single target group can be attached to only one alb.
-    const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
-      vpc: this.vpc,
-      targets: [ecsService],
-      protocol: ApplicationProtocol.HTTP,
-      port: port,
-      deregistrationDelay: Duration.seconds(10),
-      healthCheck: {
-        path: healthCheckPath,
-        interval: Duration.seconds(20),
-        healthyHttpCodes: '200-299,307',
-        healthyThresholdCount: 2,
-        unhealthyThresholdCount: 6,
-      },
-    });
-    // a condition only accepts an array with up to 5 elements
-    // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
-    for (let i = 0; i < Math.floor((paths.length + 4) / 5); i++) {
-      const slice = paths.slice(i * 5, (i + 1) * 5);
-      this.listener.addTargetGroups(`${id}${i}`, {
-        targetGroups: [group],
-        conditions: [ListenerCondition.pathPatterns(slice)],
-        priority: this.listenerPriority++,
-      });
-    }
   }
 
   getCloudFrontManagedPrefixListId() {

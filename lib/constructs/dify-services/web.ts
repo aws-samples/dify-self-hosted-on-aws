@@ -1,14 +1,14 @@
+import { Duration, aws_ecs as ecs } from 'aws-cdk-lib';
+import { IRepository } from 'aws-cdk-lib/aws-ecr';
 import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
-import { Duration, aws_ecs as ecs } from 'aws-cdk-lib';
-import { IAlb } from '../alb';
-import { IRepository } from 'aws-cdk-lib/aws-ecr';
 import { EnvironmentProps } from '../../environment-props';
+import { IEndpoint } from '../alb';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 
 export interface WebServiceProps {
   cluster: ICluster;
-  alb: IAlb;
+  endpoint: IEndpoint;
 
   imageTag: string;
 
@@ -27,7 +27,7 @@ export class WebService extends Construct {
   constructor(scope: Construct, id: string, props: WebServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, debug = false, customRepository } = props;
+    const { cluster, endpoint, debug = false, customRepository } = props;
     const port = 3000;
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
@@ -48,10 +48,10 @@ export class WebService extends Construct {
 
         // The base URL of console application api server, refers to the Console base URL of WEB service if console domain is different from api or web app domain.
         // example: http://cloud.dify.ai
-        CONSOLE_API_URL: alb.url,
+        CONSOLE_API_URL: endpoint.url,
         // The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from console or api domain.
         // example: http://udify.app
-        APP_API_URL: alb.url,
+        APP_API_URL: endpoint.url,
 
         // Setting host to 0.0.0.0 seems necessary for health check to pass.
         // https://nextjs.org/docs/pages/api-reference/next-config-js/output
@@ -97,6 +97,6 @@ export class WebService extends Construct {
       minHealthyPercent: 100,
     });
 
-    alb.addEcsService('Web', service, port, '/', ['/*']);
+    endpoint.alb.addEcsService('Web', service, port, '/', ['/*']);
   }
 }

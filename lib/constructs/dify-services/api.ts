@@ -1,23 +1,23 @@
-import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
-import { Construct } from 'constructs';
 import { CfnOutput, Duration, Stack, aws_ecs as ecs } from 'aws-cdk-lib';
+import { IRepository } from 'aws-cdk-lib/aws-ecr';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { AccessKey, ManagedPolicy, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
-import { Postgres } from '../postgres';
-import { Redis } from '../redis';
+import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { join } from 'path';
-import { IAlb } from '../alb';
-import { IRepository, Repository } from 'aws-cdk-lib/aws-ecr';
-import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
-import { EnvironmentProps } from '../../environment-props';
-import { EmailService } from '../email';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
+import { Construct } from 'constructs';
+import { join } from 'path';
+import { EnvironmentProps } from '../../environment-props';
+import { IEndpoint } from '../alb';
+import { EmailService } from '../email';
+import { Postgres } from '../postgres';
+import { Redis } from '../redis';
+import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 
 export interface ApiServiceProps {
   cluster: ICluster;
-  alb: IAlb;
+  endpoint: IEndpoint;
 
   postgres: Postgres;
   redis: Redis;
@@ -46,7 +46,7 @@ export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository } = props;
+    const { cluster, endpoint, postgres, redis, storageBucket, email, debug = false, customRepository } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -81,13 +81,13 @@ export class ApiService extends Construct {
 
         // The base URL of console application web frontend, refers to the Console base URL of WEB service if console domain is
         // different from api or web app domain.
-        CONSOLE_WEB_URL: alb.url,
+        CONSOLE_WEB_URL: endpoint.url,
         // The base URL of console application api server, refers to the Console base URL of WEB service if console domain is different from api or web app domain.
-        CONSOLE_API_URL: alb.url,
+        CONSOLE_API_URL: endpoint.url,
         // The URL prefix for Service API endpoints, refers to the base URL of the current API service if api domain is different from console domain.
-        SERVICE_API_URL: alb.url,
+        SERVICE_API_URL: endpoint.url,
         // The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from console or api domain.
-        APP_WEB_URL: alb.url,
+        APP_WEB_URL: endpoint.url,
 
         // Enable pessimistic disconnect handling for recover from Aurora automatic pause
         // https://docs.sqlalchemy.org/en/20/core/pooling.html#disconnect-handling-pessimistic
@@ -187,10 +187,10 @@ export class ApiService extends Construct {
         // enable DEBUG mode to output more logs
         DEBUG: debug ? 'true' : 'false',
 
-        CONSOLE_WEB_URL: alb.url,
-        CONSOLE_API_URL: alb.url,
-        SERVICE_API_URL: alb.url,
-        APP_WEB_URL: alb.url,
+        CONSOLE_WEB_URL: endpoint.url,
+        CONSOLE_API_URL: endpoint.url,
+        SERVICE_API_URL: endpoint.url,
+        APP_WEB_URL: endpoint.url,
 
         // When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
         MIGRATION_ENABLED: props.autoMigration ? 'true' : 'false',
@@ -422,7 +422,7 @@ export class ApiService extends Construct {
     redis.connections.allowDefaultPortFrom(service);
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
-    alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+    endpoint.alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
 
     new AwsCustomResource(this, 'CreatePluginsPlaceholder', {
       onUpdate: {
