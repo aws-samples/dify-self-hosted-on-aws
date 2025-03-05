@@ -9,8 +9,8 @@ import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from '
 import { Construct } from 'constructs';
 import { join } from 'path';
 import { EnvironmentProps } from '../../environment-props';
-import { IEndpoint } from '../alb';
 import { EmailService } from '../email';
+import { IEndpoint } from '../endpoint';
 import { Postgres } from '../postgres';
 import { Redis } from '../redis';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';

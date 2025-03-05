@@ -5,11 +5,10 @@ import { Cluster, ContainerInsights } from 'aws-cdk-lib/aws-ecs';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { Alb } from './constructs/alb';
-import { AlbWithCloudFront } from './constructs/alb-with-cloudfront';
 import { ApiService } from './constructs/dify-services/api';
 import { WebService } from './constructs/dify-services/web';
 import { EmailService } from './constructs/email';
+import { AlbEndpoint, AlbWithCloudFrontEndpoint } from './constructs/endpoint';
 import { Postgres } from './constructs/postgres';
 import { Redis } from './constructs/redis';
 import { createVpc } from './constructs/vpc';
@@ -113,7 +112,7 @@ export class DifyOnAwsStack extends cdk.Stack {
     });
 
     const endpoint = useCloudFront
-      ? new AlbWithCloudFront(this, 'Alb', {
+      ? new AlbWithCloudFrontEndpoint(this, 'Alb', {
           vpc,
           hostedZone,
           accessLogBucket,
@@ -121,7 +120,7 @@ export class DifyOnAwsStack extends cdk.Stack {
           cloudFrontWebAclArn: props.cloudFrontWebAclArn,
           subDomain,
         })
-      : new Alb(this, 'Alb', {
+      : new AlbEndpoint(this, 'Alb', {
           vpc,
           allowedIPv4Cidrs: props.allowedIPv4Cidrs,
           allowedIPv6Cidrs: props.allowedIPv6Cidrs,

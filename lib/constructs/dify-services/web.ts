@@ -3,7 +3,7 @@ import { IRepository } from 'aws-cdk-lib/aws-ecr';
 import { CpuArchitecture, FargateTaskDefinition, ICluster } from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 import { EnvironmentProps } from '../../environment-props';
-import { IEndpoint } from '../alb';
+import { IEndpoint } from '../endpoint';
 import { getAdditionalEnvironmentVariables, getAdditionalSecretVariables } from './environment-variables';
 
 export interface WebServiceProps {

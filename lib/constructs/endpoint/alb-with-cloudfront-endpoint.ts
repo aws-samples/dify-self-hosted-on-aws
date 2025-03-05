@@ -24,9 +24,9 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { IAlb, IEndpoint } from './alb';
+import { IAlb, IEndpoint } from './endpoint';
 
-export interface AlbProps {
+export interface AlbWithCloudFrontEndpointProps {
   vpc: IVpc;
 
   subDomain: string;
@@ -43,7 +43,7 @@ export interface AlbProps {
   cloudFrontWebAclArn?: string;
 }
 
-export class AlbWithCloudFront extends Construct implements IEndpoint {
+export class AlbWithCloudFrontEndpoint extends Construct implements IEndpoint {
   public url: string;
   public readonly alb: IAlb;
 
@@ -52,7 +52,7 @@ export class AlbWithCloudFront extends Construct implements IEndpoint {
   private vpc: IVpc;
   private cloudFrontPrefixListCustomResource: AwsCustomResource | undefined;
 
-  constructor(scope: Construct, id: string, props: AlbProps) {
+  constructor(scope: Construct, id: string, props: AlbWithCloudFrontEndpointProps) {
     super(scope, id);
 
     const { vpc, subDomain, accessLogBucket } = props;

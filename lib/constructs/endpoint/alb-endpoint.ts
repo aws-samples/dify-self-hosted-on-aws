@@ -1,7 +1,6 @@
 import { Duration } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { IConnectable, IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
-import { FargateService } from 'aws-cdk-lib/aws-ecs';
+import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -14,8 +13,9 @@ import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { LoadBalancerTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { IAlb, IEndpoint } from './endpoint';
 
-export interface AlbProps {
+export interface AlbEndpointProps {
   vpc: IVpc;
   allowedIPv4Cidrs?: string[];
   allowedIPv6Cidrs?: string[];
@@ -36,16 +36,7 @@ export interface AlbProps {
   internal?: boolean;
 }
 
-export interface IEndpoint {
-  readonly url: string;
-  readonly alb: IAlb;
-}
-export interface IAlb extends IConnectable {
-  readonly url: string;
-  addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]): void;
-}
-
-export class Alb extends Construct implements IEndpoint {
+export class AlbEndpoint extends Construct implements IEndpoint {
   public readonly url: string;
   public readonly alb: IAlb;
 
@@ -53,7 +44,7 @@ export class Alb extends Construct implements IEndpoint {
   public listener: ApplicationListener;
   private vpc: IVpc;
 
-  constructor(scope: Construct, id: string, props: AlbProps) {
+  constructor(scope: Construct, id: string, props: AlbEndpointProps) {
     super(scope, id);
 
     const {
