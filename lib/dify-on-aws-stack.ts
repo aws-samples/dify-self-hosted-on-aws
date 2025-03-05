@@ -170,8 +170,10 @@ export class DifyOnAwsStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DifyUrl', {
       value: endpoint.url,
     });
-    new cdk.CfnOutput(this, 'DifyApiUrl', {
-      value: endpoint.alb.url,
-    });
+    if (endpoint.url !== endpoint.alb.url) {
+      new cdk.CfnOutput(this, 'DifyInternalUrl', {
+        value: endpoint.alb.url,
+      });
+    }
   }
 }
