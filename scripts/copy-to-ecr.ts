@@ -60,7 +60,7 @@ async function ensureECRRepository(repositoryName: string, awsConfig: AWSConfig)
 async function processImage(dockerHubImage: string, repositoryName: string, awsConfig: AWSConfig): Promise<void> {
   try {
     const { accountId, region } = awsConfig;
-    const ecrImageTag = dockerHubImage.replace(':', '_');
+    const ecrImageTag = dockerHubImage.replace(':', '_').replace('langgenius/', '');
     const ecrImageUri = `${accountId}.dkr.ecr.${region}.amazonaws.com/${repositoryName}:${ecrImageTag}`;
 
     await execAsync(`docker buildx imagetools create --tag "${ecrImageUri}" "${dockerHubImage}"`);
