@@ -296,6 +296,22 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         ],
       },
     },
+    "DifyInternalUrl": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "AlbC1372A32",
+                "DNSName",
+              ],
+            },
+          ],
+        ],
+      },
+    },
     "DifyUrl": {
       "Value": "https://dify.example.com",
     },
@@ -964,6 +980,27 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           "Fn::GetAtt": [
             "AlbGetCloudFrontPrefixListId0ED122F4",
             "PrefixLists.0.PrefixListId",
+          ],
+        },
+        "ToPort": 80,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AlbSecurityGroupfromTestStackApiServiceFargateServiceSecurityGroup7DD0AF44807F2821D1": {
+      "Properties": {
+        "Description": "from TestStackApiServiceFargateServiceSecurityGroup7DD0AF44:80",
+        "FromPort": 80,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
           ],
         },
         "ToPort": 80,

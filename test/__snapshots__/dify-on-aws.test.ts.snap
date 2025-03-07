@@ -615,6 +615,27 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
+    "AlbSecurityGroupfromTestStackApiServiceFargateServiceSecurityGroup7DD0AF44443BC3945FE": {
+      "Properties": {
+        "Description": "from TestStackApiServiceFargateServiceSecurityGroup7DD0AF44:443",
+        "FromPort": 443,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
+          ],
+        },
+        "ToPort": 443,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
     "AlbSecurityGrouptoTestStackApiServiceFargateServiceSecurityGroup7DD0AF445001CF7EB3A2": {
       "Properties": {
         "Description": "Load balancer to target",
