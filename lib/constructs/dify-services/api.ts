@@ -51,8 +51,8 @@ export class ApiService extends Construct {
     const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
-      cpu: 2048,
-      memoryLimitMiB: 8192, // We got OOM frequently when RAM=512MB
+      cpu: 1024,
+      memoryLimitMiB: 2048, // We got OOM frequently when RAM=512MB
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
       volumes: [
         {
