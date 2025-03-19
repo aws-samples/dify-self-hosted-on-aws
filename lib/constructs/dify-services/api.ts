@@ -51,8 +51,8 @@ export class ApiService extends Construct {
     const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
-      cpu: 1024,
-      memoryLimitMiB: 2048, // We got OOM frequently when RAM=512MB
+      cpu: 2048,
+      memoryLimitMiB: 16384, // We got OOM frequently when RAM=512MB
       runtimePlatform: { cpuArchitecture: CpuArchitecture.X86_64 },
       volumes: [
         {
@@ -127,12 +127,12 @@ export class ApiService extends Construct {
 
         ...(email
           ? {
-              MAIL_TYPE: 'smtp',
-              SMTP_SERVER: email.serverAddress,
-              SMTP_PORT: email.serverPort,
-              SMTP_USE_TLS: 'true',
-              MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
-            }
+            MAIL_TYPE: 'smtp',
+            SMTP_SERVER: email.serverAddress,
+            SMTP_PORT: email.serverPort,
+            SMTP_USE_TLS: 'true',
+            MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
+          }
           : {}),
 
         ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
@@ -160,9 +160,9 @@ export class ApiService extends Construct {
         PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret), // is it ok to reuse this?
         ...(email
           ? {
-              SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
-              SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
-            }
+            SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
+            SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
+          }
           : {}),
 
         ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
@@ -220,12 +220,12 @@ export class ApiService extends Construct {
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
         ...(email
           ? {
-              MAIL_TYPE: 'smtp',
-              SMTP_SERVER: email.serverAddress,
-              SMTP_PORT: email.serverPort,
-              SMTP_USE_TLS: 'true',
-              MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
-            }
+            MAIL_TYPE: 'smtp',
+            SMTP_SERVER: email.serverAddress,
+            SMTP_PORT: email.serverPort,
+            SMTP_USE_TLS: 'true',
+            MAIL_DEFAULT_SEND_FROM: `no-reply@${email.domainName}`,
+          }
           : {}),
 
         ...getAdditionalEnvironmentVariables(this, 'worker', props.additionalEnvironmentVariables),
@@ -248,9 +248,9 @@ export class ApiService extends Construct {
         PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         ...(email
           ? {
-              SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
-              SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
-            }
+            SMTP_USERNAME: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'username'),
+            SMTP_PASSWORD: ecs.Secret.fromSecretsManager(email.smtpCredentials, 'password'),
+          }
           : {}),
 
         ...getAdditionalSecretVariables(this, 'worker', props.additionalEnvironmentVariables),
@@ -277,11 +277,11 @@ export class ApiService extends Construct {
         ENABLE_NETWORK: 'true',
         ...(props.allowAnySyscalls
           ? {
-              ALLOWED_SYSCALLS: Array(457)
-                .fill(0)
-                .map((_, i) => i)
-                .join(','),
-            }
+            ALLOWED_SYSCALLS: Array(457)
+              .fill(0)
+              .map((_, i) => i)
+              .join(','),
+          }
           : {}),
         ...getAdditionalEnvironmentVariables(this, 'sandbox', props.additionalEnvironmentVariables),
       },
