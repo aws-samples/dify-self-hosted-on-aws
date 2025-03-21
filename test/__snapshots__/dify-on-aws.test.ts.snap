@@ -1752,6 +1752,14 @@ exports[`Snapshot test 1`] = `
                 "Name": "FORCE_VERIFYING_SIGNATURE",
                 "Value": "true",
               },
+              {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
+                "Name": "S3_ENDPOINT",
+                "Value": "https://s3.us-west-2.amazonaws.com",
+              },
             ],
             "Essential": true,
             "Image": "langgenius/dify-plugin-daemon:main-local",
