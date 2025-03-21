@@ -349,6 +349,8 @@ export class ApiService extends Construct {
         DIFY_INNER_API_URL: `http://localhost:${port}`,
         PLUGIN_WORKING_PATH: '/app/storage/cwd',
         FORCE_VERIFYING_SIGNATURE: 'true',
+        S3_USE_AWS_MANAGED_IAM: 'true',
+        S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
