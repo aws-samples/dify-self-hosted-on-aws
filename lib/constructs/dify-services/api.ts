@@ -45,17 +45,7 @@ export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const {
-      cluster,
-      alb,
-      postgres,
-      redis,
-      storageBucket,
-      email,
-      debug = false,
-      customRepository,
-      pluginDaemonImageTag = 'main-local',
-    } = props;
+    const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository, pluginDaemonImageTag = 'main-local' } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -119,6 +109,10 @@ export class ApiService extends Construct {
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
         S3_USE_AWS_MANAGED_IAM: 'true',
+        S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
+        
+        // Plugin daemon configuration
+        DIFY_PLUGIN_DAEMON_IMAGE: `langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`,
 
         // postgres settings. the credentials are in secrets property.
         DB_DATABASE: postgres.databaseName,
@@ -211,6 +205,11 @@ export class ApiService extends Construct {
         STORAGE_TYPE: 's3',
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
+        S3_USE_AWS_MANAGED_IAM: 'true',
+        S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
+        
+        // Plugin daemon configuration
+        DIFY_PLUGIN_DAEMON_IMAGE: `langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`,
 
         DB_DATABASE: postgres.databaseName,
         // pgvector configurations
@@ -339,31 +338,6 @@ export class ApiService extends Construct {
         streamPrefix: 'log',
       }),
       portMappings: [{ containerPort: 8000 }],
-    });
-
-    // Add plugin-daemon container
-    taskDefinition.addContainer('PluginDaemon', {
-      image: customRepository
-        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_${pluginDaemonImageTag}`)
-        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`),
-      environment: {
-        DIFY_INNER_API_URL: `http://localhost:${port}`,
-        PLUGIN_WORKING_PATH: '/app/storage/cwd',
-        FORCE_VERIFYING_SIGNATURE: 'true',
-        S3_USE_AWS_MANAGED_IAM: 'true',
-        S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
-        S3_BUCKET_NAME: storageBucket.bucketName,
-        S3_REGION: Stack.of(storageBucket).region,
-
-        ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
-      },
-      logging: ecs.LogDriver.awsLogs({
-        streamPrefix: 'log',
-      }),
-      secrets: {
-        API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
-        // プラグインデーモンは追加シークレット変数をアクセスしない
-      },
     });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
 
