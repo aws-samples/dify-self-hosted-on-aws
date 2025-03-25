@@ -1913,13 +1913,13 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "LogDriver": "awslogs",
               "Options": {
                 "awslogs-group": {
-                  "Ref": "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                  "Ref": "ApiServiceTaskPluginDaemonApiServiceLogGroup26F69B6C",
                 },
                 "awslogs-region": "us-west-2",
                 "awslogs-stream-prefix": "log",
               },
             },
-            "Name": "PluginDaemon",
+            "Name": "PluginDaemon-ApiService",
             "Secrets": [
               {
                 "Name": "API_KEY",
@@ -2113,7 +2113,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                  "ApiServiceTaskPluginDaemonApiServiceLogGroup26F69B6C",
                   "Arn",
                 ],
               },
@@ -2157,7 +2157,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "ApiServiceTaskPluginDaemonLogGroupB382B492": {
+    "ApiServiceTaskPluginDaemonApiServiceLogGroup26F69B6C": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
