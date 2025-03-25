@@ -864,14 +864,6 @@ exports[`Snapshot test 1`] = `
                 "Value": "true",
               },
               {
-                "Name": "S3_ENDPOINT",
-                "Value": "https://s3.us-west-2.amazonaws.com",
-              },
-              {
-                "Name": "DIFY_PLUGIN_DAEMON_IMAGE",
-                "Value": "langgenius/dify-plugin-daemon:main-local",
-              },
-              {
                 "Name": "DB_DATABASE",
                 "Value": "main",
               },
@@ -1205,18 +1197,6 @@ exports[`Snapshot test 1`] = `
                 "Value": "us-west-2",
               },
               {
-                "Name": "S3_USE_AWS_MANAGED_IAM",
-                "Value": "true",
-              },
-              {
-                "Name": "S3_ENDPOINT",
-                "Value": "https://s3.us-west-2.amazonaws.com",
-              },
-              {
-                "Name": "DIFY_PLUGIN_DAEMON_IMAGE",
-                "Value": "langgenius/dify-plugin-daemon:main-local",
-              },
-              {
                 "Name": "DB_DATABASE",
                 "Value": "main",
               },
@@ -1516,6 +1496,72 @@ exports[`Snapshot test 1`] = `
               },
             ],
           },
+          {
+            "Environment": [
+              {
+                "Name": "DIFY_INNER_API_URL",
+                "Value": "http://localhost:5001",
+              },
+              {
+                "Name": "PLUGIN_WORKING_PATH",
+                "Value": "/app/storage/cwd",
+              },
+              {
+                "Name": "FORCE_VERIFYING_SIGNATURE",
+                "Value": "true",
+              },
+              {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
+                "Name": "S3_ENDPOINT",
+                "Value": "https://s3.us-west-2.amazonaws.com",
+              },
+              {
+                "Name": "S3_BUCKET_NAME",
+                "Value": {
+                  "Ref": "StorageBucket19DB2FF8",
+                },
+              },
+              {
+                "Name": "S3_REGION",
+                "Value": "us-west-2",
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "123456789012.dkr.ecr.us-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix",
+                  },
+                  "/custom:dify-plugin-daemon_main-local",
+                ],
+              ],
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                },
+                "awslogs-region": "us-west-2",
+                "awslogs-stream-prefix": "log",
+              },
+            },
+            "Name": "PluginDaemon",
+            "Secrets": [
+              {
+                "Name": "API_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+            ],
+          },
         ],
         "Cpu": "1024",
         "ExecutionRoleArn": {
@@ -1702,6 +1748,19 @@ exports[`Snapshot test 1`] = `
                 ],
               },
             },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApiServiceTaskPluginDaemonLogGroupB382B492",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1737,6 +1796,11 @@ exports[`Snapshot test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "ApiServiceTaskMainLogGroup4A8BF33F": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ApiServiceTaskPluginDaemonLogGroupB382B492": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
