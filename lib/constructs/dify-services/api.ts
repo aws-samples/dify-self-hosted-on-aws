@@ -45,7 +45,17 @@ export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository, pluginDaemonImageTag = 'main-local' } = props;
+    const {
+      cluster,
+      alb,
+      postgres,
+      redis,
+      storageBucket,
+      email,
+      debug = false,
+      customRepository,
+      pluginDaemonImageTag = 'main-local',
+    } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -110,7 +120,7 @@ export class ApiService extends Construct {
         S3_REGION: Stack.of(storageBucket).region,
         S3_USE_AWS_MANAGED_IAM: 'true',
         S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
-        
+
         // Plugin daemon configuration
         DIFY_PLUGIN_DAEMON_IMAGE: `langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`,
 
@@ -207,7 +217,7 @@ export class ApiService extends Construct {
         S3_REGION: Stack.of(storageBucket).region,
         S3_USE_AWS_MANAGED_IAM: 'true',
         S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
-        
+
         // Plugin daemon configuration
         DIFY_PLUGIN_DAEMON_IMAGE: `langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`,
 
