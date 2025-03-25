@@ -101,6 +101,14 @@ export interface EnvironmentProps {
    * @default "latest"
    */
   difySandboxImageTag?: string;
+  
+  /**
+   * The image tag to deploy the Dify plugin-daemon container image.
+   * The image is pulled from [here](https://hub.docker.com/r/langgenius/dify-plugin-daemon/tags).
+   *
+   * @default "main-local"
+   */
+  difyPluginDaemonImageTag?: string;
 
   /**
    * If true, Dify sandbox allows any system calls when executing code.

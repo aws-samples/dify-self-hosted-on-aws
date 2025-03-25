@@ -25,6 +25,7 @@ export interface ApiServiceProps {
 
   imageTag: string;
   sandboxImageTag: string;
+  pluginDaemonImageTag?: string;
   allowAnySyscalls: boolean;
 
   /**

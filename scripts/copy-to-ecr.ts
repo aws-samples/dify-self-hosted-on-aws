@@ -8,11 +8,13 @@ const difyImageTag = props.difyImageTag ?? 'latest';
 const difySandboxImageTag = props.difySandboxImageTag ?? 'latest';
 const repositoryName = props.customEcrRepositoryName;
 
+const difyPluginDaemonImageTag = props.difyPluginDaemonImageTag ?? 'main-local';
+
 const DOCKER_HUB_IMAGES = [
   `langgenius/dify-web:${difyImageTag}`,
   `langgenius/dify-api:${difyImageTag}`,
   `langgenius/dify-sandbox:${difySandboxImageTag}`,
-  `langgenius/dify-plugin-daemon:main-local`,
+  `langgenius/dify-plugin-daemon:${difyPluginDaemonImageTag}`,
 ];
 
 interface AWSConfig {
