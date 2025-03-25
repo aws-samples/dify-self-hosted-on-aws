@@ -6,13 +6,14 @@ const execAsync = promisify(exec);
 
 const difyImageTag = props.difyImageTag ?? 'latest';
 const difySandboxImageTag = props.difySandboxImageTag ?? 'latest';
+const difyPluginDaemonImageTag = props.difyPluginDaemonImageTag ?? 'main-local';
 const repositoryName = props.customEcrRepositoryName;
 
 const DOCKER_HUB_IMAGES = [
   `langgenius/dify-web:${difyImageTag}`,
   `langgenius/dify-api:${difyImageTag}`,
   `langgenius/dify-sandbox:${difySandboxImageTag}`,
-  `langgenius/dify-plugin-daemon:main-local`,
+  `langgenius/dify-plugin-daemon:${difyPluginDaemonImageTag}`,
 ];
 
 interface AWSConfig {

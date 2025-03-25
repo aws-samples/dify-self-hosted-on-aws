@@ -26,6 +26,7 @@ export interface ApiServiceProps {
 
   imageTag: string;
   sandboxImageTag: string;
+  pluginDaemonImageTag?: string;
   allowAnySyscalls: boolean;
 
   /**
@@ -310,10 +311,11 @@ export class ApiService extends Construct {
       condition: ecs.ContainerDependencyCondition.COMPLETE,
     });
 
+    const pluginDaemonImageTag = props.pluginDaemonImageTag || 'main-local';
     taskDefinition.addContainer('PluginDaemon', {
       image: customRepository
-        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_main-local`)
-        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:main-local`),
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_${pluginDaemonImageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`),
       environment: {
         GIN_MODE: 'release',
 
