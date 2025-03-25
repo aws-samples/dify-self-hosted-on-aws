@@ -343,7 +343,9 @@ export class ApiService extends Construct {
 
     // Add plugin-daemon container if image tag is specified
     if (pluginDaemonImageTag) {
-      taskDefinition.addContainer('PluginDaemon', {
+      // Use a unique ID for the container based on the scope ID to avoid naming conflicts in tests
+      const pluginDaemonContainerId = `PluginDaemon-${this.node.id}`;
+      taskDefinition.addContainer(pluginDaemonContainerId, {
         image: customRepository
           ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-plugin-daemon_${pluginDaemonImageTag}`)
           : ecs.ContainerImage.fromRegistry(`langgenius/dify-plugin-daemon:${pluginDaemonImageTag}`),
