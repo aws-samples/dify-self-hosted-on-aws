@@ -45,7 +45,17 @@ export class ApiService extends Construct {
   constructor(scope: Construct, id: string, props: ApiServiceProps) {
     super(scope, id);
 
-    const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository, pluginDaemonImageTag = 'main-local' } = props;
+    const {
+      cluster,
+      alb,
+      postgres,
+      redis,
+      storageBucket,
+      email,
+      debug = false,
+      customRepository,
+      pluginDaemonImageTag = 'main-local',
+    } = props;
     const port = 5001;
     const volumeName = 'sandbox';
 
@@ -330,7 +340,7 @@ export class ApiService extends Construct {
       }),
       portMappings: [{ containerPort: 8000 }],
     });
-    
+
     // Add plugin-daemon container
     taskDefinition.addContainer('PluginDaemon', {
       image: customRepository
@@ -344,7 +354,7 @@ export class ApiService extends Construct {
         S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
         S3_BUCKET_NAME: storageBucket.bucketName,
         S3_REGION: Stack.of(storageBucket).region,
-        
+
         ...getAdditionalEnvironmentVariables(this, 'api', props.additionalEnvironmentVariables),
       },
       logging: ecs.LogDriver.awsLogs({
@@ -352,7 +362,7 @@ export class ApiService extends Construct {
       }),
       secrets: {
         API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
-        ...getAdditionalSecretVariables(this, 'api', props.additionalEnvironmentVariables),
+        // プラグインデーモンは追加シークレット変数をアクセスしない
       },
     });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
