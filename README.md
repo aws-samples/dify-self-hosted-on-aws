@@ -200,19 +200,19 @@ new DifySelfHostedOnAwsStack(app, 'DifySelfHostedOnAwsStack', {
       targets: ['api'], 
     },
     {
-      // 環境変数を全てのコンテナに適用する例
+      // Example of applying environment variable to all containers
       key: 'GLOBAL_SETTING',
       value: 'value',
-      // targetsを省略すると全てのコンテナに適用
+      // Omitting targets applies to all containers
     },
     {
-      // Systems Manager パラメータを参照する例
+      // Example of referencing Systems Manager parameter
       key: 'CONFIG_PARAM',
       value: { parameterName: 'my-parameter' },
       targets: ['web', 'api'],
     },
     {
-      // Secrets Managerの特定フィールドを参照する例
+      // Example of referencing a specific field in Secrets Manager
       key: 'API_KEY',
       value: { secretName: 'my-secret', field: 'apiKey' },
       targets: ['worker'],
@@ -221,7 +221,7 @@ new DifySelfHostedOnAwsStack(app, 'DifySelfHostedOnAwsStack', {
 });
 ```
 
-この機能を使用することで、Difyコンテナに対してカスタム環境変数を注入できます。`targets`で指定可能なコンテナタイプは`'web'`, `'api'`, `'worker'`, `'sandbox'`です。
+This feature allows you to inject custom environment variables into Dify containers. The container types that can be specified in `targets` are `'web'`, `'api'`, `'worker'`, and `'sandbox'`.
 
 ### Connect to Notion
 
