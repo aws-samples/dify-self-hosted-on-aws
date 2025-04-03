@@ -182,6 +182,47 @@ To deploy on a closed network, please follow the steps below:
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
+### Additional Environment Variables
+
+You can configure additional environment variables for Dify containers by using the `additionalEnvironmentVariables` property:
+
+```typescript
+new DifySelfHostedOnAwsStack(app, 'DifySelfHostedOnAwsStack', {
+  additionalEnvironmentVariables: [
+    {
+      key: 'NOTION_INTEGRATION_TYPE',
+      value: 'internal',
+      targets: ['api'], 
+    },
+    {
+      key: 'NOTION_INTERNAL_SECRET',
+      value: { secretName: 'NOTION_INTERNAL_SECRET'},
+      targets: ['api'], 
+    },
+    {
+      // 環境変数を全てのコンテナに適用する例
+      key: 'GLOBAL_SETTING',
+      value: 'value',
+      // targetsを省略すると全てのコンテナに適用
+    },
+    {
+      // Systems Manager パラメータを参照する例
+      key: 'CONFIG_PARAM',
+      value: { parameterName: 'my-parameter' },
+      targets: ['web', 'api'],
+    },
+    {
+      // Secrets Managerの特定フィールドを参照する例
+      key: 'API_KEY',
+      value: { secretName: 'my-secret', field: 'apiKey' },
+      targets: ['worker'],
+    },
+  ],
+});
+```
+
+この機能を使用することで、Difyコンテナに対してカスタム環境変数を注入できます。`targets`で指定可能なコンテナタイプは`'web'`, `'api'`, `'worker'`, `'sandbox'`です。
+
 ### Connect to Notion
 
 You can connect to [Notion](https://www.notion.com/) data by the following steps:
