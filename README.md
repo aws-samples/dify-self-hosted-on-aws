@@ -190,16 +190,6 @@ You can configure additional environment variables for Dify containers by using 
 new DifySelfHostedOnAwsStack(app, 'DifySelfHostedOnAwsStack', {
   additionalEnvironmentVariables: [
     {
-      key: 'NOTION_INTEGRATION_TYPE',
-      value: 'internal',
-      targets: ['api'], 
-    },
-    {
-      key: 'NOTION_INTERNAL_SECRET',
-      value: { secretName: 'NOTION_INTERNAL_SECRET'},
-      targets: ['api'], 
-    },
-    {
       // Example of applying environment variable to all containers
       key: 'GLOBAL_SETTING',
       value: 'value',
