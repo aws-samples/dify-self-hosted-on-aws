@@ -9,7 +9,7 @@ export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '1.0.0',
+  difyImageTag: '1.1.3',
   // Set plugin-daemon version to stable release
   difyPluginDaemonImageTag: '0.0.6-local',
 
