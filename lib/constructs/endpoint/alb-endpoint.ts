@@ -1,7 +1,6 @@
 import { Duration } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
-import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -14,8 +13,9 @@ import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { LoadBalancerTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { IAlb, IEndpoint } from './endpoint';
 
-export interface AlbProps {
+export interface AlbEndpointProps {
   vpc: IVpc;
   allowedIPv4Cidrs?: string[];
   allowedIPv6Cidrs?: string[];
@@ -36,19 +36,15 @@ export interface AlbProps {
   internal?: boolean;
 }
 
-export interface IAlb {
-  url: string;
-  addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]): void;
-}
-
-export class Alb extends Construct implements IAlb {
-  public url: string;
+export class AlbEndpoint extends Construct implements IEndpoint {
+  public readonly url: string;
+  public readonly alb: IAlb;
 
   private listenerPriority = 1;
-  private listener: ApplicationListener;
+  public listener: ApplicationListener;
   private vpc: IVpc;
 
-  constructor(scope: Construct, id: string, props: AlbProps) {
+  constructor(scope: Construct, id: string, props: AlbEndpointProps) {
     super(scope, id);
 
     const {
@@ -97,32 +93,35 @@ export class Alb extends Construct implements IAlb {
 
     this.vpc = vpc;
     this.listener = listener;
-  }
-
-  public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
-    const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
-      vpc: this.vpc,
-      targets: [ecsService],
-      protocol: ApplicationProtocol.HTTP,
-      port: port,
-      deregistrationDelay: Duration.seconds(10),
-      healthCheck: {
-        path: healthCheckPath,
-        interval: Duration.seconds(30),
-        healthyHttpCodes: '200-299,307',
-        healthyThresholdCount: 2,
-        unhealthyThresholdCount: 10,
+    this.alb = {
+      url: this.url,
+      connections: listener.connections,
+      addEcsService: (id, ecsService, port, healthCheckPath, paths) => {
+        const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
+          vpc: this.vpc,
+          targets: [ecsService],
+          protocol: ApplicationProtocol.HTTP,
+          port: port,
+          deregistrationDelay: Duration.seconds(10),
+          healthCheck: {
+            path: healthCheckPath,
+            interval: Duration.seconds(30),
+            healthyHttpCodes: '200-299,307',
+            healthyThresholdCount: 2,
+            unhealthyThresholdCount: 10,
+          },
+        });
+        // a condition only accepts an array with up to 5 elements
+        // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
+        for (let i = 0; i < Math.floor((paths.length + 4) / 5); i++) {
+          const slice = paths.slice(i * 5, (i + 1) * 5);
+          this.listener.addTargetGroups(`${id}${i}`, {
+            targetGroups: [group],
+            conditions: [ListenerCondition.pathPatterns(slice)],
+            priority: this.listenerPriority++,
+          });
+        }
       },
-    });
-    // a condition only accepts an array with up to 5 elements
-    // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html
-    for (let i = 0; i < Math.floor((paths.length + 4) / 5); i++) {
-      const slice = paths.slice(i * 5, (i + 1) * 5);
-      this.listener.addTargetGroups(`${id}${i}`, {
-        targetGroups: [group],
-        conditions: [ListenerCondition.pathPatterns(slice)],
-        priority: this.listenerPriority++,
-      });
-    }
+    };
   }
 }
