@@ -14,6 +14,11 @@ Key Features:
     * allow to use NAT instances instead of NAT Gateway, and Fargate spot capacity by default
 * Easily integrate with Bedrock models and Knowledge Bases
 
+## Quick Start
+
+For a quick and convenient deployment, you can use the one-click deployment option available at:
+* [One-Click Deployment for Dify on AWS](https://github.com/aws-samples/sample-one-click-generative-ai-solutions?tab=readme-ov-file#dify-on-aws)
+
 本リポジトリの使い方について、日本語で書かれた記事もあります: 
 * [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f) ( [CloudShell版](https://note.com/yukkie1114/n/n8e055c4e7566) )
 * [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
