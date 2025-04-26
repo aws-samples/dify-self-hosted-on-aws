@@ -352,6 +352,7 @@ export class ApiService extends Construct {
         FORCE_VERIFYING_SIGNATURE: 'true',
         S3_USE_AWS_MANAGED_IAM: 'true',
         S3_ENDPOINT: `https://s3.${Stack.of(this).region}.amazonaws.com`,
+        PIP_MIRROR_URL: 'http://localhost:8100/simple',
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
@@ -388,6 +389,16 @@ export class ApiService extends Construct {
         streamPrefix: 'log',
       }),
       portMappings: [{ containerPort: 8000 }],
+    });
+
+    taskDefinition.addContainer('PipMirror', {
+      image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'pip-mirror'), {
+        platform: Platform.LINUX_AMD64,
+      }),
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      portMappings: [{ containerPort: 8100 }],
     });
     storageBucket.grantReadWrite(taskDefinition.taskRole);
 
