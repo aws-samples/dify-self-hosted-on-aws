@@ -403,6 +403,10 @@ exports[`Snapshot test 1`] = `
             "Value": "false",
           },
           {
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "600",
+          },
+          {
             "Key": "access_logs.s3.enabled",
             "Value": "true",
           },
@@ -1008,6 +1012,10 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "MARKETPLACE_URL",
                 "Value": "https://marketplace.dify.ai",
+              },
+              {
+                "Name": "TEXT_GENERATION_TIMEOUT_MS",
+                "Value": "600000",
               },
             ],
             "Essential": true,
@@ -1695,6 +1703,10 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "PLUGIN_REMOTE_INSTALLING_PORT",
                 "Value": "5003",
+              },
+              {
+                "Name": "TEXT_GENERATION_TIMEOUT_MS",
+                "Value": "600000",
               },
               {
                 "Name": "ROUTINE_POOL_SIZE",
