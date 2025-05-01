@@ -1373,6 +1373,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Value": "https://marketplace.dify.ai",
               },
               {
+                "Name": "TEXT_GENERATION_TIMEOUT_MS",
+                "Value": "600000",
+              },
+              {
                 "Name": "MAIL_TYPE",
                 "Value": "smtp",
               },
@@ -2073,6 +2077,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               {
                 "Name": "PLUGIN_REMOTE_INSTALLING_PORT",
                 "Value": "5003",
+              },
+              {
+                "Name": "TEXT_GENERATION_TIMEOUT_MS",
+                "Value": "600000",
               },
               {
                 "Name": "ROUTINE_POOL_SIZE",
