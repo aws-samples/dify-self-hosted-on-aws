@@ -73,6 +73,7 @@ export class Alb extends Construct implements IAlb {
         subnets: internal ? vpc.privateSubnets.concat(vpc.isolatedSubnets) : vpc.publicSubnets,
       }),
       internetFacing: !internal,
+      idleTimeout: Duration.seconds(600),
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;

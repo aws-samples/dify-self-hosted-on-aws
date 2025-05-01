@@ -125,6 +125,8 @@ export class ApiService extends Construct {
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
+        
+        TEXT_GENERATION_TIMEOUT_MS: '600000',
 
         ...(email
           ? {
@@ -341,6 +343,8 @@ export class ApiService extends Construct {
         PLUGIN_REMOTE_INSTALLING_HOST: 'localhost',
         PLUGIN_REMOTE_INSTALLING_PORT: '5003',
 
+        TEXT_GENERATION_TIMEOUT_MS: '600000',
+        
         ROUTINE_POOL_SIZE: '10000',
         LIFETIME_COLLECTION_HEARTBEAT_INTERVAL: '5',
         LIFETIME_COLLECTION_GC_INTERVAL: '60',
