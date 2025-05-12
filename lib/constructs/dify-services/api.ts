@@ -49,6 +49,7 @@ export class ApiService extends Construct {
 
     const { cluster, alb, postgres, redis, storageBucket, email, debug = false, customRepository } = props;
     const port = 5001;
+    const pluginDaemonPort = 5002;
     const volumeName = 'sandbox';
 
     const taskDefinition = new FargateTaskDefinition(this, 'Task', {
@@ -121,12 +122,15 @@ export class ApiService extends Construct {
         // The sandbox service endpoint.
         CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
 
-        PLUGIN_DAEMON_URL: 'http://localhost:5002',
+        PLUGIN_DAEMON_URL: `http://localhost:${pluginDaemonPort}`,
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
 
         TEXT_GENERATION_TIMEOUT_MS: '600000',
+
+        // used for Dify Extension endpoint URLs
+        ENDPOINT_URL_TEMPLATE: `${alb.url}/e/{hook_id}`,
 
         ...(email
           ? {
@@ -217,7 +221,7 @@ export class ApiService extends Construct {
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
-        PLUGIN_API_URL: 'http://localhost:5002',
+        PLUGIN_API_URL: `http://localhost:${pluginDaemonPort}`,
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
@@ -328,8 +332,7 @@ export class ApiService extends Construct {
         DB_DATABASE: 'dify_plugin',
         DB_SSL_MODE: 'disable',
 
-        SERVER_PORT: '5002',
-
+        SERVER_PORT: pluginDaemonPort.toString(),
         AWS_REGION: Stack.of(this).region,
 
         // TODO: set this to aws_s3 for persistence
@@ -374,7 +377,7 @@ export class ApiService extends Construct {
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'log',
       }),
-      portMappings: [{ containerPort: 5002 }, { containerPort: 5003 }],
+      portMappings: [{ containerPort: pluginDaemonPort }, { containerPort: 5003 }],
     });
 
     taskDefinition.addContainer('ExternalKnowledgeBaseAPI', {
@@ -430,6 +433,13 @@ export class ApiService extends Construct {
 
     const paths = ['/console/api', '/api', '/v1', '/files'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+    alb.addEcsService(
+      'Extension',
+      service.loadBalancerTarget({ containerName: 'PluginDaemon', containerPort: pluginDaemonPort }),
+      pluginDaemonPort,
+      '/health/check',
+      ['/e', '/e/*'],
+    );
 
     new AwsCustomResource(this, 'CreatePluginsPlaceholder', {
       onUpdate: {

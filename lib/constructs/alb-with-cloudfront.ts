@@ -10,7 +10,7 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront';
 import { LoadBalancerV2Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
-import { FargateService } from 'aws-cdk-lib/aws-ecs';
+import { IEcsLoadBalancerTarget } from 'aws-cdk-lib/aws-ecs';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -62,6 +62,7 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       vpc,
       vpcSubnets: vpc.selectSubnets({ subnets: vpc.privateSubnets }),
       internetFacing: false,
+      idleTimeout: Duration.seconds(600),
     });
     alb.logAccessLogs(accessLogBucket, 'dify-alb');
     this.url = `${protocol.toLowerCase()}://${alb.loadBalancerDnsName}`;
@@ -138,13 +139,19 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     this.listener = listener;
   }
 
-  public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
+  public addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ) {
     // we need different target group ids for different albs because a single target group can be attached to only one alb.
     const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
       vpc: this.vpc,
       targets: [ecsService],
       protocol: ApplicationProtocol.HTTP,
-      port: port,
+      port,
       deregistrationDelay: Duration.seconds(10),
       healthCheck: {
         path: healthCheckPath,

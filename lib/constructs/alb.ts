@@ -1,7 +1,7 @@
 import { Duration } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import { IVpc, Peer } from 'aws-cdk-lib/aws-ec2';
-import { FargateService } from 'aws-cdk-lib/aws-ecs';
+import { IEcsLoadBalancerTarget } from 'aws-cdk-lib/aws-ecs';
 import {
   ApplicationListener,
   ApplicationLoadBalancer,
@@ -38,7 +38,13 @@ export interface AlbProps {
 
 export interface IAlb {
   url: string;
-  addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]): void;
+  addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ): void;
 }
 
 export class Alb extends Construct implements IAlb {
@@ -100,12 +106,18 @@ export class Alb extends Construct implements IAlb {
     this.listener = listener;
   }
 
-  public addEcsService(id: string, ecsService: FargateService, port: number, healthCheckPath: string, paths: string[]) {
+  public addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ) {
     const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
       vpc: this.vpc,
       targets: [ecsService],
       protocol: ApplicationProtocol.HTTP,
-      port: port,
+      port,
       deregistrationDelay: Duration.seconds(10),
       healthCheck: {
         path: healthCheckPath,

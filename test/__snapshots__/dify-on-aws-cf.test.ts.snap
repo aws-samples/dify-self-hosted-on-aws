@@ -672,6 +672,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Value": "false",
           },
           {
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "600",
+          },
+          {
             "Key": "access_logs.s3.enabled",
             "Value": "true",
           },
@@ -780,6 +784,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         },
       },
       "Type": "AWS::CloudFront::Distribution",
+    },
+    "AlbExtensionTargetGroupInternal7D926089": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 20,
+        "HealthCheckPath": "/health/check",
+        "HealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200-299,307",
+        },
+        "Port": 5002,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "10",
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "UnhealthyThresholdCount": 6,
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "AlbGetCloudFrontPrefixListId0ED122F4": {
       "DeletionPolicy": "Delete",
@@ -899,6 +931,34 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
     },
+    "AlbListenerExtension0Rule76BF40E2": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbExtensionTargetGroupInternal7D926089",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "/e",
+                "/e/*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "AlbListener318AEEBA",
+        },
+        "Priority": 3,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
     "AlbListenerWeb0RuleE10BEE0F": {
       "Properties": {
         "Actions": [
@@ -922,7 +982,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "ListenerArn": {
           "Ref": "AlbListener318AEEBA",
         },
-        "Priority": 3,
+        "Priority": 4,
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
     },
@@ -988,6 +1048,27 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         },
         "IpProtocol": "tcp",
         "ToPort": 5001,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "AlbSecurityGrouptoTestStackApiServiceFargateServiceSecurityGroup7DD0AF4450024F600494": {
+      "Properties": {
+        "Description": "Load balancer to target",
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
+          ],
+        },
+        "FromPort": 5002,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 5002,
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
@@ -1150,6 +1231,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "DependsOn": [
         "AlbListenerApi0Rule033B7A48",
         "AlbListenerApi1RuleDF535F10",
+        "AlbListenerExtension0Rule76BF40E2",
         "ApiServiceTaskTaskRoleDefaultPolicy982AD2DC",
         "ApiServiceTaskTaskRole06F87EBE",
       ],
@@ -1185,6 +1267,13 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "ContainerPort": 5001,
             "TargetGroupArn": {
               "Ref": "AlbApiTargetGroupInternal2EB9930E",
+            },
+          },
+          {
+            "ContainerName": "PluginDaemon",
+            "ContainerPort": 5002,
+            "TargetGroupArn": {
+              "Ref": "AlbExtensionTargetGroupInternal7D926089",
             },
           },
         ],
@@ -1257,6 +1346,31 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           ],
         },
         "ToPort": 5001,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "ApiServiceFargateServiceSecurityGroupfromTestStackAlbSecurityGroup8A47F1DC5002033681A8": {
+      "DependsOn": [
+        "ApiServiceTaskTaskRoleDefaultPolicy982AD2DC",
+        "ApiServiceTaskTaskRole06F87EBE",
+      ],
+      "Properties": {
+        "Description": "Load balancer to target",
+        "FromPort": 5002,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "ToPort": 5002,
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
@@ -1375,6 +1489,10 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               {
                 "Name": "TEXT_GENERATION_TIMEOUT_MS",
                 "Value": "600000",
+              },
+              {
+                "Name": "ENDPOINT_URL_TEMPLATE",
+                "Value": "https://dify.example.com/e/{hook_id}",
               },
               {
                 "Name": "MAIL_TYPE",
