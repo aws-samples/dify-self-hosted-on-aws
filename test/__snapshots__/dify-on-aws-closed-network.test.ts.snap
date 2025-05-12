@@ -442,6 +442,34 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
+    "AlbExtensionTargetGroup73E67323": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckPath": "/health/check",
+        "HealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200-299,307",
+        },
+        "Port": 5002,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "10",
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "UnhealthyThresholdCount": 10,
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
     "AlbListener318AEEBA": {
       "Properties": {
         "DefaultActions": [
@@ -520,6 +548,34 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
     },
+    "AlbListenerExtension0Rule76BF40E2": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbExtensionTargetGroup73E67323",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "/e",
+                "/e/*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "AlbListener318AEEBA",
+        },
+        "Priority": 3,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
     "AlbListenerWeb0RuleE10BEE0F": {
       "Properties": {
         "Actions": [
@@ -543,7 +599,7 @@ exports[`Snapshot test 1`] = `
         "ListenerArn": {
           "Ref": "AlbListener318AEEBA",
         },
-        "Priority": 3,
+        "Priority": 4,
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
     },
@@ -590,6 +646,27 @@ exports[`Snapshot test 1`] = `
         },
         "IpProtocol": "tcp",
         "ToPort": 5001,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "AlbSecurityGrouptoTestStackApiServiceFargateServiceSecurityGroup7DD0AF4450024F600494": {
+      "Properties": {
+        "Description": "Load balancer to target",
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
+          ],
+        },
+        "FromPort": 5002,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 5002,
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
@@ -739,6 +816,7 @@ exports[`Snapshot test 1`] = `
       "DependsOn": [
         "AlbListenerApi0Rule033B7A48",
         "AlbListenerApi1RuleDF535F10",
+        "AlbListenerExtension0Rule76BF40E2",
         "ApiServiceTaskTaskRoleDefaultPolicy982AD2DC",
         "ApiServiceTaskTaskRole06F87EBE",
       ],
@@ -774,6 +852,13 @@ exports[`Snapshot test 1`] = `
             "ContainerPort": 5001,
             "TargetGroupArn": {
               "Ref": "AlbApiTargetGroup4B6AF19C",
+            },
+          },
+          {
+            "ContainerName": "PluginDaemon",
+            "ContainerPort": 5002,
+            "TargetGroupArn": {
+              "Ref": "AlbExtensionTargetGroup73E67323",
             },
           },
         ],
@@ -846,6 +931,31 @@ exports[`Snapshot test 1`] = `
           ],
         },
         "ToPort": 5001,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "ApiServiceFargateServiceSecurityGroupfromTestStackAlbSecurityGroup8A47F1DC5002033681A8": {
+      "DependsOn": [
+        "ApiServiceTaskTaskRoleDefaultPolicy982AD2DC",
+        "ApiServiceTaskTaskRole06F87EBE",
+      ],
+      "Properties": {
+        "Description": "Load balancer to target",
+        "FromPort": 5002,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "ApiServiceFargateServiceSecurityGroupE31C96C6",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup433229ED",
+            "GroupId",
+          ],
+        },
+        "ToPort": 5002,
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
@@ -1016,6 +1126,24 @@ exports[`Snapshot test 1`] = `
               {
                 "Name": "TEXT_GENERATION_TIMEOUT_MS",
                 "Value": "600000",
+              },
+              {
+                "Name": "ENDPOINT_URL_TEMPLATE",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                      "/e/{hook_id}",
+                    ],
+                  ],
+                },
               },
             ],
             "Essential": true,
