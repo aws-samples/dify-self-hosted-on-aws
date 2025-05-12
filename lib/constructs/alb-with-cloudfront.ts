@@ -139,7 +139,13 @@ export class AlbWithCloudFront extends Construct implements IAlb {
     this.listener = listener;
   }
 
-  public addEcsService(id: string, ecsService: IEcsLoadBalancerTarget, port: number, healthCheckPath: string, paths: string[]) {
+  public addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ) {
     // we need different target group ids for different albs because a single target group can be attached to only one alb.
     const group = new ApplicationTargetGroup(this, `${id}TargetGroupInternal`, {
       vpc: this.vpc,

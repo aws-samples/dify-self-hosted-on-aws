@@ -38,7 +38,13 @@ export interface AlbProps {
 
 export interface IAlb {
   url: string;
-  addEcsService(id: string, ecsService: IEcsLoadBalancerTarget, port: number, healthCheckPath: string, paths: string[]): void;
+  addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ): void;
 }
 
 export class Alb extends Construct implements IAlb {
@@ -100,7 +106,13 @@ export class Alb extends Construct implements IAlb {
     this.listener = listener;
   }
 
-  public addEcsService(id: string, ecsService: IEcsLoadBalancerTarget, port: number, healthCheckPath: string, paths: string[]) {
+  public addEcsService(
+    id: string,
+    ecsService: IEcsLoadBalancerTarget,
+    port: number,
+    healthCheckPath: string,
+    paths: string[],
+  ) {
     const group = new ApplicationTargetGroup(this, `${id}TargetGroup`, {
       vpc: this.vpc,
       targets: [ecsService],
