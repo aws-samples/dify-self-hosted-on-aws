@@ -257,7 +257,7 @@ export const props: EnvironmentProps = {
 
 ### Setup Email (SMTP) for user invitation
 
-You can let Dify send emails to invite new users or reset passwords. To enable the feature, set `setupEmail` property to `true` in `bin/cdk.ts` first. Note that you can only configure one email server (Amazon SES Identity) per `domainName` property.
+You can let Dify send emails to invite new users or reset passwords. To enable the feature, set `setupEmail` and `domainName` property in `bin/cdk.ts`. Note that you can only configure one email server (Amazon SES Identity) per `domainName` property.
 
 After a successful deployment, you have to move out from SES sandbox to send emails to non-verified addresses and domains. Please refer to the document for more details: [Request production access (Moving out of the Amazon SES sandbox)](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 
