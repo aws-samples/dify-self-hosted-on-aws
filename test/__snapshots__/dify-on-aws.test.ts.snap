@@ -2424,6 +2424,7 @@ exports[`Snapshot test 1`] = `
               "Action": [
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream",
+                "bedrock:ListFoundationModels",
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
                 "bedrock:RetrieveAndGenerate",

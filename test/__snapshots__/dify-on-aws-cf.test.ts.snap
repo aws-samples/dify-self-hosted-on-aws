@@ -2752,6 +2752,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               "Action": [
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream",
+                "bedrock:ListFoundationModels",
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
                 "bedrock:RetrieveAndGenerate",
