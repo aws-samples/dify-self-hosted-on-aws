@@ -403,6 +403,7 @@ export class ApiService extends Construct {
         actions: [
           'bedrock:InvokeModel',
           'bedrock:InvokeModelWithResponseStream',
+          'bedrock:ListFoundationModels',
           'bedrock:Rerank',
           'bedrock:Retrieve',
           'bedrock:RetrieveAndGenerate',
