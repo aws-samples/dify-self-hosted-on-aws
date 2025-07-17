@@ -187,6 +187,45 @@ To deploy on a closed network, please follow the steps below:
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
+### WAF (Web Application Firewall) Configuration
+
+You can configure WAF to restrict access to your Dify application by IP addresses and countries. WAF settings are managed through environment variables.
+
+#### Environment Variables for WAF
+
+Set the following environment variables before deployment:
+
+```bash
+# IPv4 address restrictions (CIDR format)
+export ALLOWED_IPV4_CIDRS="203.0.113.0/24,198.51.100.0/24,192.168.1.100/32"
+
+# IPv6 address restrictions (optional)
+export ALLOWED_IPV6_CIDRS="2001:db8::/64"
+
+# Country code restrictions (optional)
+export ALLOWED_COUNTRY_CODES="JP,US"
+```
+
+#### Examples
+
+**Example 1: Office network only**
+```bash
+export ALLOWED_IPV4_CIDRS="203.0.113.0/24"
+export ALLOWED_COUNTRY_CODES="JP"
+```
+
+**Example 2: Multiple IP ranges**
+```bash
+export ALLOWED_IPV4_CIDRS="203.0.113.0/24,198.51.100.0/24,192.168.1.100/32"
+```
+
+**Example 3: No restrictions (allow all access)**
+```bash
+export ALLOWED_IPV4_CIDRS="0.0.0.0/0"
+```
+
+For more detailed information, see [WAF_SETUP.md](./WAF_SETUP.md) and [waf-config-examples.md](./waf-config-examples.md).
+
 ### Additional Environment Variables
 
 You can configure additional environment variables for Dify containers by using the `additionalEnvironmentVariables` property:
