@@ -21,7 +21,7 @@ export const props: EnvironmentProps = {
 
   // WAF設定 - 環境変数からIPアドレスを読み取り
   // 環境変数が設定されていない場合は、すべてのIPアドレスを許可（デフォルト）
-  allowedIPv4Cidrs: parseIpAddresses(process.env.ALLOWED_IPV4_CIDRS) || ['0.0.0.0/0'],
+  allowedIPv4Cidrs: parseIpAddresses(process.env.ALLOWED_IPV4_CIDRS),
   allowedIPv6Cidrs: parseIpAddresses(process.env.ALLOWED_IPV6_CIDRS),
   allowedCountryCodes: parseIpAddresses(process.env.ALLOWED_COUNTRY_CODES),
 
