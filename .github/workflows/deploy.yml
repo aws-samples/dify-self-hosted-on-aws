@@ -7,25 +7,28 @@
 #   対応する AWS アカウントへ CDK によるインフラデプロイを実行する。
 #
 # ブランチごとのデプロイ先:
-#   - dev ブランチ  → POC 用 AWS（アカウントID: 058264089195）
-#   - main ブランチ → 本番用 AWS（アカウントID: 478681634885）
+#   - dev ブランチ  → POC 用 AWS（アカウントIDはGitHub Secretsで管理）
+#   - main ブランチ → 本番用 AWS（アカウントIDはGitHub Secretsで管理）
 #
 # 前提条件:
 #   - CDK プロジェクトは既に存在しており、bootstrap 済み（初期化）
 #   - GitHub Secrets に以下の環境別 AWS 認証情報が登録されていること
 #       - AWS_ACCESS_KEY_ID_DEV / AWS_SECRET_ACCESS_KEY_DEV
 #       - AWS_ACCESS_KEY_ID_PROD / AWS_SECRET_ACCESS_KEY_PROD
+#       - AWS_ACCOUNT_ID_DEV / AWS_ACCOUNT_ID_PROD (AWSアカウントID)
 #
 #   ※ GitHub Secrets の登録手順:
 #     1. GitHub リポジトリのページにアクセス
 #     2. [Settings] → [Secrets and variables] → [Actions] を開く
 #     3. 「New repository secret」をクリック
-#     4. 名前に以下のいずれかを入力し、該当する AWS IAM ユーザーのキーを貼り付ける
+#     4. 名前に以下のいずれかを入力し、該当する値を貼り付ける
 #        - AWS_ACCESS_KEY_ID_DEV
 #        - AWS_SECRET_ACCESS_KEY_DEV
 #        - AWS_ACCESS_KEY_ID_PROD
 #        - AWS_SECRET_ACCESS_KEY_PROD
-#     5. 同様に必要な4つの Secret をすべて登録する
+#        - AWS_ACCOUNT_ID_DEV (例: 05826xxxxxxx)
+#        - AWS_ACCOUNT_ID_PROD (例: 47868xxxxxxx)
+#     5. 同様に必要な6つの Secret をすべて登録する
 #
 #   ※ IAM ユーザーには CDK デプロイに必要な権限（例: CloudFormation, IAM, S3, Lambda 等）が付与されていること
 # ===================================================================================
@@ -70,10 +73,10 @@ jobs:
           echo "BRANCH_NAME=$BRANCH" >> $GITHUB_ENV
 
           if [[ "$BRANCH" == "dev" ]]; then
-            echo "AWS_ACCOUNT_ID=058264089195" >> $GITHUB_ENV
+            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=dev" >> $GITHUB_ENV
           elif [[ "$BRANCH" == "main" ]]; then
-            echo "AWS_ACCOUNT_ID=478681634885" >> $GITHUB_ENV
+            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=prod" >> $GITHUB_ENV
           fi
         # ブランチに応じて AWS 認証情報と環境を設定
