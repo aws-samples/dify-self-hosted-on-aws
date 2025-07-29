@@ -7,28 +7,26 @@
 #   対応する AWS アカウントへ CDK によるインフラデプロイを実行する。
 #
 # ブランチごとのデプロイ先:
-#   - dev ブランチ  → POC 用 AWS（アカウントIDはGitHub Secretsで管理）
-#   - main ブランチ → 本番用 AWS（アカウントIDはGitHub Secretsで管理）
+#   - dev ブランチ  → dev 環境（POC用）
+#   - main ブランチ → main 環境（本番用）
 #
 # 前提条件:
 #   - CDK プロジェクトは既に存在しており、bootstrap 済み（初期化）
-#   - GitHub Secrets に以下の環境別 AWS 認証情報が登録されていること
-#       - AWS_ACCESS_KEY_ID_DEV / AWS_SECRET_ACCESS_KEY_DEV
-#       - AWS_ACCESS_KEY_ID_PROD / AWS_SECRET_ACCESS_KEY_PROD
-#       - AWS_ACCOUNT_ID_DEV / AWS_ACCOUNT_ID_PROD (AWSアカウントID)
+#   - GitHub Environments に dev と main を作成済み
+#   - 各 Environment に以下のシークレットが登録されていること
+#       - AWS_ACCESS_KEY_ID
+#       - AWS_SECRET_ACCESS_KEY
+#       - AWS_ACCOUNT_ID
 #
-#   ※ GitHub Secrets の登録手順:
+#   ※ GitHub Environments の設定手順:
 #     1. GitHub リポジトリのページにアクセス
-#     2. [Settings] → [Secrets and variables] → [Actions] を開く
-#     3. 「New repository secret」をクリック
-#     4. 名前に以下のいずれかを入力し、該当する値を貼り付ける
-#        - AWS_ACCESS_KEY_ID_DEV
-#        - AWS_SECRET_ACCESS_KEY_DEV
-#        - AWS_ACCESS_KEY_ID_PROD
-#        - AWS_SECRET_ACCESS_KEY_PROD
-#        - AWS_ACCOUNT_ID_DEV (例: 05826xxxxxxx)
-#        - AWS_ACCOUNT_ID_PROD (例: 47868xxxxxxx)
-#     5. 同様に必要な6つの Secret をすべて登録する
+#     2. [Settings] → [Environments] を開く
+#     3. 「New environment」をクリックし「dev」と「main」を作成
+#     4. 各環境の設定ページで「Add secret」をクリック
+#     5. 以下のシークレットを登録:
+#        - AWS_ACCESS_KEY_ID
+#        - AWS_SECRET_ACCESS_KEY
+#        - AWS_ACCOUNT_ID (例: 058260000000)
 #
 #   ※ IAM ユーザーには CDK デプロイに必要な権限（例: CloudFormation, IAM, S3, Lambda 等）が付与されていること
 # ===================================================================================
@@ -44,6 +42,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
+    # ブランチに応じて適切な環境を選択
+    environment: ${{ github.ref == 'refs/heads/main' && 'main' || 'dev' }}
 
     env:
       AWS_REGION: ap-northeast-1  # リージョン（日本）
@@ -67,31 +68,17 @@ jobs:
         run: npm install -g aws-cdk
         # CDK コマンドラインツールをインストール
 
-      - name: Set AWS credentials and deployment environment
-        run: |
-          BRANCH=${GITHUB_REF##*/}  # refs/heads/dev → dev
-          echo "BRANCH_NAME=$BRANCH" >> $GITHUB_ENV
-
-          if [[ "$BRANCH" == "dev" ]]; then
-            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
-            echo "DEPLOY_ENV=dev" >> $GITHUB_ENV
-          elif [[ "$BRANCH" == "main" ]]; then
-            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
-            echo "DEPLOY_ENV=prod" >> $GITHUB_ENV
-          fi
-        # ブランチに応じて AWS 認証情報と環境を設定
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ github.ref == 'refs/heads/dev' && secrets.AWS_ACCESS_KEY_ID_DEV || secrets.AWS_ACCESS_KEY_ID_PROD }}
-          aws-secret-access-key: ${{ github.ref == 'refs/heads/dev' && secrets.AWS_SECRET_ACCESS_KEY_DEV || secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-        # 設定した AWS 認証情報を使って AWS CLI/CDK を認証
+        # Environment に設定された AWS 認証情報を使って AWS CLI/CDK を認証
 
       - name: Deploy CDK Stack
         run: |
-          export CDK_DEFAULT_ACCOUNT=${{ env.AWS_ACCOUNT_ID }}
+          export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
           export CDK_DEFAULT_REGION=${{ env.AWS_REGION }}
           
           cdk deploy --all --require-approval never
@@ -101,6 +88,6 @@ jobs:
         if: success()
         run: |
           echo "✅ Deployment successful!"
-          echo "Environment: ${{ env.DEPLOY_ENV }}"
-          echo "AWS Account: ${{ env.AWS_ACCOUNT_ID }}"
+          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'main' || 'dev' }}"
+          echo "AWS Account: ${{ secrets.AWS_ACCOUNT_ID }}"
           echo "Region: ${{ env.AWS_REGION }}"
