@@ -66,17 +66,17 @@ jobs:
           diff=$(npx cdk diff --all 2>&1) || true
           echo "$diff"
 
-          # GitHubの出力変数に保存（複数行対応）
-          echo "cdk_diff<<EOF" >> $GITHUB_OUTPUT
-          echo "$diff" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # GitHubの出力変数に保存（Base64エンコード）
+          echo "cdk_diff=$(echo "$diff" | base64 -w 0)" >> $GITHUB_OUTPUT
 
       - name: Comment PR
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const diff = `${{ steps.cdk-diff.outputs.cdk_diff }}`;
+            // Base64デコードしてCDK diff出力を取得
+            const base64Diff = '${{ steps.cdk-diff.outputs.cdk_diff }}';
+            const diff = base64Diff ? Buffer.from(base64Diff, 'base64').toString('utf-8') : '';
 
             const body = diff ? `## 📋 CDK Diff Results
                         
