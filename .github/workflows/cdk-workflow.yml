@@ -59,8 +59,8 @@ jobs:
         run: |
           export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
           export CDK_DEFAULT_REGION=us-west-2
-          export ALLOWED_IPV4_CIDRS="${{ vars.ALLOWED_IPV4_CIDRS }}"
-          export ALLOWED_COUNTRY_CODES="${{ vars.ALLOWED_COUNTRY_CODES }}"
+          export ALLOWED_IPV4_CIDRS="${{ secrets.ALLOWED_IPV4_CIDRS }}"
+          export ALLOWED_COUNTRY_CODES="${{ secrets.ALLOWED_COUNTRY_CODES }}"
 
           # CDK diffを実行し、結果を取得（マルチリージョン対応）
           diff=$(npx cdk diff --all 2>&1) || true

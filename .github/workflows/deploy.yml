@@ -77,8 +77,8 @@ jobs:
         run: |
           export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
           export CDK_DEFAULT_REGION=us-west-2
-          export ALLOWED_IPV4_CIDRS="${{ vars.ALLOWED_IPV4_CIDRS }}"
-          export ALLOWED_COUNTRY_CODES="${{ vars.ALLOWED_COUNTRY_CODES }}"
+          export ALLOWED_IPV4_CIDRS="${{ secrets.ALLOWED_IPV4_CIDRS }}"
+          export ALLOWED_COUNTRY_CODES="${{ secrets.ALLOWED_COUNTRY_CODES }}"
 
           cdk deploy --all --require-approval never
         # すべての CDK スタックをデプロイ
