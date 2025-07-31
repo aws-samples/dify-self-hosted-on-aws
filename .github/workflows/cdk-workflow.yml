@@ -52,15 +52,17 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-1
+          aws-region: us-west-2
           
       - name: CDK Diff
         id: cdk-diff
         run: |
           export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
-          export CDK_DEFAULT_REGION=ap-northeast-1
+          export CDK_DEFAULT_REGION=us-west-2
+          export ALLOWED_IPV4_CIDRS="${{ vars.ALLOWED_IPV4_CIDRS }}"
+          export ALLOWED_COUNTRY_CODES="${{ vars.ALLOWED_COUNTRY_CODES }}"
           
-          # CDK diffを実行し、結果を取得
+          # CDK diffを実行し、結果を取得（マルチリージョン対応）
           diff=$(npx cdk diff --all 2>&1) || true
           echo "$diff"
           
