@@ -8,7 +8,10 @@ import { EnvironmentProps } from '../lib/environment-props';
 // 環境変数からIPアドレスを読み取る関数
 const parseIpAddresses = (envVar: string | undefined): string[] | undefined => {
   if (!envVar) return undefined;
-  return envVar.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+  return envVar
+    .split(',')
+    .map((ip) => ip.trim())
+    .filter((ip) => ip.length > 0);
 };
 
 export const props: EnvironmentProps = {
@@ -37,7 +40,10 @@ export const props: EnvironmentProps = {
 const app = new cdk.App();
 
 let virginia: UsEast1Stack | undefined = undefined;
-if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs || props.allowedCountryCodes)) {
+if (
+  (props.useCloudFront ?? true) &&
+  (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs || props.allowedCountryCodes)
+) {
   // add a unique suffix to prevent collision with different Dify instances in the same account.
   virginia = new UsEast1Stack(app, `DifyOnAwsUsEast1Stack${props.subDomain ? `-${props.subDomain}` : ''}`, {
     env: { region: 'us-east-1', account: props.awsAccount },

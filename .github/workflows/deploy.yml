@@ -1,0 +1,92 @@
+# ===================================================================================
+# GitHub Actions Workflow: AWS CDK 自動デプロイ用（土佐作成）
+# （対象リポジトリ：dify-self-hosted-on-aws）
+#
+# 概要:
+#   dev または main ブランチに push（マージ）された際に、
+#   対応する AWS アカウントへ CDK によるインフラデプロイを実行する。
+#
+# ブランチごとのデプロイ先:
+#   - dev ブランチ  → dev 環境（POC用）
+#   - main ブランチ → main 環境（本番用）
+#
+# 前提条件:
+#   - CDK プロジェクトは既に存在しており、bootstrap 済み（初期化）
+#   - GitHub Environments に dev と main を作成済み
+#   - 各 Environment に以下のシークレットが登録されていること
+#       - AWS_ACCESS_KEY_ID
+#       - AWS_SECRET_ACCESS_KEY
+#       - AWS_ACCOUNT_ID
+#
+#   ※ GitHub Environments の設定手順:
+#     1. GitHub リポジトリのページにアクセス
+#     2. [Settings] → [Environments] を開く
+#     3. 「New environment」をクリックし「dev」と「main」を作成
+#     4. 各環境の設定ページで「Add secret」をクリック
+#     5. 以下のシークレットを登録:
+#        - AWS_ACCESS_KEY_ID
+#        - AWS_SECRET_ACCESS_KEY
+#        - AWS_ACCOUNT_ID (例: 058260000000)
+#
+#   ※ IAM ユーザーには CDK デプロイに必要な権限（例: CloudFormation, IAM, S3, Lambda 等）が付与されていること
+# ===================================================================================
+
+name: Deploy CDK to AWS
+
+on:
+  push:
+    branches:
+      - dev # dev ブランチに push されたら実行
+      - main # main ブランチに push されたら実行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # ブランチに応じて適切な環境を選択
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        # GitHub リポジトリのコードをチェックアウト
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        # CDK 実行に必要な Node.js をセットアップ
+
+      - name: Install NPM dependencies
+        run: npm ci
+        # パッケージをクリーンインストール（package-lock.json を使用）
+
+      - name: Install AWS CDK CLI globally
+        run: npm install -g aws-cdk
+        # CDK コマンドラインツールをインストール
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+        # Environment に設定された AWS 認証情報を使って AWS CLI/CDK を認証
+
+      - name: Deploy CDK Stack
+        run: |
+          export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
+          export CDK_DEFAULT_REGION=us-west-2
+          export ALLOWED_IPV4_CIDRS="${{ secrets.ALLOWED_IPV4_CIDRS }}"
+          export ALLOWED_COUNTRY_CODES="${{ secrets.ALLOWED_COUNTRY_CODES }}"
+
+          cdk deploy --all --require-approval never
+        # すべての CDK スタックをデプロイ
+
+      - name: Deploy Success Notification
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'main' || 'dev' }}"
+          echo "AWS Account: ${{ secrets.AWS_ACCOUNT_ID }}"
+          echo "Region: us-west-2"
