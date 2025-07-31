@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # ブランチに応じて適切な環境を選択
-    environment: ${{ github.ref == 'refs/heads/main' && 'main' || 'dev' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout source code

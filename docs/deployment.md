@@ -29,7 +29,7 @@ source set-env.sh && npx cdk deploy --all
 
 以下の環境を作成してください：
 - `dev` - 開発環境用
-- `main` - 本番環境用
+- `prod` - 本番環境用
 
 #### 2. Environment Secrets（各環境に設定）
 
@@ -50,7 +50,7 @@ source set-env.sh && npx cdk deploy --all
 
 1. GitHub リポジトリのページにアクセス
 2. [Settings] → [Environments] を開く
-3. 「New environment」をクリックし「dev」と「main」を作成
+3. 「New environment」をクリックし「dev」と「prod」を作成
 4. 各環境の設定ページで「Add secret」をクリックし、上記のシークレットを登録
 5. [Settings] → [Secrets and variables] → [Actions] を開く
 6. 「Variables」タブで「New repository variable」をクリックし、上記の変数を登録
