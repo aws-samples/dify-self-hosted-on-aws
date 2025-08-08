@@ -3666,7 +3666,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                   "PrimaryEndPoint.Address",
                 ],
               },
-              ":6379/1",
+              ":6379/1?ssl_cert_reqs=optional",
             ],
           ],
         },

@@ -59,7 +59,8 @@ export class Redis extends Construct implements ec2.IConnectable {
     this.endpoint = redis.attrPrimaryEndPointAddress;
 
     this.brokerUrl = new StringParameter(this, 'BrokerUrl', {
-      stringValue: `rediss://:${secret.secretValue.unsafeUnwrap()}@${this.endpoint}:${this.port}/1`,
+      // Celery crashes when ssl_cert_reqs is not set
+      stringValue: `rediss://:${secret.secretValue.unsafeUnwrap()}@${this.endpoint}:${this.port}/1?ssl_cert_reqs=optional`,
     });
 
     this.connections = new ec2.Connections({ securityGroups: [securityGroup], defaultPort: ec2.Port.tcp(this.port) });
