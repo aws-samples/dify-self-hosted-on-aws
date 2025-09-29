@@ -26,7 +26,7 @@ export const props: EnvironmentProps = {
   // 環境変数が設定されていない場合は、すべてのIPアドレスを許可（デフォルト）
   allowedIPv4Cidrs: parseIpAddresses(process.env.ALLOWED_IPV4_CIDRS),
   allowedIPv6Cidrs: parseIpAddresses(process.env.ALLOWED_IPV6_CIDRS),
-  // allowedCountryCodes: parseIpAddresses(process.env.ALLOWED_COUNTRY_CODES),
+  allowedCountryCodes: parseIpAddresses(process.env.ALLOWED_COUNTRY_CODES),
 
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
@@ -40,7 +40,10 @@ export const props: EnvironmentProps = {
 const app = new cdk.App();
 
 let virginia: UsEast1Stack | undefined = undefined;
-if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs)) {
+if (
+  (props.useCloudFront ?? true) &&
+  (props.domainName || props.allowedIPv4Cidrs || props.allowedIPv6Cidrs || props.allowedCountryCodes)
+) {
   // add a unique suffix to prevent collision with different Dify instances in the same account.
   virginia = new UsEast1Stack(app, `DifyOnAwsUsEast1Stack${props.subDomain ? `-${props.subDomain}` : ''}`, {
     env: { region: 'us-east-1', account: props.awsAccount },
@@ -48,7 +51,7 @@ if ((props.useCloudFront ?? true) && (props.domainName || props.allowedIPv4Cidrs
     domainName: props.domainName,
     allowedIpV4AddressRanges: props.allowedIPv4Cidrs,
     allowedIpV6AddressRanges: props.allowedIPv6Cidrs,
-    // allowedCountryCodes: props.allowedCountryCodes,
+    allowedCountryCodes: props.allowedCountryCodes,
   });
 }
 
