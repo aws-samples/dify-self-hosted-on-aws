@@ -22,11 +22,11 @@ export const props: EnvironmentProps = {
   // Set plugin-daemon version to stable release
   difyPluginDaemonImageTag: '0.1.2-local',
 
-  // WAF設定 - 環境変数からIPアドレスを読み取り
+  // WAF設定 - 一時的に無効化（すべてのアクセスを許可）
   // 環境変数が設定されていない場合は、すべてのIPアドレスを許可（デフォルト）
-  allowedIPv4Cidrs: parseIpAddresses(process.env.ALLOWED_IPV4_CIDRS),
-  allowedIPv6Cidrs: parseIpAddresses(process.env.ALLOWED_IPV6_CIDRS),
-  allowedCountryCodes: parseIpAddresses(process.env.ALLOWED_COUNTRY_CODES),
+  allowedIPv4Cidrs: undefined, // parseIpAddresses(process.env.ALLOWED_IPV4_CIDRS),
+  allowedIPv6Cidrs: undefined, // parseIpAddresses(process.env.ALLOWED_IPV6_CIDRS),
+  allowedCountryCodes: undefined, // parseIpAddresses(process.env.ALLOWED_COUNTRY_CODES),
 
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
