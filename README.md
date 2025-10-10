@@ -134,6 +134,7 @@ The below are the list of configurable parameters and their default values:
         2. web: 256vCPU / 512MB
     2. Desired Count
         1. 1 task for each service
+        2. Currently the count of api service should be fixed to 1, because Dify plugin-daemon does not support scaling out well (See [dify-plugin-daemon#390](https://github.com/langgenius/dify-plugin-daemon/issues/390)). 
 2. ElastiCache ([redis.ts](./lib/constructs/redis.ts))
     1. Node Type: `cache.t4g.micro`
     2. Node Count: 1
@@ -186,6 +187,9 @@ To deploy on a closed network, please follow the steps below:
 5. Deploy the CDK project following the [Deploy](#deploy) section.
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
+
+> [!WARNING]
+> From Dify v1, you often need access to the PyPI server to install Dify plugins, which happens every time the plugin-daemon container starts. You can use solutions like [pypi-mirror](https://pypi.org/project/python-pypi-mirror/) to avoid the limitation. See [issue#69](https://github.com/aws-samples/dify-self-hosted-on-aws/issues/69) for more details.
 
 ### Additional Environment Variables
 
