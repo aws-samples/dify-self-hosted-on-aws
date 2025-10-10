@@ -270,17 +270,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             {
               "Ref": "ClusterEB0386A7",
             },
-            " --container Main --interactive --command "bash" --task TASK_ID",
-          ],
-        ],
-      },
-    },
-    "ConsoleListTasksCommand": {
-      "Value": {
-        "Fn::Join": [
-          "",
-          [
-            "aws ecs list-tasks --region us-west-2 --cluster ",
+            " --container Main --interactive --command "bash" --task $(aws ecs list-tasks --region us-west-2 --cluster ",
             {
               "Ref": "ClusterEB0386A7",
             },
@@ -291,7 +281,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Name",
               ],
             },
-            " --desired-status RUNNING",
+            " --desired-status RUNNING --query 'taskArns[0]' --output text)",
           ],
         ],
       },
