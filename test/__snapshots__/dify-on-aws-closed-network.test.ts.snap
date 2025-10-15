@@ -2397,6 +2397,7 @@ exports[`Snapshot test 1`] = `
             },
             {
               "Action": [
+                "bedrock:GetInferenceProfile",
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:ListFoundationModels",

@@ -401,6 +401,7 @@ export class ApiService extends Construct {
     taskDefinition.taskRole.addToPrincipalPolicy(
       new PolicyStatement({
         actions: [
+          'bedrock:GetInferenceProfile',
           'bedrock:InvokeModel',
           'bedrock:InvokeModelWithResponseStream',
           'bedrock:ListFoundationModels',
