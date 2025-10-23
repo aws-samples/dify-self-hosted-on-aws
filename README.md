@@ -17,10 +17,11 @@ Key Features:
 ## Quick Start
 
 For a quick and convenient deployment, you can use the one-click deployment option available at:
-* [One-Click Deployment for Dify on AWS](https://github.com/aws-samples/sample-one-click-generative-ai-solutions?tab=readme-ov-file#dify-on-aws)
+* [One-Click Deployment for Dify on AWS](https://aws-samples.github.io/sample-one-click-generative-ai-solutions/en/solutions/dify/)
 
-本リポジトリの使い方について、日本語で書かれた記事もあります: 
-* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f) ( [CloudShell版](https://note.com/yukkie1114/n/n8e055c4e7566) )
+本リポジトリの使い方について、日本語で書かれた資料もあります: 
+* [Dify on AWS 環境構築手順 (スライド形式)](https://speakerdeck.com/yosse95ai/dify-on-aws-huan-jing-gou-zhu-shou-shun)
+* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n8e055c4e7566)
 * [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
 
 ## Prerequisites
