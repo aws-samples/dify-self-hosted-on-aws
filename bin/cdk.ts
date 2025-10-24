@@ -18,9 +18,9 @@ export const props: EnvironmentProps = {
   awsRegion: 'us-west-2',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
   // Set Dify version
-  difyImageTag: '1.4.3',
+  difyImageTag: '1.9.1',
   // Set plugin-daemon version to stable release
-  difyPluginDaemonImageTag: '0.1.2-local',
+  difyPluginDaemonImageTag: '0.3.1-local',
 
   // WAF設定 - 環境変数からIPアドレスを読み取り
   // 環境変数が設定されていない場合は、すべてのIPアドレスを許可（デフォルト）

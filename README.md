@@ -17,10 +17,11 @@ Key Features:
 ## Quick Start
 
 For a quick and convenient deployment, you can use the one-click deployment option available at:
-* [One-Click Deployment for Dify on AWS](https://github.com/aws-samples/sample-one-click-generative-ai-solutions?tab=readme-ov-file#dify-on-aws)
+* [One-Click Deployment for Dify on AWS](https://aws-samples.github.io/sample-one-click-generative-ai-solutions/en/solutions/dify/)
 
-本リポジトリの使い方について、日本語で書かれた記事もあります: 
-* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n0d9c5551569f) ( [CloudShell版](https://note.com/yukkie1114/n/n8e055c4e7566) )
+本リポジトリの使い方について、日本語で書かれた資料もあります: 
+* [Dify on AWS 環境構築手順 (スライド形式)](https://speakerdeck.com/yosse95ai/dify-on-aws-huan-jing-gou-zhu-shou-shun)
+* [AWS CDKでDifyを一撃構築](https://note.com/yukkie1114/n/n8e055c4e7566)
 * [AWSマネージドサービスで Dify のセルフホスティングを試してみた](https://dev.classmethod.jp/articles/dify-self-hosting-aws/)
 
 ## Prerequisites
@@ -32,9 +33,6 @@ You must have the following dependencies installed to deploy this app:
 
 ## Deploy
 You can adjust configuration parameters such as AWS regions by modifying [`bin/cdk.ts`](bin/cdk.ts). Please also check [`EnvironmentProps` interface](./lib/environment-props.ts) for all the available parameters.
-
-> [!IMPORTANT]
-> > If you are upgrading from Dify v0 to v1, please refer to [Upgrading Dify v0 to v1](#upgrading-dify-v0-to-v1).
 
 Then you can run the following commands to deploy the entire stack.
 
@@ -134,6 +132,7 @@ The below are the list of configurable parameters and their default values:
         2. web: 256vCPU / 512MB
     2. Desired Count
         1. 1 task for each service
+        2. Currently the count of api service should be fixed to 1, because Dify plugin-daemon does not support scaling out well (See [dify-plugin-daemon#390](https://github.com/langgenius/dify-plugin-daemon/issues/390)). 
 2. ElastiCache ([redis.ts](./lib/constructs/redis.ts))
     1. Node Type: `cache.t4g.micro`
     2. Node Count: 1
@@ -187,6 +186,9 @@ To deploy on a closed network, please follow the steps below:
 6. After the deployment, please configure Bedrock in Dify with the same AWS region as your VPC (see [setup section](#setup-dify-to-use-bedrock))
     * This is **only required** if Bedrock API in other regions are not accessible from your vpc subnets.
 
+> [!WARNING]
+> From Dify v1, you often need access to the PyPI server to install Dify plugins, which happens every time the plugin-daemon container starts. You can use solutions like [pypi-mirror](https://pypi.org/project/python-pypi-mirror/) to avoid the limitation. See [issue#69](https://github.com/aws-samples/dify-self-hosted-on-aws/issues/69) for more details.
+
 ### Additional Environment Variables
 
 You can configure additional environment variables for Dify containers by using the `additionalEnvironmentVariables` property:
@@ -224,7 +226,7 @@ You can connect to [Notion](https://www.notion.com/) data by the following steps
 
 1. Obtain the Notion Secret Token: [Notion - Authorization](https://developers.notion.com/docs/authorization).
 
-2. Create a Screts Manager secret for the token:
+2. Create a Secrets Manager secret for the token:
 ```sh
  NOTION_INTERNAL_SECRET="NOTION_SECRET_REPLACE_THIS"
  aws secretsmanager create-secret \
@@ -261,23 +263,30 @@ You can let Dify send emails to invite new users or reset passwords. To enable t
 
 After a successful deployment, you have to move out from SES sandbox to send emails to non-verified addresses and domains. Please refer to the document for more details: [Request production access (Moving out of the Amazon SES sandbox)](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 
-### Upgrading Dify v0 to v1
-When you upgrade Dify from v0 to v1, you need to execute some migration steps described below.
+### Running commands in Dify container
 
-1. Set `autoMigration: false` in lib/dify-on-aws-stack.ts (`ApiService` construct).
-2. Deploy the project with `difyImageTag: 1.0.0` (`bin/cdk.ts`), and you will get two commands required for the next steps
-   ```sh
-    DifyOnAwsStack.ConsoleConnectToTaskCommand = aws ecs execute-command --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted --container Main --interactive --command "bash" --task TASK_ID
-    DifyOnAwsStack.ConsoleListTasksCommand = aws ecs list-tasks --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted  --service-name DifyOnAwsStack-ApiServiceFargateServiceE4EA9E4E-redacted --desired-status RUNNING
-   ```
-3. Run commands in `ConsoleListTasksCommand` to get the ECS task ARN
-4. Replace `TASK_ID` in `ConsoleConnectToTaskCommand` with the task ARN and run it
-5. You can now run commands in Dify environment, run the below two commands (c.f. [Dify v1.0.0 release note](https://github.com/langgenius/dify/releases/tag/1.0.0)):
-   ```sh
-   poetry run flask extract-plugins --workers=20
-   poetry run flask install-plugins --workers=2
-   ```
-6. After the commands run successfully, set `autoMigration: true`, and deploy CDK again. You should be now onboard with Dify v1.
+Dify occasionally requires manual command execution to handle breaking changes or perform maintenance tasks. This section describes how to connect to the Dify container and run commands.
+
+#### Connecting to the Dify API container
+
+After deployment, you can use the `ConsoleConnectToTaskCommand` output to connect to the dify-api container:
+
+```sh
+# Example output from deployment
+DifyOnAwsStack.ConsoleConnectToTaskCommand = aws ecs execute-command --region ap-northeast-1 --cluster DifyOnAwsStack-ClusterEB0386A7-redacted --container Main --interactive --command "bash" --task $(...)
+```
+
+Execute this command to start an interactive bash session in the container, where you can run any commands needed for maintenance or migration tasks.
+
+#### Upgrading Dify without automatic migration
+
+If you need to upgrade Dify without running automatic database migrations (e.g., to handle breaking changes manually), you can toggle the `autoMigration` flag:
+
+1. Set `autoMigration: false` in [lib/dify-on-aws-stack.ts](lib/dify-on-aws-stack.ts) (`ApiService` construct)
+2. Deploy the project with the new Dify version
+3. Use `ConsoleConnectToTaskCommand` to connect to the container
+4. Run the required migration or maintenance commands manually
+5. Set `autoMigration: true` and deploy again to re-enable automatic migrations
 
 ## Clean up
 To avoid incurring future charges, clean up the resources you created.
