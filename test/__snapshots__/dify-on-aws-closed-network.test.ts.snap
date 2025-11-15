@@ -1477,7 +1477,7 @@ exports[`Snapshot test 1`] = `
                 "Value": "pgvector",
               },
               {
-                "Name": "PLUGIN_API_URL",
+                "Name": "PLUGIN_DAEMON_URL",
                 "Value": "http://localhost:5002",
               },
               {

@@ -1811,7 +1811,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "Value": "pgvector",
               },
               {
-                "Name": "PLUGIN_API_URL",
+                "Name": "PLUGIN_DAEMON_URL",
                 "Value": "http://localhost:5002",
               },
               {
