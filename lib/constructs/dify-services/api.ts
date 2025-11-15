@@ -221,7 +221,7 @@ export class ApiService extends Construct {
         VECTOR_STORE: 'pgvector',
         PGVECTOR_DATABASE: postgres.pgVectorDatabaseName,
 
-        PLUGIN_API_URL: `http://localhost:${pluginDaemonPort}`,
+        PLUGIN_DAEMON_URL: `http://localhost:${pluginDaemonPort}`,
 
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
