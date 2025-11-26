@@ -90,6 +90,8 @@ export class ApiService extends Construct {
         SERVICE_API_URL: alb.url,
         // The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from console or api domain.
         APP_WEB_URL: alb.url,
+        // The base URL prefix for webhook callbacks in trigger feature, refers to the base URL of the current API service if trigger domain is different from api domain.
+        TRIGGER_URL: alb.url,
 
         // Enable pessimistic disconnect handling for recover from Aurora automatic pause
         // https://docs.sqlalchemy.org/en/20/core/pooling.html#disconnect-handling-pessimistic
@@ -433,7 +435,7 @@ export class ApiService extends Construct {
     postgres.connections.allowDefaultPortFrom(service);
     redis.connections.allowDefaultPortFrom(service);
 
-    const paths = ['/console/api', '/api', '/v1', '/files'];
+    const paths = ['/console/api', '/api', '/v1', '/files', '/triggers'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
     alb.addEcsService(
       'Extension',
