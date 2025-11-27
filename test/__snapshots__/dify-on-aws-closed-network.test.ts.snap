@@ -497,7 +497,7 @@ exports[`Snapshot test 1`] = `
                 "/api",
                 "/v1",
                 "/files",
-                "/console/api/*",
+                "/triggers",
               ],
             },
           },
@@ -524,9 +524,11 @@ exports[`Snapshot test 1`] = `
             "Field": "path-pattern",
             "PathPatternConfig": {
               "Values": [
+                "/console/api/*",
                 "/api/*",
                 "/v1/*",
                 "/files/*",
+                "/triggers/*",
               ],
             },
           },
@@ -1019,6 +1021,23 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "APP_WEB_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "AlbC1372A32",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "TRIGGER_URL",
                 "Value": {
                   "Fn::Join": [
                     "",
