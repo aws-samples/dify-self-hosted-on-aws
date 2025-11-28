@@ -1443,6 +1443,10 @@ exports[`Snapshot test 1`] = `
                 "Value": "http://localhost:5002",
               },
               {
+                "Name": "CODE_EXECUTION_ENDPOINT",
+                "Value": "http://localhost:8194",
+              },
+              {
                 "Name": "MARKETPLACE_API_URL",
                 "Value": "https://marketplace.dify.ai",
               },
@@ -1607,6 +1611,12 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "CODE_EXECUTION_API_KEY",
                 "ValueFrom": {
                   "Ref": "ApiServiceEncryptionSecretF73F9ECD",
                 },
