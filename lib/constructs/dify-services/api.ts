@@ -225,6 +225,9 @@ export class ApiService extends Construct {
 
         PLUGIN_DAEMON_URL: `http://localhost:${pluginDaemonPort}`,
 
+        // The sandbox service endpoint.
+        CODE_EXECUTION_ENDPOINT: 'http://localhost:8194',
+
         MARKETPLACE_API_URL: 'https://marketplace.dify.ai',
         MARKETPLACE_URL: 'https://marketplace.dify.ai',
         ...(email
@@ -254,6 +257,7 @@ export class ApiService extends Construct {
         REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
         CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
         SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+        CODE_EXECUTION_API_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         PLUGIN_DAEMON_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
         ...(email
           ? {
