@@ -11,7 +11,7 @@ export const props: EnvironmentProps = {
   // Set Dify version
   difyImageTag: '1.11.1',
   // Set plugin-daemon version to stable release
-  difyPluginDaemonImageTag: '0.4.1-local',
+  difyPluginDaemonImageTag: '0.5.1-local',
 
   // uncomment the below options for less expensive configuration:
   // isRedisMultiAz: false,
