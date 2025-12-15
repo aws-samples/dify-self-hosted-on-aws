@@ -49,7 +49,7 @@ exports[`Snapshot test (with CloudFront) 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -306,7 +306,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-west-2",
-          "S3Key": "9d043014be736e8162bcc7ec5590cc6d2ff24fd0d9c73a5c5d595151c5fdad00.zip",
+          "S3Key": "bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625.zip",
         },
         "Handler": "index.handler",
         "Role": {
@@ -315,7 +315,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
@@ -2836,7 +2836,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -2922,7 +2922,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -3164,7 +3164,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -3227,6 +3227,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "PostgresCluster53E5BDAB": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "AutoMinorVersionUpgrade": false,
         "CopyTagsToSnapshot": true,
         "DBClusterParameterGroupName": {
           "Ref": "PostgresParameterGroupC3694DF2",
@@ -3237,7 +3238,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "DatabaseName": "main",
         "EnableHttpEndpoint": true,
         "Engine": "aurora-postgresql",
-        "EngineVersion": "15.10",
+        "EngineVersion": "15.12",
         "MasterUserPassword": {
           "Fn::Join": [
             "",
@@ -4770,13 +4771,17 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "Role": {
           "Fn::GetAtt": [
             "cdksessmtpcredentialsCredentialsProvidersessmtpcredentialsproviderframeworkonEventServiceRoleFE45B538",
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
