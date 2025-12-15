@@ -38,7 +38,7 @@ export class Postgres extends Construct implements IConnectable {
 
     const { vpc } = props;
     const engine = rds.DatabaseClusterEngine.auroraPostgres({
-      version: rds.AuroraPostgresEngineVersion.VER_15_7,
+      version: rds.AuroraPostgresEngineVersion.VER_15_10,
     });
 
     const cluster = new rds.DatabaseCluster(this, 'Cluster', {

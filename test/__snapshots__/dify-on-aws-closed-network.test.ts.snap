@@ -2558,7 +2558,7 @@ exports[`Snapshot test 1`] = `
         "DatabaseName": "main",
         "EnableHttpEndpoint": true,
         "Engine": "aurora-postgresql",
-        "EngineVersion": "15.7",
+        "EngineVersion": "15.10",
         "MasterUserPassword": {
           "Fn::Join": [
             "",
