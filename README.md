@@ -132,7 +132,6 @@ The below are the list of configurable parameters and their default values:
         2. web: 256vCPU / 512MB
     2. Desired Count
         1. 1 task for each service
-        2. Currently the count of api service should be fixed to 1, because Dify plugin-daemon does not support scaling out well (See [dify-plugin-daemon#390](https://github.com/langgenius/dify-plugin-daemon/issues/390)). 
 2. ElastiCache ([redis.ts](./lib/constructs/redis.ts))
     1. Node Type: `cache.t4g.micro`
     2. Node Count: 1
