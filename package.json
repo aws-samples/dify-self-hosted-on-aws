@@ -1,5 +1,8 @@
 {
   "name": "dify-on-aws-cdk",
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "dify-on-aws-cdk": "bin/cdk.js"
   },
@@ -15,7 +18,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "20.12.7",
-    "aws-cdk": "^2.1007.0",
+    "aws-cdk": "^2.1101.0",
     "esbuild": "^0.25.0",
     "jest": "^29.7.0",
     "prettier": "^3.4.2",
