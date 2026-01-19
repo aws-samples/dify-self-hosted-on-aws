@@ -6,8 +6,10 @@ import { UsEast1Stack } from '../lib/us-east-1-stack';
 import { EnvironmentProps } from '../lib/environment-props';
 
 export const props: EnvironmentProps = {
-  awsRegion: 'us-west-2',
+  awsRegion: 'ap-northeast-1',
   awsAccount: process.env.CDK_DEFAULT_ACCOUNT!,
+  // Restrict access by source IPs (CloudFront WAF allowlist)
+  allowedIPv4Cidrs: ['52.192.191.92/32'],
   // Set Dify version
   difyImageTag: '1.11.4',
   // Set plugin-daemon version to stable release
