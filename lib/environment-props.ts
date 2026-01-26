@@ -180,6 +180,22 @@ export interface EnvironmentProps {
    * @default false
    */
   setupEmail?: boolean;
+
+  /**
+   * Basic認証設定（CloudFront使用時のみ有効）
+   * 特定のパスにBasic認証をかける場合に設定します。
+   */
+  basicAuth?: {
+    /**
+     * 認証をかけるパス（例: "/workflow/SX1sGkP1mtsUCxzo"）
+     */
+    readonly path: string;
+    /**
+     * SSM Parameter Store のパラメータ名（例: "/dify/basic-auth-credentials"）
+     * パラメータには "username:password" 形式の値を設定してください。
+     */
+    readonly ssmParameterName: string;
+  };
 }
 
 export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'sandbox';
