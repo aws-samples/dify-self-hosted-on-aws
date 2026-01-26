@@ -121,7 +121,6 @@ export class DifyOnAwsStack extends cdk.Stack {
           cloudFrontCertificate: props.cloudFrontCertificate,
           cloudFrontWebAclArn: props.cloudFrontWebAclArn,
           subDomain,
-          basicAuth: props.basicAuth,
         })
       : new Alb(this, 'Alb', {
           vpc,
