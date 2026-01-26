@@ -4,6 +4,9 @@ import {
   AllowedMethods,
   CachePolicy,
   Distribution,
+  Function as CloudFrontFunction,
+  FunctionCode,
+  FunctionEventType,
   OriginProtocolPolicy,
   OriginRequestPolicy,
   ViewerProtocolPolicy,
@@ -22,6 +25,7 @@ import {
 import { ARecord, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { IAlb } from './alb';
 import { AwsCustomResource, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
@@ -42,6 +46,16 @@ export interface AlbProps {
   cloudFrontCertificate?: ICertificate;
 
   cloudFrontWebAclArn?: string;
+
+  /**
+   * Basic認証設定（オプション）
+   */
+  basicAuth?: {
+    /** 認証をかけるパス（例: "/workflow/SX1sGkP1mtsUCxzo"） */
+    path: string;
+    /** SSM Parameter Store のパラメータ名（例: "/dify/basic-auth-credentials"） */
+    ssmParameterName: string;
+  };
 }
 
 export class AlbWithCloudFront extends Construct implements IAlb {
@@ -125,6 +139,67 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       'DistributionConfig.DefaultCacheBehavior.TargetOriginId',
       vpcOriginId,
     );
+
+    // Basic認証が設定されている場合、CloudFront Functionを作成して対象パスに適用
+    if (props.basicAuth) {
+      // SSMから認証情報を取得（synth時に取得）
+      const credentials = StringParameter.valueFromLookup(this, props.basicAuth.ssmParameterName);
+      const base64Credentials = Buffer.from(credentials).toString('base64');
+
+      // CloudFront Function定義
+      const basicAuthFunction = new CloudFrontFunction(this, 'BasicAuthFunction', {
+        code: FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var headers = request.headers;
+  var authString = "Basic ${base64Credentials}";
+
+  if (!headers.authorization || headers.authorization.value !== authString) {
+    return {
+      statusCode: 401,
+      statusDescription: 'Unauthorized',
+      headers: {
+        'www-authenticate': { value: 'Basic realm="Restricted"' }
+      }
+    };
+  }
+  return request;
+}
+        `),
+      });
+
+      // 対象パスにビヘイビア追加
+      distribution.addBehavior(`${props.basicAuth.path}*`, new LoadBalancerV2Origin(alb, { protocolPolicy: OriginProtocolPolicy.HTTP_ONLY }), {
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        compress: true,
+        cachePolicy: CachePolicy.USE_ORIGIN_CACHE_CONTROL_HEADERS_QUERY_STRINGS,
+        allowedMethods: AllowedMethods.ALLOW_ALL,
+        originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
+        functionAssociations: [
+          {
+            function: basicAuthFunction,
+            eventType: FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
+      });
+
+      // 追加したビヘイビアのオリジンもVpcOriginに変更する必要がある
+      // distribution.addBehaviorで追加されるオリジンは2番目になる
+      (distribution.node.defaultChild as CfnResource).addPropertyOverride('DistributionConfig.Origins.1', {
+        Id: `${vpcOriginId}BasicAuth`,
+        DomainName: alb.loadBalancerDnsName,
+        VpcOriginConfig: {
+          VpcOriginId: vpcOrigin.getAtt('Id'),
+        },
+      });
+      (distribution.node.defaultChild as CfnResource).addPropertyDeletionOverride(
+        'DistributionConfig.Origins.1.CustomOriginConfig',
+      );
+      (distribution.node.defaultChild as CfnResource).addPropertyOverride(
+        'DistributionConfig.CacheBehaviors.0.TargetOriginId',
+        `${vpcOriginId}BasicAuth`,
+      );
+    }
 
     if (props.hostedZone) {
       new ARecord(this, 'AliasRecord', {
