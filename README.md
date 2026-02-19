@@ -316,6 +316,8 @@ The following table provides a sample cost breakdown for deploying this system i
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 
+## Maintainers
+* [Hiroaki Yoshimura (@yhiroaky)](https://github.com/yhiroaky)
 
 ## Security
 
