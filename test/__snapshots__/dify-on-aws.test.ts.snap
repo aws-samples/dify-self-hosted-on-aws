@@ -2770,8 +2770,8 @@ exports[`Snapshot test 1`] = `
     "PostgresQuery0FD53F567": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "PostgresClusterWriterF88DD8CC",
         "PostgresQuery0CustomResourcePolicy41175230",
-        "PostgresWaitForHttpEndpointReady6D04AFAC",
       ],
       "Properties": {
         "Create": {
@@ -2949,24 +2949,6 @@ exports[`Snapshot test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "PostgresWaitForHttpEndpointReady6D04AFAC": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PostgresClusterWriterF88DD8CC",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "TimeSleepCustomResourceHandler494c1b460d2f4e3b9bfd0b2cf10162f981117264",
-            "Arn",
-          ],
-        },
-        "createDurationSeconds": 60,
-        "destroyDurationSeconds": 0,
-      },
-      "Type": "Custom::TimeSleep",
-      "UpdateReplacePolicy": "Delete",
     },
     "RedisAuthToken9E34F6A5": {
       "DeletionPolicy": "Delete",
@@ -3218,59 +3200,6 @@ exports[`Snapshot test 1`] = `
         },
       },
       "Type": "AWS::S3::BucketPolicy",
-    },
-    "TimeSleepCustomResourceHandler494c1b460d2f4e3b9bfd0b2cf10162f981117264": {
-      "DependsOn": [
-        "TimeSleepCustomResourceHandler494c1b460d2f4e3b9bfd0b2cf10162f9ServiceRole47E386BD",
-      ],
-      "Properties": {
-        "Code": {
-          "ZipFile": ""use strict";var o=Object.defineProperty;var n=Object.getOwnPropertyDescriptor;var d=Object.getOwnPropertyNames;var p=Object.prototype.hasOwnProperty;var u=(t,e)=>{for(var s in e)o(t,s,{get:e[s],enumerable:!0})},R=(t,e,s,a)=>{if(e&&typeof e=="object"||typeof e=="function")for(let r of d(e))!p.call(t,r)&&r!==s&&o(t,r,{get:()=>e[r],enumerable:!(a=n(e,r))||a.enumerable});return t};var S=t=>R(o({},"__esModule",{value:!0}),t);var l={};u(l,{handler:()=>g});module.exports=S(l);var c=require("timers/promises"),g=async(t,e)=>{try{switch(t.RequestType){case"Create":await(0,c.setTimeout)(t.ResourceProperties.createDurationSeconds*1e3);break;case"Update":break;case"Delete":await(0,c.setTimeout)(t.ResourceProperties.destroyDurationSeconds*1e3);break}await i("SUCCESS",t,e)}catch(s){console.log(s),await i("FAILED",t,e,s.message)}},i=async(t,e,s,a)=>{let r=JSON.stringify({Status:t,Reason:a??"See the details in CloudWatch Log Stream: "+s.logStreamName,PhysicalResourceId:s.logStreamName,StackId:e.StackId,RequestId:e.RequestId,LogicalResourceId:e.LogicalResourceId,NoEcho:!1,Data:{}});await fetch(e.ResponseURL,{method:"PUT",body:r,headers:{"Content-Type":"","Content-Length":r.length.toString()}})};0&&(module.exports={handler});
-",
-        },
-        "Handler": "index.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "TimeSleepCustomResourceHandler494c1b460d2f4e3b9bfd0b2cf10162f9ServiceRole47E386BD",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs24.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "TimeSleepCustomResourceHandler494c1b460d2f4e3b9bfd0b2cf10162f9ServiceRole47E386BD": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
     },
     "Vpc8378EB38": {
       "Properties": {
