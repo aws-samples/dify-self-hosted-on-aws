@@ -182,4 +182,4 @@ export interface EnvironmentProps {
   setupEmail?: boolean;
 }
 
-export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'sandbox';
+export type DifyContainerTypes = 'web' | 'api' | 'worker' | 'worker_beat' | 'sandbox';
