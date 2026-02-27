@@ -270,6 +270,50 @@ export class ApiService extends Construct {
       },
     });
 
+    taskDefinition.addContainer('WorkerBeat', {
+      image: customRepository
+        ? ecs.ContainerImage.fromEcrRepository(customRepository, `dify-api_${props.imageTag}`)
+        : ecs.ContainerImage.fromRegistry(`langgenius/dify-api:${props.imageTag}`),
+      environment: {
+        MODE: 'beat',
+        LOG_LEVEL: debug ? 'DEBUG' : 'ERROR',
+        DEBUG: debug ? 'true' : 'false',
+
+        // Enable pessimistic disconnect handling for recover from Aurora automatic pause
+        SQLALCHEMY_POOL_PRE_PING: 'True',
+
+        // The configurations of redis connection.
+        REDIS_HOST: redis.endpoint,
+        REDIS_PORT: redis.port.toString(),
+        REDIS_USE_SSL: 'true',
+        REDIS_DB: '0',
+
+        // The type of storage to use for storing user files.
+        STORAGE_TYPE: 's3',
+        S3_BUCKET_NAME: storageBucket.bucketName,
+        S3_REGION: Stack.of(storageBucket).region,
+        S3_USE_AWS_MANAGED_IAM: 'true',
+
+        DB_DATABASE: postgres.databaseName,
+
+        ...getAdditionalEnvironmentVariables(this, 'worker_beat', props.additionalEnvironmentVariables),
+      },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'log',
+      }),
+      secrets: {
+        DB_USERNAME: ecs.Secret.fromSecretsManager(postgres.secret, 'username'),
+        DB_HOST: ecs.Secret.fromSecretsManager(postgres.secret, 'host'),
+        DB_PORT: ecs.Secret.fromSecretsManager(postgres.secret, 'port'),
+        DB_PASSWORD: ecs.Secret.fromSecretsManager(postgres.secret, 'password'),
+        REDIS_PASSWORD: ecs.Secret.fromSecretsManager(redis.secret),
+        CELERY_BROKER_URL: ecs.Secret.fromSsmParameter(redis.brokerUrl),
+        SECRET_KEY: ecs.Secret.fromSecretsManager(encryptionSecret),
+
+        ...getAdditionalSecretVariables(this, 'worker_beat', props.additionalEnvironmentVariables),
+      },
+    });
+
     const sandboxFileContainer = taskDefinition.addContainer('SandboxFileMount', {
       image: ecs.ContainerImage.fromAsset(join(__dirname, 'docker', 'sandbox'), {
         platform: Platform.LINUX_AMD64,
