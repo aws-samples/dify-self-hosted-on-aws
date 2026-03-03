@@ -26,3 +26,7 @@ jobs:
           npm run test
         working-directory: ./
         name: snaphost test
+      - run: |
+          npx cdk synth
+        working-directory: ./
+        name: run cdk cli (synth)
