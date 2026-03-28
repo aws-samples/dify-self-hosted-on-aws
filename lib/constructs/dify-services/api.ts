@@ -442,6 +442,11 @@ export class ApiService extends Construct {
 
     const paths = ['/console/api', '/api', '/v1', '/files', '/triggers'];
     alb.addEcsService('Api', service, port, '/health', [...paths, ...paths.map((p) => `${p}/*`)]);
+
+    // Because maximum of condition is 5
+    const mcpPaths = ['/mcp', '/.well-known'];
+    alb.addEcsService('MCPServer', service, port, '/health', [...mcpPaths.map((p) => `${p}/*`)]);
+
     alb.addEcsService(
       'Extension',
       service.loadBalancerTarget({ containerName: 'PluginDaemon', containerPort: pluginDaemonPort }),
