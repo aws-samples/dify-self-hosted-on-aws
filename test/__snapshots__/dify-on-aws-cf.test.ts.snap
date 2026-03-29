@@ -708,6 +708,12 @@ exports[`Snapshot test (with CloudFront) 2`] = `
             "dify.example.com",
           ],
           "Comment": "Dify distribution (TestStack - us-west-2)",
+          "CustomErrorResponses": [
+            {
+              "ErrorCachingMinTTL": 0,
+              "ErrorCode": 404,
+            },
+          ],
           "DefaultCacheBehavior": {
             "AllowedMethods": [
               "GET",

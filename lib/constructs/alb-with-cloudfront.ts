@@ -93,6 +93,12 @@ export class AlbWithCloudFront extends Construct implements IAlb {
       },
       logBucket: accessLogBucket,
       logFilePrefix: 'dify-cloudfront/',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          ttl: Duration.seconds(0),
+        },
+      ],
     });
     this.url = `https://${distribution.domainName}`;
 
