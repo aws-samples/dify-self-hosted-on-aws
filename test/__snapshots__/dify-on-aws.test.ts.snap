@@ -1687,7 +1687,7 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "WORKER_TIMEOUT",
-                "Value": "15",
+                "Value": "180",
               },
               {
                 "Name": "ENABLE_NETWORK",
@@ -2435,6 +2435,8 @@ exports[`Snapshot test 1`] = `
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
                 "bedrock:RetrieveAndGenerate",
+                "aws-marketplace:ViewSubscriptions",
+                "aws-marketplace:Subscribe",
               ],
               "Effect": "Allow",
               "Resource": "*",
