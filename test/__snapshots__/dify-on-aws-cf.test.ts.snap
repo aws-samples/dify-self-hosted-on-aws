@@ -2079,7 +2079,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
               },
               {
                 "Name": "WORKER_TIMEOUT",
-                "Value": "15",
+                "Value": "180",
               },
               {
                 "Name": "ENABLE_NETWORK",
@@ -2763,6 +2763,8 @@ exports[`Snapshot test (with CloudFront) 2`] = `
                 "bedrock:Rerank",
                 "bedrock:Retrieve",
                 "bedrock:RetrieveAndGenerate",
+                "aws-marketplace:ViewSubscriptions",
+                "aws-marketplace:Subscribe",
               ],
               "Effect": "Allow",
               "Resource": "*",
