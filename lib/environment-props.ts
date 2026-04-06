@@ -29,6 +29,13 @@ export interface EnvironmentProps {
   allowedIPv6Cidrs?: string[];
 
   /**
+   * Country codes that have access to the app.
+   * @example ['JP', 'US']
+   * @default Allow access from any country
+   */
+  allowedCountryCodes?: string[];
+
+  /**
    * Use t4g.nano NAT instances instead of NAT Gateway.
    * This property is ignored when you import an existing VPC (see {@link vpcId}.)
    * @default false

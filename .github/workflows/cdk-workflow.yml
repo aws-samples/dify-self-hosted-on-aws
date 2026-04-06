@@ -1,0 +1,122 @@
+# ===================================================================================
+# GitHub Actions Workflow: Pull Request CDK Diff　を作成
+# （参考：api-ai.git の cdk-workflow.yml を参考に）
+#
+# 概要:
+#   Pull Requestが作成・更新された際に、対象ブランチに応じた環境に対して
+#   CDK diffを実行し、結果をPRコメントとして投稿する
+#
+# 動作:
+#   - dev ブランチへのPR  → dev 環境との差分を表示
+#   - main ブランチへのPR → main 環境との差分を表示
+# ===================================================================================
+
+name: CDK Diff on Pull Request
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  cdk-diff:
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
+
+    # PRのターゲットブランチに応じて環境を選択
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.0'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: CDK Diff
+        id: cdk-diff
+        run: |
+          export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
+          export CDK_DEFAULT_REGION=us-west-2
+          export ALLOWED_IPV4_CIDRS="${{ vars.ALLOWED_IPV4_CIDRS }}"
+          export ALLOWED_COUNTRY_CODES="${{ vars.ALLOWED_COUNTRY_CODES }}"
+
+          # CDK diffを実行し、結果を取得（マルチリージョン対応）
+          diff=$(npx cdk diff --all 2>&1) || true
+          echo "$diff"
+
+          # GitHubの出力変数に保存（Base64エンコード）
+          echo "cdk_diff=$(echo "$diff" | base64 -w 0)" >> $GITHUB_OUTPUT
+
+      - name: Comment PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Base64デコードしてCDK diff出力を取得
+            const base64Diff = '${{ steps.cdk-diff.outputs.cdk_diff }}';
+            const diff = base64Diff ? Buffer.from(base64Diff, 'base64').toString('utf-8') : '';
+
+            const body = diff ? `## 📋 CDK Diff Results
+                        
+            <details>
+            <summary>Click to expand diff results</summary>
+
+            \`\`\`
+            ${diff}
+            \`\`\`
+
+            </details>
+
+            ---
+            ⚠️ Please review the changes above before merging.` : "## 📋 CDK Diff Results\n\nNo infrastructure changes detected.";
+
+            // 既存のコメントを検索
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('CDK Diff Results')
+            );
+
+            // 既存のコメントがあれば更新、なければ新規作成
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

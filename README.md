@@ -323,9 +323,14 @@ Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the abo
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
+## ドキュメント
+
+プロジェクト全体のアーキテクチャ、ADR（意思決定記録）、セキュリティレポート等は [monthly-visit-agent-docs](https://github.com/kodato-dev/monthly-visit-agent-docs) を参照してください。
+
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file. You should also check [Dify's license](https://github.com/langgenius/dify/blob/main/LICENSE).
 
 ## Acknowledgement
 This CDK code is heavily inspired by [dify-aws-terraform](https://github.com/sonodar/dify-aws-terraform).
+
