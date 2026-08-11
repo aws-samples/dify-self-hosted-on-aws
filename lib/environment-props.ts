@@ -86,6 +86,28 @@ export interface EnvironmentProps {
   useFargateSpot?: boolean;
 
   /**
+   * The amount of CPU units allocated to the api service Fargate task.
+   * The task runs the api, worker, sandbox, and plugin-daemon containers.
+   *
+   * Must be a valid Fargate CPU value (e.g. 512, 1024, 2048, 4096).
+   * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+   * @default 1024
+   */
+  apiServiceCpu?: number;
+
+  /**
+   * The amount of memory (in MiB) allocated to the api service Fargate task.
+   * The plugin-daemon container consumes a large amount of memory when it installs
+   * plugin dependencies and pre-compiles them on task startup, so 2048 MiB is often
+   * not enough once you install plugins. Consider 8192 for plugin-heavy workloads.
+   *
+   * Must be a valid combination with {@link apiServiceCpu}.
+   * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+   * @default 4096
+   */
+  apiServiceMemoryLimitMiB?: number;
+
+  /**
    * The image tag to deploy the Dify container images (api and web).
    * The images are pulled from [here](https://hub.docker.com/u/langgenius).
    *

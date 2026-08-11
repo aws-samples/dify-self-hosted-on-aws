@@ -2109,7 +2109,7 @@ exports[`Snapshot test 1`] = `
           ],
         },
         "Family": "TestStackApiServiceTaskBFA8CBF7",
-        "Memory": "2048",
+        "Memory": "4096",
         "NetworkMode": "awsvpc",
         "RequiresCompatibilities": [
           "FARGATE",

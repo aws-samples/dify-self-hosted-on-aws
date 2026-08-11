@@ -2473,7 +2473,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
           ],
         },
         "Family": "TestStackApiServiceTaskBFA8CBF7",
-        "Memory": "2048",
+        "Memory": "4096",
         "NetworkMode": "awsvpc",
         "RequiresCompatibilities": [
           "FARGATE",
