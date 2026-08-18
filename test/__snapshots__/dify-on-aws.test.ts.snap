@@ -1660,6 +1660,204 @@ exports[`Snapshot test 1`] = `
             ],
           },
           {
+            "Environment": [
+              {
+                "Name": "MODE",
+                "Value": "beat",
+              },
+              {
+                "Name": "LOG_LEVEL",
+                "Value": "ERROR",
+              },
+              {
+                "Name": "DEBUG",
+                "Value": "false",
+              },
+              {
+                "Name": "SQLALCHEMY_POOL_PRE_PING",
+                "Value": "True",
+              },
+              {
+                "Name": "REDIS_HOST",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "RedisFF642DF2",
+                    "PrimaryEndPoint.Address",
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PORT",
+                "Value": "6379",
+              },
+              {
+                "Name": "REDIS_USE_SSL",
+                "Value": "true",
+              },
+              {
+                "Name": "REDIS_DB",
+                "Value": "0",
+              },
+              {
+                "Name": "STORAGE_TYPE",
+                "Value": "s3",
+              },
+              {
+                "Name": "S3_BUCKET_NAME",
+                "Value": {
+                  "Ref": "StorageBucket19DB2FF8",
+                },
+              },
+              {
+                "Name": "S3_REGION",
+                "Value": "us-west-2",
+              },
+              {
+                "Name": "S3_USE_AWS_MANAGED_IAM",
+                "Value": "true",
+              },
+              {
+                "Name": "DB_DATABASE",
+                "Value": "main",
+              },
+              {
+                "Name": "ALL",
+                "Value": "foo",
+              },
+            ],
+            "Essential": true,
+            "Image": "langgenius/dify-api:latest",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "ApiServiceTaskWorkerBeatLogGroup5578F6B1",
+                },
+                "awslogs-region": "us-west-2",
+                "awslogs-stream-prefix": "log",
+              },
+            },
+            "Name": "WorkerBeat",
+            "Secrets": [
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "PostgresClusterSecretAttachment8DDCF2A8",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_PASSWORD",
+                "ValueFrom": {
+                  "Ref": "RedisAuthToken9E34F6A5",
+                },
+              },
+              {
+                "Name": "CELERY_BROKER_URL",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/",
+                      {
+                        "Ref": "RedisBrokerUrlA8582E06",
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "ApiServiceEncryptionSecretF73F9ECD",
+                },
+              },
+              {
+                "Name": "SECRET_ON_SM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-west-2:123456789012:secret:foo:bar::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "SECRET_ON_SSM",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-west-2:123456789012:parameter/foo",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+          {
             "Essential": false,
             "Image": {
               "Fn::Sub": "123456789012.dkr.ecr.us-west-2.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-us-west-2:8212bb6032c6f45fe8aa3802d732a1c334e09486001a46c78816d50319722a0b",
@@ -2257,6 +2455,19 @@ exports[`Snapshot test 1`] = `
             },
             {
               "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApiServiceTaskWorkerBeatLogGroup5578F6B1",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
                 "ecr:BatchCheckLayerAvailability",
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:BatchGetImage",
@@ -2474,6 +2685,11 @@ exports[`Snapshot test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "ApiServiceTaskWorkerBeatLogGroup5578F6B1": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
     },
     "ApiServiceTaskWorkerLogGroup48EED12F": {
       "DeletionPolicy": "Retain",
