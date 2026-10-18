@@ -3233,7 +3233,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
     "PostgresCluster53E5BDAB": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "AutoMinorVersionUpgrade": false,
+        "AutoMinorVersionUpgrade": true,
         "CopyTagsToSnapshot": true,
         "DBClusterParameterGroupName": {
           "Ref": "PostgresParameterGroupC3694DF2",
@@ -3244,7 +3244,7 @@ exports[`Snapshot test (with CloudFront) 2`] = `
         "DatabaseName": "main",
         "EnableHttpEndpoint": true,
         "Engine": "aurora-postgresql",
-        "EngineVersion": "15.12",
+        "EngineVersion": "15",
         "MasterUserPassword": {
           "Fn::Join": [
             "",
