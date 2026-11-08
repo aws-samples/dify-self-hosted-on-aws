@@ -564,6 +564,34 @@ exports[`Snapshot test 1`] = `
         "ListenerArn": {
           "Ref": "AlbListener318AEEBA",
         },
+        "Priority": 4,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
+    "AlbListenerMCPServer0Rule5533A3CC": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbMCPServerTargetGroup12703324",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "/mcp/*",
+                "/.well-known/*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "AlbListener318AEEBA",
+        },
         "Priority": 3,
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
@@ -591,9 +619,37 @@ exports[`Snapshot test 1`] = `
         "ListenerArn": {
           "Ref": "AlbListener318AEEBA",
         },
-        "Priority": 4,
+        "Priority": 5,
       },
       "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
+    "AlbMCPServerTargetGroup12703324": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckPath": "/health",
+        "HealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200-299,307",
+        },
+        "Port": 5001,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "10",
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "UnhealthyThresholdCount": 10,
+        "VpcId": {
+          "Ref": "Vpc8378EB38",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "AlbSecurityGroup433229ED": {
       "Properties": {
@@ -809,6 +865,7 @@ exports[`Snapshot test 1`] = `
         "AlbListenerApi0Rule033B7A48",
         "AlbListenerApi1RuleDF535F10",
         "AlbListenerExtension0Rule76BF40E2",
+        "AlbListenerMCPServer0Rule5533A3CC",
         "ApiServiceTaskTaskRoleDefaultPolicy982AD2DC",
         "ApiServiceTaskTaskRole06F87EBE",
       ],
@@ -844,6 +901,13 @@ exports[`Snapshot test 1`] = `
             "ContainerPort": 5001,
             "TargetGroupArn": {
               "Ref": "AlbApiTargetGroup4B6AF19C",
+            },
+          },
+          {
+            "ContainerName": "Main",
+            "ContainerPort": 5001,
+            "TargetGroupArn": {
+              "Ref": "AlbMCPServerTargetGroup12703324",
             },
           },
           {
