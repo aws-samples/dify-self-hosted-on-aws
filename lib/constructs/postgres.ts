@@ -35,8 +35,10 @@ export class Postgres extends Construct implements IConnectable {
     super(scope, id);
 
     const { vpc } = props;
+    // Pin only the major version. Minor versions are upgraded by Aurora (auto minor version upgrade),
+    // so the template never pins a version lower than the running cluster and no downgrade is attempted.
     const engine = rds.DatabaseClusterEngine.auroraPostgres({
-      version: rds.AuroraPostgresEngineVersion.VER_15_12,
+      version: rds.AuroraPostgresEngineVersion.of('15', '15'),
     });
 
     const cluster = new rds.DatabaseCluster(this, 'Cluster', {
@@ -48,7 +50,7 @@ export class Postgres extends Construct implements IConnectable {
         autoMinorVersionUpgrade: true,
         publiclyAccessible: false,
       }),
-      autoMinorVersionUpgrade: false,
+      autoMinorVersionUpgrade: true,
       defaultDatabaseName: this.databaseName,
       enableDataApi: true,
       storageEncrypted: true,
