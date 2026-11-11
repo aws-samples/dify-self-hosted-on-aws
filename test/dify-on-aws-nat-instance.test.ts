@@ -29,6 +29,8 @@ test('Snapshot test (with NAT instance)', () => {
     SecurityGroupEgress: Match.arrayEquals([Match.objectLike({ CidrIp: '0.0.0.0/0', IpProtocol: '-1' })]),
   });
   template.resourceCountIs('AWS::EC2::Instance', 1);
+  // t4g.nano can run out of memory while setting up NAT on boot
+  template.hasResourceProperties('AWS::EC2::Instance', { InstanceType: 't4g.micro' });
   template.resourceCountIs('AWS::EC2::NatGateway', 0);
   expect(template).toMatchSnapshot();
 });

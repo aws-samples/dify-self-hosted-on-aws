@@ -309,10 +309,10 @@ The following table provides a sample cost breakdown for deploying this system i
 | ECS (Fargate) | Dify-web 1 task running 24/7 (256CPU / 512MB) | $2.7 |
 | ECS (Fargate) | Dify-api/worker 1 task running 24/7 (1024CPU / 4096MB) | $12.6 |
 | Application Load Balancer | ALB-hour per month | $17.5 |
-| VPC | NAT Instances t4g.nano x1 | $3.0 |
+| VPC | NAT Instances t4g.micro x1 | $6.1 |
 | VPC | Public IP address x1 | $3.6 |
 | Secrets Manager | Secret x3 | $1.2 |
-| TOTAL | estimate per month | $49.8 |
+| TOTAL | estimate per month | $52.9 |
 
 Note that you have to pay LLM cost (e.g. Amazon Bedrock ) in addition to the above, which totally depends on your specific use case.
 
