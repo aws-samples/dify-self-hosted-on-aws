@@ -29,7 +29,7 @@ export interface EnvironmentProps {
   allowedIPv6Cidrs?: string[];
 
   /**
-   * Use t4g.nano NAT instances instead of NAT Gateway.
+   * Use t4g.micro NAT instances instead of NAT Gateway.
    * This property is ignored when you import an existing VPC (see {@link vpcId}.)
    * @default false
    */

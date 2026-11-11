@@ -37,7 +37,7 @@ export const createVpc = (
   } else {
     const natProvider = useNatInstance
       ? NatProvider.instanceV2({
-          instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.NANO),
+          instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.MICRO),
           associatePublicIpAddress: true,
           defaultAllowedTraffic: NatTrafficDirection.OUTBOUND_ONLY,
         })
